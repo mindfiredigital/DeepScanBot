@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -47,6 +48,10 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return nil, 0, fmt.Errorf("bad status code: %d", resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
