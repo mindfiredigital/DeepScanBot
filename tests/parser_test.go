@@ -38,6 +38,23 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
+			name:    "filter non-HTTP schemes",
+			baseURL: "https://example.com/blog/post1",
+			body: []byte(`
+				<html>
+					<body>
+						<a href="mailto:info@example.com">Email</a>
+						<a href="javascript:void(0)">JS</a>
+						<a href="tel:+123456789">Tel</a>
+						<a href="#section-1">Anchor</a>
+						<a href="">Empty</a>
+						<a href="   ">Spaces</a>
+					</body>
+				</html>
+			`),
+			wantLinks: map[string]string{},
+		},
+		{
 			name:    "invalid base URL",
 			baseURL: ":invalid-url",
 			body: []byte(`

@@ -29,9 +29,15 @@ func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[stri
 		if n.Data == "a" {
 			for _, attr := range n.Attr {
 				if attr.Key == "href" {
-					if u, err := url.Parse(attr.Val); err == nil {
+					val := strings.TrimSpace(attr.Val)
+					if val == "" || strings.HasPrefix(val, "#") {
+						continue
+					}
+					if u, err := url.Parse(val); err == nil {
 						resolved := base.ResolveReference(u)
-						links[resolved.String()] = "href"
+						if resolved.Scheme == "http" || resolved.Scheme == "https" {
+							links[resolved.String()] = "href"
+						}
 					}
 				}
 			}
@@ -39,9 +45,15 @@ func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[stri
 		if n.Data == "script" {
 			for _, attr := range n.Attr {
 				if attr.Key == "src" {
-					if u, err := url.Parse(attr.Val); err == nil {
+					val := strings.TrimSpace(attr.Val)
+					if val == "" || strings.HasPrefix(val, "#") {
+						continue
+					}
+					if u, err := url.Parse(val); err == nil {
 						resolved := base.ResolveReference(u)
-						links[resolved.String()] = "script"
+						if resolved.Scheme == "http" || resolved.Scheme == "https" {
+							links[resolved.String()] = "script"
+						}
 					}
 				}
 			}
