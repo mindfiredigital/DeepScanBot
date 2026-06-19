@@ -20,21 +20,26 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 		}
 	}
 
+	transport := &http.Transport{}
+	hasCustomTransport := false
+
 	if proxyUrl != "" {
 		proxy, err := url.Parse(proxyUrl)
 		if err != nil {
 			return nil, 0, err
 		}
-		client.Transport = &http.Transport{
-			Proxy: http.ProxyURL(proxy),
-		}
+		transport.Proxy = http.ProxyURL(proxy)
+		hasCustomTransport = true
 	}
 
 	if insecure {
 		log.Println("-insecure flag, disable TLS verification")
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		hasCustomTransport = true
+	}
+
+	if hasCustomTransport {
+		client.Transport = transport
 	}
 
 	resp, err := client.Get(targetUrl)
