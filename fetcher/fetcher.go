@@ -43,7 +43,13 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 		client.Transport = transport
 	}
 
-	resp, err := client.Get(targetUrl)
+	req, err := http.NewRequest("GET", targetUrl, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("User-Agent", "DeepScanBot/1.0")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
