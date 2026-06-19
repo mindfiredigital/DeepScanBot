@@ -57,3 +57,24 @@ func TestFetchHTTPStatus(t *testing.T) {
 	}
 }
 
+func TestFetchUserAgent(t *testing.T) {
+	var capturedUserAgent string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedUserAgent = r.Header.Get("User-Agent")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	}))
+	defer server.Close()
+
+	_, _, err := fetcher.Fetch(server.URL, 2*time.Second, "", false, false)
+	if err != nil {
+		t.Fatalf("Fetch failed: %v", err)
+	}
+
+	expectedUA := "DeepScanBot/1.0"
+	if capturedUserAgent != expectedUA {
+		t.Errorf("Expected User-Agent '%s', got '%s'", expectedUA, capturedUserAgent)
+	}
+}
+
+
