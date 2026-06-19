@@ -94,7 +94,7 @@ func (c *Crawler) crawl(url string, depth int) {
 
 	c.storage.StoreContent(url, data, c.showSource)
 
-	links := parser.Parse(data)
+	links := parser.Parse(data, url)
 	for link, source := range links {
 		if !c.uniqueUrls || !c.storage.HasVisited(link) {
 			c.urlChan <- link
