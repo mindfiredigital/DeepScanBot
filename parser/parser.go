@@ -26,25 +26,33 @@ func Parse(body []byte, baseURLStr string) map[string]string {
 
 func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[string]string {
 	if n.Type == html.ElementNode {
-		if n.Data == "a" {
-			for _, attr := range n.Attr {
-				if attr.Key == "href" {
-					val := strings.TrimSpace(attr.Val)
-					if val == "" || strings.HasPrefix(val, "#") {
-						continue
-					}
-					if u, err := url.Parse(val); err == nil {
-						resolved := base.ResolveReference(u)
-						if resolved.Scheme == "http" || resolved.Scheme == "https" {
-							links[resolved.String()] = "href"
-						}
-					}
-				}
-			}
+		var targetAttr string
+		var sourceType string
+
+		switch n.Data {
+		case "a":
+			targetAttr = "href"
+			sourceType = "href"
+		case "script":
+			targetAttr = "src"
+			sourceType = "script"
+		case "img":
+			targetAttr = "src"
+			sourceType = "img"
+		case "link":
+			targetAttr = "href"
+			sourceType = "link"
+		case "iframe":
+			targetAttr = "src"
+			sourceType = "iframe"
+		case "form":
+			targetAttr = "action"
+			sourceType = "form"
 		}
-		if n.Data == "script" {
+
+		if targetAttr != "" {
 			for _, attr := range n.Attr {
-				if attr.Key == "src" {
+				if attr.Key == targetAttr {
 					val := strings.TrimSpace(attr.Val)
 					if val == "" || strings.HasPrefix(val, "#") {
 						continue
@@ -52,7 +60,7 @@ func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[stri
 					if u, err := url.Parse(val); err == nil {
 						resolved := base.ResolveReference(u)
 						if resolved.Scheme == "http" || resolved.Scheme == "https" {
-							links[resolved.String()] = "script"
+							links[resolved.String()] = sourceType
 						}
 					}
 				}
