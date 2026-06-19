@@ -55,6 +55,28 @@ func TestParse(t *testing.T) {
 			wantLinks: map[string]string{},
 		},
 		{
+			name:    "resolve expanded tags img link iframe form",
+			baseURL: "https://example.com/blog/post1",
+			body: []byte(`
+				<html>
+					<head>
+						<link rel="stylesheet" href="/styles.css">
+					</head>
+					<body>
+						<img src="logo.png">
+						<iframe src="/embed/video"></iframe>
+						<form action="/submit-form" method="post"></form>
+					</body>
+				</html>
+			`),
+			wantLinks: map[string]string{
+				"https://example.com/styles.css":   "link",
+				"https://example.com/blog/logo.png": "img",
+				"https://example.com/embed/video":  "iframe",
+				"https://example.com/submit-form":  "form",
+			},
+		},
+		{
 			name:    "invalid base URL",
 			baseURL: ":invalid-url",
 			body: []byte(`
