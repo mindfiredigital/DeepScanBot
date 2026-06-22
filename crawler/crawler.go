@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 	"web-crawler-assignment/fetcher"
@@ -23,9 +24,13 @@ type Crawler struct {
 	wg               sync.WaitGroup
 	urlChan          chan string
 	depthChan        chan int
+	sem              chan struct{}
 }
 
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, jsonOutput bool, maxSize int, disableRedirects bool, showSource bool, insecure bool, uniqueUrls bool) *Crawler {
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, jsonOutput bool, maxSize int, disableRedirects bool, showSource bool, insecure bool, uniqueUrls bool, concurrency int) *Crawler {
+	if concurrency <= 0 {
+		concurrency = 10
+	}
 	return &Crawler{
 		startURL:         startURL,
 		maxDepth:         maxDepth,
@@ -39,6 +44,7 @@ func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl s
 		storage:          storage.NewPageStorage(jsonOutput, maxSize),
 		urlChan:          make(chan string),
 		depthChan:        make(chan int),
+		sem:              make(chan struct{}, concurrency),
 	}
 }
 
@@ -81,7 +87,10 @@ func (c *Crawler) crawl(url string, depth int) {
 		c.storage.MarkVisited(url)
 	}
 
-	data, size, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure)
+	c.sem <- struct{}{}
+	defer func() { <-c.sem }()
+
+	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure)
 	if err != nil {
 		log.Printf("Error fetching URL %s: %v\n", url, err)
 		return
@@ -94,12 +103,22 @@ func (c *Crawler) crawl(url string, depth int) {
 
 	c.storage.StoreContent(url, data, c.showSource)
 
-	links := parser.Parse(data, url)
-	for link, source := range links {
-		if !c.uniqueUrls || !c.storage.HasVisited(link) {
-			c.urlChan <- link
-			c.depthChan <- depth + 1
-			c.storage.StoreSource(link, source)
+	if strings.Contains(strings.ToLower(contentType), "text/html") {
+		links := parser.Parse(data, url)
+		for link, source := range links {
+			if !c.uniqueUrls || !c.storage.HasVisited(link) {
+				if source == "href" || source == "iframe" {
+					c.urlChan <- link
+					c.depthChan <- depth + 1
+					c.storage.StoreSource(link, source)
+				} else {
+					if c.uniqueUrls {
+						c.storage.MarkVisited(link)
+					}
+					c.storage.StoreSource(link, source)
+					c.storage.StoreContent(link, nil, c.showSource)
+				}
+			}
 		}
 	}
 }
