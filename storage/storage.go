@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"sync"
@@ -93,15 +94,25 @@ func (ps *PageStorage) StoreContent(url string, content []byte, showSource bool)
 	}
 }
 
-func (ps *PageStorage) Close() {
+func (ps *PageStorage) Close() error {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
+	var errs []error
 	if ps.writer != nil {
-		ps.writer.Flush()
+		if err := ps.writer.Flush(); err != nil {
+			errs = append(errs, err)
+		}
+		ps.writer = nil
 	}
 	if ps.file != nil {
-		ps.file.Close()
+		if err := ps.file.Close(); err != nil {
+			errs = append(errs, err)
+		}
+		ps.file = nil
 	}
+
+	return errors.Join(errs...)
 }
 
 func (ps *PageStorage) WriteJSONToFile(filename string) error {
