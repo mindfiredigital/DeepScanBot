@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -67,7 +68,9 @@ func (c *Crawler) Start() error {
 
 	c.wg.Wait()
 	log.Println("Finished crawler", c)
-	c.storage.Close()
+	if err := c.storage.Close(); err != nil {
+		return fmt.Errorf("close crawler output: %w", err)
+	}
 	if c.storage.IsJSONOutput() {
 		if err := c.storage.WriteJSONToFile("crawler_results.json"); err != nil {
 			log.Println("Error writing JSON to file:", err)
