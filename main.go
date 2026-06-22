@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -38,13 +39,14 @@ func main() {
 		return
 	}
 
-	if *url == "" {
-		log.Fatal("You must specify a starting URL with the -url flag")
+	startURL, err := validateStartURL(*url)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	timeoutDuration := time.Duration(*timeout) * time.Second
 
-	c := crawler.NewCrawler(*url, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes))
+	c := crawler.NewCrawler(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes))
 
 	results, err := c.Start()
 	if err != nil {
@@ -58,6 +60,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("write results: %v", err)
 	}
+}
+
+func validateStartURL(rawURL string) (string, error) {
+	startURL := strings.TrimSpace(rawURL)
+	if startURL == "" {
+		return "", fmt.Errorf("you must specify a starting URL with the -url flag")
+	}
+
+	parsedURL, err := url.ParseRequestURI(startURL)
+	if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+		return "", fmt.Errorf("invalid URL %q: must be an absolute http:// or https:// URL", rawURL)
+	}
+
+	return parsedURL.String(), nil
 }
 
 func parseContentTypes(value string) []string {
