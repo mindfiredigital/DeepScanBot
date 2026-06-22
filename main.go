@@ -25,6 +25,7 @@ func main() {
 	uniqueUrls := flag.Bool("u", false, "Ensure unique URLs")
 	concurrency := flag.Int("concurrency", 10, "The maximum number of concurrent requests")
 	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download, e.g. text/html,application/pdf,image/jpeg")
+	output := flag.String("output", "crawler_results", "Output filename without an extension")
 	showHelp := flag.Bool("h", false, "Show this help message")
 
 	flag.Usage = func() {
@@ -52,14 +53,29 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
+	outputFilename, err := buildOutputFilename(*output, *jsonOutput)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if *jsonOutput {
-		err = storage.WriteJSONToFile("crawler_results.json", results)
+		err = storage.WriteJSONToFile(outputFilename, results)
 	} else {
-		err = storage.WriteTextToFile("crawler_results.txt", results, *showSource)
+		err = storage.WriteTextToFile(outputFilename, results, *showSource)
 	}
 	if err != nil {
 		log.Fatalf("write results: %v", err)
 	}
+}
+
+func buildOutputFilename(baseName string, jsonOutput bool) (string, error) {
+	baseName = strings.TrimSpace(baseName)
+	if baseName == "" {
+		return "", fmt.Errorf("output filename must not be empty")
+	}
+	if jsonOutput {
+		return baseName + ".json", nil
+	}
+	return baseName + ".txt", nil
 }
 
 func validateStartURL(rawURL string) (string, error) {
