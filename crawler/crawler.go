@@ -90,7 +90,7 @@ func (c *Crawler) crawl(url string, depth int) {
 	c.sem <- struct{}{}
 	defer func() { <-c.sem }()
 
-	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure)
+	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize)
 	if err != nil {
 		log.Printf("Error fetching URL %s: %v\n", url, err)
 		return
