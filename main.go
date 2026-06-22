@@ -25,7 +25,7 @@ func main() {
 	uniqueUrls := flag.Bool("u", false, "Ensure unique URLs")
 	concurrency := flag.Int("concurrency", 10, "The maximum number of concurrent requests")
 	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download, e.g. text/html,application/pdf,image/jpeg")
-	showHelp := flag.Bool("h", false, "")
+	showHelp := flag.Bool("h", false, "Show this help message")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s web crawler:\n", os.Args[0])
