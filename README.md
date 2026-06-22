@@ -51,6 +51,7 @@ go build
 -concurrency <int>: Limit maximum concurrent request workers. Default: 10.
 -content-types <string>: Comma-separated MIME types to download. Default: text/html. Supports wildcards such as image/*.
 -ignore-robots: Ignore robots.txt crawl restrictions. Default: false.
+-cross-domain: Follow links to hosts other than the starting URL. Default: false.
 -output <string>: Output filename without an extension. Default: crawler_results.
 -h: Show help message.
 

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/temoto/robotstxt"
@@ -26,20 +27,27 @@ type Crawler struct {
 	uniqueUrls       bool
 	contentTypes     []string
 	ignoreRobots     bool
+	crossDomain      bool
+	seedHost         string
 	storage          *storage.PageStorage
 	robotsMu         sync.Mutex
 	robotsCache      map[string]*robotstxt.RobotsData
 	robotsLoaded     map[string]bool
 	wg               sync.WaitGroup
-	urlChan          chan string
-	depthChan        chan int
 	sem              chan struct{}
+	fetched          atomic.Int64
+	failed           atomic.Int64
+	deepestDepth     atomic.Int64
 }
 
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool) *Crawler {
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
 	if concurrency <= 0 {
 		concurrency = 10
 	}
+	if maxDepth < 0 {
+		maxDepth = 0
+	}
+	parsedStartURL, _ := url.Parse(startURL)
 	return &Crawler{
 		startURL:         startURL,
 		maxDepth:         maxDepth,
@@ -51,43 +59,32 @@ func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl s
 		uniqueUrls:       uniqueUrls,
 		contentTypes:     contentTypes,
 		ignoreRobots:     ignoreRobots,
+		crossDomain:      crossDomain,
+		seedHost:         parsedStartURL.Host,
 		storage:          storage.NewPageStorage(),
 		robotsCache:      make(map[string]*robotstxt.RobotsData),
 		robotsLoaded:     make(map[string]bool),
-		urlChan:          make(chan string),
-		depthChan:        make(chan int),
 		sem:              make(chan struct{}, concurrency),
 	}
 }
 
 func (c *Crawler) Start() ([]storage.URLEntry, error) {
-	log.Println("Start crawler", c)
+	startedAt := time.Now()
+	log.Printf("Starting crawl: url=%s max-depth=%d concurrency=%d", c.startURL, c.maxDepth, cap(c.sem))
 
 	c.storage.StoreSource(c.startURL, "href")
 	c.wg.Add(1)
 	go c.crawl(c.startURL, 0)
 
-	go func() {
-		for url := range c.urlChan {
-			depth := <-c.depthChan
-			if depth <= c.maxDepth && (!c.uniqueUrls || !c.storage.HasVisited(url)) {
-				c.wg.Add(1)
-				go c.crawl(url, depth)
-			}
-		}
-	}()
-
 	c.wg.Wait()
-	log.Println("Finished crawler", c)
+	log.Printf("Crawl finished: url=%s fetched=%d failed=%d max-depth=%d duration=%s", c.startURL, c.fetched.Load(), c.failed.Load(), c.deepestDepth.Load(), time.Since(startedAt).Round(time.Millisecond))
 	return c.storage.Results(), nil
 }
 
 func (c *Crawler) crawl(url string, depth int) {
 	defer c.wg.Done()
 
-	if depth > c.maxDepth {
-		return
-	}
+	c.recordDepth(depth)
 	if !c.allowedByRobots(url) {
 		log.Printf("Skipping %s because robots.txt disallows it", url)
 		return
@@ -102,33 +99,55 @@ func (c *Crawler) crawl(url string, depth int) {
 
 	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
 	if err != nil {
+		c.failed.Add(1)
 		log.Printf("Error fetching URL %s: %v\n", url, err)
 		return
 	}
 
 	if c.maxSize > 0 && size > c.maxSize*1024 {
+		c.failed.Add(1)
 		log.Printf("Skipping URL %s due to size limit (%d bytes > %d bytes)\n", url, size, c.maxSize*1024)
 		return
 	}
 
 	c.storage.StoreContent(url)
+	c.fetched.Add(1)
 
-	if strings.Contains(strings.ToLower(contentType), "text/html") {
+	if depth < c.maxDepth && strings.Contains(strings.ToLower(contentType), "text/html") {
 		links := parser.Parse(data, url)
 		for link, source := range links {
-			if !c.uniqueUrls || !c.storage.HasVisited(link) {
-				if source == "href" || source == "iframe" {
-					c.urlChan <- link
-					c.depthChan <- depth + 1
-					c.storage.StoreSource(link, source)
-				} else {
-					if c.uniqueUrls {
-						c.storage.MarkVisited(link)
-					}
-					c.storage.StoreSource(link, source)
-					c.storage.StoreContent(link)
-				}
+			if !c.shouldFollow(link) || (c.uniqueUrls && c.storage.HasVisited(link)) {
+				continue
 			}
+			c.storage.StoreSource(link, source)
+			if source == "href" || source == "iframe" {
+				// Add before launching the child so Wait cannot observe a zero count
+				// while discovered work is still pending.
+				c.wg.Add(1)
+				go c.crawl(link, depth+1)
+			} else {
+				if c.uniqueUrls {
+					c.storage.MarkVisited(link)
+				}
+				c.storage.StoreContent(link)
+			}
+		}
+	}
+}
+
+func (c *Crawler) shouldFollow(targetURL string) bool {
+	if c.crossDomain {
+		return true
+	}
+	parsedURL, err := url.Parse(targetURL)
+	return err == nil && parsedURL.Host == c.seedHost
+}
+
+func (c *Crawler) recordDepth(depth int) {
+	for {
+		current := c.deepestDepth.Load()
+		if depth <= int(current) || c.deepestDepth.CompareAndSwap(current, int64(depth)) {
+			return
 		}
 	}
 }

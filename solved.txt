@@ -1,0 +1,114 @@
+DeepScanBot — Solved Issues
+============================
+
+All 25 review issues have been resolved. The project is verified with:
+  go test ./...
+  go test -race ./...
+
+Parser
+------
+
+P1 — Relative URLs were not resolved against the page URL.
+Solution: the parser resolves references against the document base URL before
+returning them, so relative paths become crawlable absolute HTTP(S) URLs.
+
+P2 — Parsing was limited to anchor and script elements.
+Solution: extraction now covers a, script, img, link, iframe, and form elements.
+
+P3 — Non-HTTP URL schemes could enter the crawl queue.
+Solution: the parser only returns http and https URLs and ignores fragment-only
+and empty references.
+
+Crawler
+-------
+
+C1 — The dispatcher could call WaitGroup.Add after Wait had observed zero.
+Solution: the dispatcher channels were removed. A crawling goroutine increments
+the WaitGroup before it starts each child, so all discovered work is counted.
+
+C2 — The URL dispatcher goroutine could wait forever on an unclosed channel.
+Solution: removing the dispatcher and its channels removes the leaked goroutine.
+
+C3 — crawl contained a redundant depth guard.
+Solution: depth is now enforced when scheduling child work; only children below
+the configured maximum depth are started.
+
+C4 — Logs printed the raw Crawler struct and internal implementation details.
+Solution: start and completion logs now use readable URL, depth, concurrency,
+duration, fetched-count, and failure-count fields.
+
+C5 — Crawls provided no useful completion statistics.
+Solution: atomic fetched, failed, and deepest-depth counters are reported in the
+final crawl summary.
+
+G4 — Requests were previously unconstrained.
+Solution: a configurable concurrency semaphore caps active fetches; the CLI
+defaults to 10 concurrent requests.
+
+G5 — Crawls followed external hosts by default.
+Solution: links are restricted to the seed URL host and port by default. The
+-cross-domain flag is the explicit opt-in for external hosts.
+
+Fetcher
+-------
+
+F1 — Proxy configuration was lost when insecure TLS was also enabled.
+Solution: proxy and TLS settings are configured on the same HTTP transport.
+
+F2 — HTTP error status responses were treated as successful fetches.
+Solution: 4xx and 5xx responses now return an error before content processing.
+
+F3 — Requests had no crawler identity.
+Solution: outbound requests include User-Agent: DeepScanBot/1.0.
+
+F4 — Page bodies were fully read before the configured size limit was checked.
+Solution: io.LimitReader bounds reads to the configured maximum plus one byte,
+allowing oversize responses to be rejected without unbounded reads.
+
+Storage and results
+-------------------
+
+S1 — Text output accumulated results from prior runs.
+Solution: explicit text rendering uses os.Create, which truncates the output
+file before writing the current crawl's results.
+
+S2 — Output was opened and closed once per URL.
+Solution: results are collected in memory as compact metadata and rendered once
+through a buffered writer after the crawl, eliminating per-URL file operations.
+
+S3 — JSON encoded source metadata as a string prefix.
+Solution: JSON output uses URLEntry objects with url and optional source fields.
+
+S4 — Full response bodies were retained indefinitely in pageContent.
+Solution: pageContent was removed. Bodies are discarded after optional HTML link
+parsing; only URL and source metadata are retained.
+
+S5 — GetContent was unused exported API.
+Solution: GetContent was removed together with its unused body cache.
+
+G3 — The crawler could not be embedded without parsing hardcoded output files.
+Solution: Crawler.Start returns []storage.URLEntry and has no file-writing side
+effects. The CLI explicitly chooses when and where to render results.
+
+CLI and architecture
+--------------------
+
+M1 — The -h option was undocumented.
+Solution: usage now describes -h as “Show this help message”.
+
+M2 — Invalid or non-HTTP(S) start URLs reached the fetcher.
+Solution: startup trims and validates the URL as an absolute HTTP(S) URL with a
+host before constructing the crawler.
+
+M3 — Output names were hardcoded.
+Solution: -output selects the output base name; .txt or .json is appended based
+on the selected output format.
+
+G1 — The repository had no test coverage.
+Solution: parser, fetcher, storage, crawler, CLI validation, output, robots,
+library-use, and concurrency behavior now have unit/integration coverage.
+
+G2 — robots.txt was ignored.
+Solution: robots.txt is parsed with github.com/temoto/robotstxt, cached per
+origin, and applied to DeepScanBot before fetches. -ignore-robots is an explicit
+opt-out.

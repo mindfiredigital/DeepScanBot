@@ -19,7 +19,7 @@ func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := crawler.NewCrawler(server.URL, 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false)
+	c := crawler.NewCrawler(server.URL, 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false)
 	results, err := c.Start()
 	if err != nil {
 		t.Fatalf("start crawler: %v", err)
