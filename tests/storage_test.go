@@ -17,10 +17,10 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 		t.Fatalf("seed previous output: %v", err)
 	}
 
-	pageStorage := storage.NewPageStorage(false, -1)
-	pageStorage.StoreContent("https://example.com/current", false)
-	if err := pageStorage.Close(); err != nil {
-		t.Fatalf("close output: %v", err)
+	pageStorage := storage.NewPageStorage()
+	pageStorage.StoreContent("https://example.com/current")
+	if err := storage.WriteTextToFile(filename, pageStorage.Results(), false); err != nil {
+		t.Fatalf("write output: %v", err)
 	}
 
 	contents, err := os.ReadFile(filename)
@@ -36,11 +36,11 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	const filename = "crawler_results.txt"
 	t.Chdir(t.TempDir())
 
-	pageStorage := storage.NewPageStorage(false, -1)
-	pageStorage.StoreContent("https://example.com/one", false)
-	pageStorage.StoreContent("https://example.com/two", false)
-	if err := pageStorage.Close(); err != nil {
-		t.Fatalf("close output: %v", err)
+	pageStorage := storage.NewPageStorage()
+	pageStorage.StoreContent("https://example.com/one")
+	pageStorage.StoreContent("https://example.com/two")
+	if err := storage.WriteTextToFile(filename, pageStorage.Results(), false); err != nil {
+		t.Fatalf("write output: %v", err)
 	}
 
 	contents, err := os.ReadFile(filename)
@@ -53,13 +53,13 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 }
 
 func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
-	pageStorage := storage.NewPageStorage(true, -1)
+	pageStorage := storage.NewPageStorage()
 	pageStorage.StoreSource("https://example.com/about", "href")
-	pageStorage.StoreContent("https://example.com/about", false)
-	pageStorage.StoreContent("https://example.com/standalone", false)
+	pageStorage.StoreContent("https://example.com/about")
+	pageStorage.StoreContent("https://example.com/standalone")
 
 	filename := filepath.Join(t.TempDir(), "results.json")
-	if err := pageStorage.WriteJSONToFile(filename); err != nil {
+	if err := storage.WriteJSONToFile(filename, pageStorage.Results()); err != nil {
 		t.Fatalf("write JSON output: %v", err)
 	}
 
@@ -89,5 +89,17 @@ func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
 	}
 	if _, found := rawOutput.URLs[1]["source"]; found {
 		t.Error("unknown source should be omitted from JSON output")
+	}
+}
+
+func TestResultsReturnsSnapshot(t *testing.T) {
+	pageStorage := storage.NewPageStorage()
+	pageStorage.StoreSource("https://example.com/about", "href")
+	pageStorage.StoreContent("https://example.com/about")
+
+	results := pageStorage.Results()
+	results[0].URL = "https://example.com/changed"
+	if got, want := pageStorage.Results()[0].URL, "https://example.com/about"; got != want {
+		t.Errorf("stored URL = %q, want %q", got, want)
 	}
 }

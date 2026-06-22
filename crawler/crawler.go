@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -18,7 +17,6 @@ type Crawler struct {
 	proxyUrl         string
 	maxSize          int
 	disableRedirects bool
-	showSource       bool
 	insecure         bool
 	uniqueUrls       bool
 	contentTypes     []string
@@ -29,7 +27,7 @@ type Crawler struct {
 	sem              chan struct{}
 }
 
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, jsonOutput bool, maxSize int, disableRedirects bool, showSource bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string) *Crawler {
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string) *Crawler {
 	if concurrency <= 0 {
 		concurrency = 10
 	}
@@ -40,23 +38,22 @@ func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl s
 		proxyUrl:         proxyUrl,
 		maxSize:          maxSize,
 		disableRedirects: disableRedirects,
-		showSource:       showSource,
 		insecure:         insecure,
 		uniqueUrls:       uniqueUrls,
 		contentTypes:     contentTypes,
-		storage:          storage.NewPageStorage(jsonOutput, maxSize),
+		storage:          storage.NewPageStorage(),
 		urlChan:          make(chan string),
 		depthChan:        make(chan int),
 		sem:              make(chan struct{}, concurrency),
 	}
 }
 
-func (c *Crawler) Start() error {
+func (c *Crawler) Start() ([]storage.URLEntry, error) {
 	log.Println("Start crawler", c)
 
+	c.storage.StoreSource(c.startURL, "href")
 	c.wg.Add(1)
 	go c.crawl(c.startURL, 0)
-	c.storage.StoreSource(c.startURL, "href")
 
 	go func() {
 		for url := range c.urlChan {
@@ -70,16 +67,7 @@ func (c *Crawler) Start() error {
 
 	c.wg.Wait()
 	log.Println("Finished crawler", c)
-	if err := c.storage.Close(); err != nil {
-		return fmt.Errorf("close crawler output: %w", err)
-	}
-	if c.storage.IsJSONOutput() {
-		if err := c.storage.WriteJSONToFile("crawler_results.json"); err != nil {
-			log.Println("Error writing JSON to file:", err)
-		}
-	}
-
-	return nil
+	return c.storage.Results(), nil
 }
 
 func (c *Crawler) crawl(url string, depth int) {
@@ -107,7 +95,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		return
 	}
 
-	c.storage.StoreContent(url, c.showSource)
+	c.storage.StoreContent(url)
 
 	if strings.Contains(strings.ToLower(contentType), "text/html") {
 		links := parser.Parse(data, url)
@@ -122,7 +110,7 @@ func (c *Crawler) crawl(url string, depth int) {
 						c.storage.MarkVisited(link)
 					}
 					c.storage.StoreSource(link, source)
-					c.storage.StoreContent(link, c.showSource)
+					c.storage.StoreContent(link)
 				}
 			}
 		}
