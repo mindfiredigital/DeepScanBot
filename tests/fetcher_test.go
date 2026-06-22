@@ -9,12 +9,12 @@ import (
 )
 
 func TestFetchProxyAndInsecure(t *testing.T) {
-	_, _, _, err := fetcher.Fetch("https://localhost:9999", 1*time.Second, "http://127.0.0.1:8080", false, true, -1, nil)
+	_, _, _, _, err := fetcher.Fetch("https://localhost:9999", 1*time.Second, "http://127.0.0.1:8080", false, true, -1, nil)
 	if err == nil {
 		t.Log("Expected connection error or timeout, since proxy/server doesn't exist, got nil error")
 	}
 
-	_, _, _, err = fetcher.Fetch("https://example.com", 1*time.Second, "::invalid-proxy-url", false, true, -1, nil)
+	_, _, _, _, err = fetcher.Fetch("https://example.com", 1*time.Second, "::invalid-proxy-url", false, true, -1, nil)
 	if err == nil {
 		t.Fatal("Expected error on invalid proxy URL, got nil")
 	}
@@ -37,22 +37,28 @@ func TestFetchHTTPStatus(t *testing.T) {
 	defer server.Close()
 
 	// Test 200 OK
-	body, _, _, err := fetcher.Fetch(server.URL+"/200", 2*time.Second, "", false, false, -1, nil)
+	body, _, _, statusCode, err := fetcher.Fetch(server.URL+"/200", 2*time.Second, "", false, false, -1, nil)
 	if err != nil {
 		t.Fatalf("Expected success for 200 OK, got error: %v", err)
 	}
 	if string(body) != "success" {
 		t.Errorf("Expected body 'success', got '%s'", string(body))
 	}
+	if statusCode != http.StatusOK {
+		t.Errorf("status code = %d, want %d", statusCode, http.StatusOK)
+	}
 
 	// Test 404
-	_, _, _, err = fetcher.Fetch(server.URL+"/404", 2*time.Second, "", false, false, -1, nil)
+	_, _, _, statusCode, err = fetcher.Fetch(server.URL+"/404", 2*time.Second, "", false, false, -1, nil)
 	if err == nil {
 		t.Error("Expected error for 404 status code, got nil")
 	}
+	if statusCode != http.StatusNotFound {
+		t.Errorf("status code = %d, want %d", statusCode, http.StatusNotFound)
+	}
 
 	// Test 500
-	_, _, _, err = fetcher.Fetch(server.URL+"/500", 2*time.Second, "", false, false, -1, nil)
+	_, _, _, statusCode, err = fetcher.Fetch(server.URL+"/500", 2*time.Second, "", false, false, -1, nil)
 	if err == nil {
 		t.Error("Expected error for 500 status code, got nil")
 	}
@@ -68,7 +74,7 @@ func TestFetchUserAgent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, _, _, err := fetcher.Fetch(server.URL, 2*time.Second, "", false, false, -1, nil)
+	_, _, _, _, err := fetcher.Fetch(server.URL, 2*time.Second, "", false, false, -1, nil)
 	if err != nil {
 		t.Fatalf("Fetch failed: %v", err)
 	}
@@ -98,7 +104,7 @@ func TestFetchConfiguredContentTypes(t *testing.T) {
 	allowed := []string{"text/html", "application/pdf", "image/*"}
 	for _, path := range []string{"/html", "/pdf", "/jpeg"} {
 		t.Run(path, func(t *testing.T) {
-			body, _, _, err := fetcher.Fetch(server.URL+path, 2*time.Second, "", false, false, -1, allowed)
+			body, _, _, _, err := fetcher.Fetch(server.URL+path, 2*time.Second, "", false, false, -1, allowed)
 			if err != nil {
 				t.Fatalf("fetch configured content type: %v", err)
 			}
@@ -108,7 +114,7 @@ func TestFetchConfiguredContentTypes(t *testing.T) {
 		})
 	}
 
-	body, _, _, err := fetcher.Fetch(server.URL+"/text", 2*time.Second, "", false, false, -1, allowed)
+	body, _, _, _, err := fetcher.Fetch(server.URL+"/text", 2*time.Second, "", false, false, -1, allowed)
 	if err != nil {
 		t.Fatalf("fetch unconfigured content type: %v", err)
 	}

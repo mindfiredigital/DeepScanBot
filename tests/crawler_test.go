@@ -27,7 +27,7 @@ func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {
 		t.Fatalf("start crawler: %v", err)
 	}
 
-	want := []storage.URLEntry{{URL: server.URL, Source: "href"}}
+	want := []storage.URLEntry{{URL: server.URL, Source: "href", StatusCode: http.StatusOK}}
 	if !reflect.DeepEqual(results, want) {
 		t.Errorf("results = %#v, want %#v", results, want)
 	}
@@ -62,7 +62,7 @@ func TestCrawlerRespectsRobots(t *testing.T) {
 	}
 
 	disallowed := crawler.NewCrawler(server.URL+"/private", 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false)
-	if results, err := disallowed.Start(); err != nil || len(results) != 0 {
+	if results, err := disallowed.Start(); err != nil || len(results) != 1 || results[0].Error != "disallowed by robots.txt" {
 		t.Fatalf("disallowed crawl results = %#v, error = %v", results, err)
 	}
 	if got := privateRequests.Load(); got != 0 {
@@ -152,5 +152,29 @@ func TestCrawlerIgnoreRobotsAllowsDisallowedPath(t *testing.T) {
 	}
 	if len(results) != 1 || results[0].URL != server.URL+"/private" {
 		t.Errorf("results = %#v, want allowed private URL", results)
+	}
+}
+
+func TestCrawlerStoresFailedFetchResult(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = w.Write([]byte("User-agent: *\nAllow: /\n"))
+			return
+		}
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	c := crawler.NewCrawler(server.URL, 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false)
+	results, err := c.Start()
+	if err != nil {
+		t.Fatalf("start crawler: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("result count = %d, want 1", len(results))
+	}
+	result := results[0]
+	if result.StatusCode != http.StatusServiceUnavailable || result.Error == "" {
+		t.Errorf("failed result = %#v, want status %d and an error", result, http.StatusServiceUnavailable)
 	}
 }

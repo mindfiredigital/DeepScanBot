@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -37,12 +38,13 @@ type Crawler struct {
 	sem              chan struct{}
 	fetched          atomic.Int64
 	failed           atomic.Int64
+	skipped          atomic.Int64
 	deepestDepth     atomic.Int64
 }
 
 func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
 	if concurrency <= 0 {
-		concurrency = 10
+		concurrency = runtime.GOMAXPROCS(0)
 	}
 	if maxDepth < 0 {
 		maxDepth = 0
@@ -70,14 +72,14 @@ func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl s
 
 func (c *Crawler) Start() ([]storage.URLEntry, error) {
 	startedAt := time.Now()
-	log.Printf("Starting crawl: url=%s max-depth=%d concurrency=%d", c.startURL, c.maxDepth, cap(c.sem))
+	log.Printf("Starting crawl: url=%s max-depth=%d concurrency=%d cpu-cores=%d gomaxprocs=%d", c.startURL, c.maxDepth, cap(c.sem), runtime.NumCPU(), runtime.GOMAXPROCS(0))
 
 	c.storage.StoreSource(c.startURL, "href")
 	c.wg.Add(1)
 	go c.crawl(c.startURL, 0)
 
 	c.wg.Wait()
-	log.Printf("Crawl finished: url=%s fetched=%d failed=%d max-depth=%d duration=%s", c.startURL, c.fetched.Load(), c.failed.Load(), c.deepestDepth.Load(), time.Since(startedAt).Round(time.Millisecond))
+	log.Printf("Crawl finished: url=%s fetched=%d failed=%d skipped=%d max-depth=%d duration=%s", c.startURL, c.fetched.Load(), c.failed.Load(), c.skipped.Load(), c.deepestDepth.Load(), time.Since(startedAt).Round(time.Millisecond))
 	return c.storage.Results(), nil
 }
 
@@ -86,6 +88,8 @@ func (c *Crawler) crawl(url string, depth int) {
 
 	c.recordDepth(depth)
 	if !c.allowedByRobots(url) {
+		c.skipped.Add(1)
+		c.storage.StoreResult(url, depth, 0, "disallowed by robots.txt")
 		log.Printf("Skipping %s because robots.txt disallows it", url)
 		return
 	}
@@ -97,20 +101,22 @@ func (c *Crawler) crawl(url string, depth int) {
 	c.sem <- struct{}{}
 	defer func() { <-c.sem }()
 
-	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
+	data, size, contentType, statusCode, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
 	if err != nil {
 		c.failed.Add(1)
+		c.storage.StoreResult(url, depth, statusCode, err.Error())
 		log.Printf("Error fetching URL %s: %v\n", url, err)
 		return
 	}
 
 	if c.maxSize > 0 && size > c.maxSize*1024 {
 		c.failed.Add(1)
+		c.storage.StoreResult(url, depth, statusCode, "page exceeds configured size limit")
 		log.Printf("Skipping URL %s due to size limit (%d bytes > %d bytes)\n", url, size, c.maxSize*1024)
 		return
 	}
 
-	c.storage.StoreContent(url)
+	c.storage.StoreResult(url, depth, statusCode, "")
 	c.fetched.Add(1)
 
 	if depth < c.maxDepth && strings.Contains(strings.ToLower(contentType), "text/html") {
@@ -129,7 +135,7 @@ func (c *Crawler) crawl(url string, depth int) {
 				if c.uniqueUrls {
 					c.storage.MarkVisited(link)
 				}
-				c.storage.StoreContent(link)
+				c.storage.StoreResult(link, depth+1, 0, "")
 			}
 		}
 	}
