@@ -21,6 +21,7 @@ type Crawler struct {
 	showSource       bool
 	insecure         bool
 	uniqueUrls       bool
+	contentTypes     []string
 	storage          *storage.PageStorage
 	wg               sync.WaitGroup
 	urlChan          chan string
@@ -28,7 +29,7 @@ type Crawler struct {
 	sem              chan struct{}
 }
 
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, jsonOutput bool, maxSize int, disableRedirects bool, showSource bool, insecure bool, uniqueUrls bool, concurrency int) *Crawler {
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, jsonOutput bool, maxSize int, disableRedirects bool, showSource bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string) *Crawler {
 	if concurrency <= 0 {
 		concurrency = 10
 	}
@@ -42,6 +43,7 @@ func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl s
 		showSource:       showSource,
 		insecure:         insecure,
 		uniqueUrls:       uniqueUrls,
+		contentTypes:     contentTypes,
 		storage:          storage.NewPageStorage(jsonOutput, maxSize),
 		urlChan:          make(chan string),
 		depthChan:        make(chan int),
@@ -94,7 +96,7 @@ func (c *Crawler) crawl(url string, depth int) {
 	c.sem <- struct{}{}
 	defer func() { <-c.sem }()
 
-	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize)
+	data, size, contentType, err := fetcher.Fetch(url, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
 	if err != nil {
 		log.Printf("Error fetching URL %s: %v\n", url, err)
 		return
@@ -105,7 +107,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		return
 	}
 
-	c.storage.StoreContent(url, data, c.showSource)
+	c.storage.StoreContent(url, c.showSource)
 
 	if strings.Contains(strings.ToLower(contentType), "text/html") {
 		links := parser.Parse(data, url)
@@ -120,7 +122,7 @@ func (c *Crawler) crawl(url string, depth int) {
 						c.storage.MarkVisited(link)
 					}
 					c.storage.StoreSource(link, source)
-					c.storage.StoreContent(link, nil, c.showSource)
+					c.storage.StoreContent(link, c.showSource)
 				}
 			}
 		}
