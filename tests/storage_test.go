@@ -103,3 +103,52 @@ func TestResultsReturnsSnapshot(t *testing.T) {
 		t.Errorf("stored URL = %q, want %q", got, want)
 	}
 }
+
+func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
+	pageStorage := storage.NewPageStorage()
+	pageStorage.StoreSource("https://example.com/ok", "href")
+	pageStorage.StoreResult("https://example.com/ok", 1, 200, "")
+	pageStorage.StoreResult("https://example.com/timeout", 2, 0, "context deadline exceeded")
+
+	results := pageStorage.Results()
+	want := []storage.URLEntry{
+		{URL: "https://example.com/ok", Source: "href", Depth: 1, StatusCode: 200},
+		{URL: "https://example.com/timeout", Depth: 2, Error: "context deadline exceeded"},
+	}
+	if !reflect.DeepEqual(results, want) {
+		t.Fatalf("stored results = %#v, want %#v", results, want)
+	}
+
+	dir := t.TempDir()
+	jsonFilename := filepath.Join(dir, "results.json")
+	if err := storage.WriteJSONToFile(jsonFilename, results); err != nil {
+		t.Fatalf("write JSON output: %v", err)
+	}
+	jsonContents, err := os.ReadFile(jsonFilename)
+	if err != nil {
+		t.Fatalf("read JSON output: %v", err)
+	}
+	var jsonOutput struct {
+		URLs []storage.URLEntry `json:"urls"`
+	}
+	if err := json.Unmarshal(jsonContents, &jsonOutput); err != nil {
+		t.Fatalf("unmarshal JSON output: %v", err)
+	}
+	if !reflect.DeepEqual(jsonOutput.URLs, want) {
+		t.Errorf("JSON results = %#v, want %#v", jsonOutput.URLs, want)
+	}
+
+	textFilename := filepath.Join(dir, "results.txt")
+	if err := storage.WriteTextToFile(textFilename, results, true); err != nil {
+		t.Fatalf("write text output: %v", err)
+	}
+	textContents, err := os.ReadFile(textFilename)
+	if err != nil {
+		t.Fatalf("read text output: %v", err)
+	}
+	wantText := "[href] https://example.com/ok [status=200]\n" +
+		"https://example.com/timeout [error=context deadline exceeded]\n"
+	if got := string(textContents); got != wantText {
+		t.Errorf("text output = %q, want %q", got, wantText)
+	}
+}
