@@ -26,6 +26,7 @@ func main() {
 	concurrency := flag.Int("concurrency", 10, "The maximum number of concurrent requests")
 	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download, e.g. text/html,application/pdf,image/jpeg")
 	output := flag.String("output", "crawler_results", "Output filename without an extension")
+	ignoreRobots := flag.Bool("ignore-robots", false, "Ignore robots.txt crawl restrictions")
 	showHelp := flag.Bool("h", false, "Show this help message")
 
 	flag.Usage = func() {
@@ -47,7 +48,7 @@ func main() {
 
 	timeoutDuration := time.Duration(*timeout) * time.Second
 
-	c := crawler.NewCrawler(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes))
+	c := crawler.NewCrawler(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes), *ignoreRobots)
 
 	results, err := c.Start()
 	if err != nil {
