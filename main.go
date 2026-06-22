@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"web-crawler-assignment/crawler"
+	"web-crawler-assignment/storage"
 )
 
 func main() {
@@ -43,10 +44,19 @@ func main() {
 
 	timeoutDuration := time.Duration(*timeout) * time.Second
 
-	c := crawler.NewCrawler(*url, *depth, timeoutDuration, *proxy, *jsonOutput, *maxSize, *disableRedirects, *showSource, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes))
+	c := crawler.NewCrawler(*url, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes))
 
-	if err := c.Start(); err != nil {
+	results, err := c.Start()
+	if err != nil {
 		log.Fatalf("error: %v", err)
+	}
+	if *jsonOutput {
+		err = storage.WriteJSONToFile("crawler_results.json", results)
+	} else {
+		err = storage.WriteTextToFile("crawler_results.txt", results, *showSource)
+	}
+	if err != nil {
+		log.Fatalf("write results: %v", err)
 	}
 }
 

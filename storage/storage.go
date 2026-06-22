@@ -3,8 +3,6 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
-	"log"
 	"os"
 	"sync"
 )
@@ -12,12 +10,8 @@ import (
 type PageStorage struct {
 	visitedUrls map[string]bool
 	urlSource   map[string]string
-	jsonOutput  bool
 	mutex       sync.Mutex
-	urls        []string
-	maxSize     int
-	file        *os.File
-	writer      *bufio.Writer
+	results     []URLEntry
 }
 
 // URLEntry is one crawled URL and, when known, the HTML element that referenced it.
@@ -26,24 +20,12 @@ type URLEntry struct {
 	Source string `json:"source,omitempty"`
 }
 
-func NewPageStorage(jsonOutput bool, maxSize int) *PageStorage {
-	ps := &PageStorage{
+func NewPageStorage() *PageStorage {
+	return &PageStorage{
 		visitedUrls: make(map[string]bool),
 		urlSource:   make(map[string]string),
-		jsonOutput:  jsonOutput,
-		maxSize:     maxSize,
-		urls:        []string{},
+		results:     []URLEntry{},
 	}
-	if !jsonOutput {
-		f, err := os.Create("crawler_results.txt")
-		if err != nil {
-			log.Println("Error creating crawler_results.txt:", err)
-		} else {
-			ps.file = f
-			ps.writer = bufio.NewWriter(f)
-		}
-	}
-	return ps
 }
 
 func (ps *PageStorage) MarkVisited(url string) {
@@ -64,64 +46,22 @@ func (ps *PageStorage) StoreSource(url, source string) {
 	ps.urlSource[url] = source
 }
 
-func (ps *PageStorage) IsJSONOutput() bool {
-	return ps.jsonOutput
-}
-
-func (ps *PageStorage) StoreContent(url string, showSource bool) {
+func (ps *PageStorage) StoreContent(url string) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 
-	if ps.jsonOutput {
-		ps.urls = append(ps.urls, url)
-	} else {
-		source := ps.urlSource[url]
-		if ps.writer != nil {
-			var err error
-			if showSource && source != "" {
-				_, err = ps.writer.WriteString("[" + source + "] " + url + "\n")
-			} else {
-				_, err = ps.writer.WriteString(url + "\n")
-			}
-			if err != nil {
-				log.Println("Error writing URL to file:", err)
-			}
-		}
-	}
+	ps.results = append(ps.results, URLEntry{URL: url, Source: ps.urlSource[url]})
 }
 
-func (ps *PageStorage) Close() error {
+// Results returns a snapshot of the URLs collected during a crawl.
+func (ps *PageStorage) Results() []URLEntry {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 
-	var errs []error
-	if ps.writer != nil {
-		if err := ps.writer.Flush(); err != nil {
-			errs = append(errs, err)
-		}
-		ps.writer = nil
-	}
-	if ps.file != nil {
-		if err := ps.file.Close(); err != nil {
-			errs = append(errs, err)
-		}
-		ps.file = nil
-	}
-
-	return errors.Join(errs...)
+	return append([]URLEntry(nil), ps.results...)
 }
 
-func (ps *PageStorage) WriteJSONToFile(filename string) error {
-	ps.mutex.Lock()
-	defer ps.mutex.Unlock()
-
-	entries := make([]URLEntry, 0, len(ps.urls))
-	for _, url := range ps.urls {
-		entry := URLEntry{URL: url}
-		entry.Source = ps.urlSource[url]
-		entries = append(entries, entry)
-	}
-
+func WriteJSONToFile(filename string, entries []URLEntry) error {
 	data := struct {
 		URLs []URLEntry `json:"urls"`
 	}{
@@ -134,4 +74,25 @@ func (ps *PageStorage) WriteJSONToFile(filename string) error {
 	}
 
 	return os.WriteFile(filename, jsonData, 0644)
+}
+
+func WriteTextToFile(filename string, entries []URLEntry, showSource bool) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	for _, entry := range entries {
+		if showSource && entry.Source != "" {
+			if _, err := writer.WriteString("[" + entry.Source + "] " + entry.URL + "\n"); err != nil {
+				return err
+			}
+		} else if _, err := writer.WriteString(entry.URL + "\n"); err != nil {
+			return err
+		}
+	}
+
+	return writer.Flush()
 }
