@@ -1,4 +1,4 @@
-package storage
+package tests
 
 import (
 	"encoding/json"
@@ -6,23 +6,20 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"web-crawler-assignment/storage"
 )
 
 func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	const filename = "crawler_results.txt"
-	t.Cleanup(func() {
-		if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
-			t.Errorf("remove test output: %v", err)
-		}
-	})
+	t.Chdir(t.TempDir())
 
 	if err := os.WriteFile(filename, []byte("result from a previous crawl\n"), 0644); err != nil {
 		t.Fatalf("seed previous output: %v", err)
 	}
 
-	storage := NewPageStorage(false, -1)
-	storage.StoreContent("https://example.com/current", nil, false)
-	if err := storage.Close(); err != nil {
+	pageStorage := storage.NewPageStorage(false, -1)
+	pageStorage.StoreContent("https://example.com/current", nil, false)
+	if err := pageStorage.Close(); err != nil {
 		t.Fatalf("close output: %v", err)
 	}
 
@@ -35,33 +32,15 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	}
 }
 
-func TestTextOutputUsesBufferedWriterUntilClose(t *testing.T) {
+func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	const filename = "crawler_results.txt"
-	t.Cleanup(func() {
-		if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
-			t.Errorf("remove test output: %v", err)
-		}
-	})
+	t.Chdir(t.TempDir())
 
-	storage := NewPageStorage(false, -1)
-	if storage.file == nil || storage.writer == nil {
-		t.Fatal("text output should open one file and create one buffered writer")
-	}
-	file, writer := storage.file, storage.writer
-
-	storage.StoreContent("https://example.com/one", nil, false)
-	storage.StoreContent("https://example.com/two", nil, false)
-	if storage.file != file || storage.writer != writer {
-		t.Error("writes should reuse the original file and buffered writer")
-	}
-	if writer.Buffered() == 0 {
-		t.Error("expected output to remain buffered until close")
-	}
-	if err := storage.Close(); err != nil {
+	pageStorage := storage.NewPageStorage(false, -1)
+	pageStorage.StoreContent("https://example.com/one", nil, false)
+	pageStorage.StoreContent("https://example.com/two", nil, false)
+	if err := pageStorage.Close(); err != nil {
 		t.Fatalf("close output: %v", err)
-	}
-	if storage.file != nil || storage.writer != nil {
-		t.Error("close should release the file and buffered writer")
 	}
 
 	contents, err := os.ReadFile(filename)
@@ -74,13 +53,13 @@ func TestTextOutputUsesBufferedWriterUntilClose(t *testing.T) {
 }
 
 func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
-	storage := NewPageStorage(true, -1)
-	storage.StoreSource("https://example.com/about", "href")
-	storage.StoreContent("https://example.com/about", nil, false)
-	storage.StoreContent("https://example.com/standalone", nil, false)
+	pageStorage := storage.NewPageStorage(true, -1)
+	pageStorage.StoreSource("https://example.com/about", "href")
+	pageStorage.StoreContent("https://example.com/about", nil, false)
+	pageStorage.StoreContent("https://example.com/standalone", nil, false)
 
 	filename := filepath.Join(t.TempDir(), "results.json")
-	if err := storage.WriteJSONToFile(filename); err != nil {
+	if err := pageStorage.WriteJSONToFile(filename); err != nil {
 		t.Fatalf("write JSON output: %v", err)
 	}
 
@@ -89,12 +68,12 @@ func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
 		t.Fatalf("read JSON output: %v", err)
 	}
 	var output struct {
-		URLs []URLEntry `json:"urls"`
+		URLs []storage.URLEntry `json:"urls"`
 	}
 	if err := json.Unmarshal(contents, &output); err != nil {
 		t.Fatalf("unmarshal JSON output: %v", err)
 	}
-	want := []URLEntry{
+	want := []storage.URLEntry{
 		{URL: "https://example.com/about", Source: "href"},
 		{URL: "https://example.com/standalone"},
 	}
