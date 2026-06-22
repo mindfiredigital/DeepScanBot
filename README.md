@@ -50,6 +50,7 @@ go build
 -u: Ensure unique URLs are crawled. Default: false.
 -concurrency <int>: Limit maximum concurrent request workers. Default: 10.
 -content-types <string>: Comma-separated MIME types to download. Default: text/html. Supports wildcards such as image/*.
+-output <string>: Output filename without an extension. Default: crawler_results.
 -h: Show help message.
 
 # Example

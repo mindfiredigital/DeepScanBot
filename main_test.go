@@ -33,3 +33,31 @@ func TestValidateStartURL(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildOutputFilename(t *testing.T) {
+	tests := []struct {
+		name       string
+		baseName   string
+		jsonOutput bool
+		want       string
+		err        bool
+	}{
+		{name: "text output", baseName: "scan-results", want: "scan-results.txt"},
+		{name: "JSON output", baseName: "scan-results", jsonOutput: true, want: "scan-results.json"},
+		{name: "trims whitespace", baseName: " reports/crawl ", want: "reports/crawl.txt"},
+		{name: "empty", baseName: "", err: true},
+		{name: "whitespace only", baseName: "  ", err: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := buildOutputFilename(tt.baseName, tt.jsonOutput)
+			if (err != nil) != tt.err {
+				t.Fatalf("buildOutputFilename(%q, %t) error = %v, want error = %v", tt.baseName, tt.jsonOutput, err, tt.err)
+			}
+			if got != tt.want {
+				t.Errorf("buildOutputFilename(%q, %t) = %q, want %q", tt.baseName, tt.jsonOutput, got, tt.want)
+			}
+		})
+	}
+}
