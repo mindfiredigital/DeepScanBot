@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bufio"
 	"encoding/json"
 	"log"
 	"os"
@@ -15,10 +16,12 @@ type PageStorage struct {
 	mutex       sync.Mutex
 	urls        []string
 	maxSize     int
+	file        *os.File
+	writer      *bufio.Writer
 }
 
 func NewPageStorage(jsonOutput bool, maxSize int) *PageStorage {
-	return &PageStorage{
+	ps := &PageStorage{
 		visitedUrls: make(map[string]bool),
 		pageContent: make(map[string][]byte),
 		urlSource:   make(map[string]string),
@@ -26,6 +29,16 @@ func NewPageStorage(jsonOutput bool, maxSize int) *PageStorage {
 		maxSize:     maxSize,
 		urls:        []string{},
 	}
+	if !jsonOutput {
+		f, err := os.Create("crawler_results.txt")
+		if err != nil {
+			log.Println("Error creating crawler_results.txt:", err)
+		} else {
+			ps.file = f
+			ps.writer = bufio.NewWriter(f)
+		}
+	}
+	return ps
 }
 
 func (ps *PageStorage) MarkVisited(url string) {
@@ -66,26 +79,29 @@ func (ps *PageStorage) StoreContent(url string, content []byte, showSource bool)
 		ps.urls = append(ps.urls, url)
 	} else {
 		source := ps.urlSource[url]
-		err := storeUrlToFile("crawler_results.txt", url, showSource, source)
-		if err != nil {
-			log.Println(err)
+		if ps.writer != nil {
+			var err error
+			if showSource && source != "" {
+				_, err = ps.writer.WriteString("[" + source + "] " + url + "\n")
+			} else {
+				_, err = ps.writer.WriteString(url + "\n")
+			}
+			if err != nil {
+				log.Println("Error writing URL to file:", err)
+			}
 		}
 	}
 }
 
-func storeUrlToFile(filename, url string, showSource bool, source string) error {
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+func (ps *PageStorage) Close() {
+	ps.mutex.Lock()
+	defer ps.mutex.Unlock()
+	if ps.writer != nil {
+		ps.writer.Flush()
 	}
-	defer file.Close()
-
-	if showSource && source != "" {
-		_, err = file.WriteString("[" + source + "] " + url + "\n")
-	} else {
-		_, err = file.WriteString(url + "\n")
+	if ps.file != nil {
+		ps.file.Close()
 	}
-	return err
 }
 
 func (ps *PageStorage) WriteJSONToFile(filename string) error {

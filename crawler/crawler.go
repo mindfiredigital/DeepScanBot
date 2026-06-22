@@ -67,6 +67,7 @@ func (c *Crawler) Start() error {
 
 	c.wg.Wait()
 	log.Println("Finished crawler", c)
+	c.storage.Close()
 	if c.storage.IsJSONOutput() {
 		if err := c.storage.WriteJSONToFile("crawler_results.json"); err != nil {
 			log.Println("Error writing JSON to file:", err)
