@@ -27,6 +27,7 @@ func main() {
 	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download, e.g. text/html,application/pdf,image/jpeg")
 	output := flag.String("output", "crawler_results", "Output filename without an extension")
 	ignoreRobots := flag.Bool("ignore-robots", false, "Ignore robots.txt crawl restrictions")
+	crossDomain := flag.Bool("cross-domain", false, "Follow links to hosts other than the starting URL")
 	showHelp := flag.Bool("h", false, "Show this help message")
 
 	flag.Usage = func() {
@@ -48,7 +49,7 @@ func main() {
 
 	timeoutDuration := time.Duration(*timeout) * time.Second
 
-	c := crawler.NewCrawler(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes), *ignoreRobots)
+	c := crawler.NewCrawler(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes), *ignoreRobots, *crossDomain)
 
 	results, err := c.Start()
 	if err != nil {
