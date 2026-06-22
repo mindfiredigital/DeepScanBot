@@ -21,6 +21,12 @@ type PageStorage struct {
 	writer      *bufio.Writer
 }
 
+// URLEntry is one crawled URL and, when known, the HTML element that referenced it.
+type URLEntry struct {
+	URL    string `json:"url"`
+	Source string `json:"source,omitempty"`
+}
+
 func NewPageStorage(jsonOutput bool, maxSize int) *PageStorage {
 	ps := &PageStorage{
 		visitedUrls: make(map[string]bool),
@@ -119,17 +125,17 @@ func (ps *PageStorage) WriteJSONToFile(filename string) error {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 
-	var urlsWithSources []string
+	entries := make([]URLEntry, 0, len(ps.urls))
 	for _, url := range ps.urls {
-		if source, found := ps.urlSource[url]; found {
-			urlsWithSources = append(urlsWithSources, "["+source+"] "+url)
-		} else {
-			urlsWithSources = append(urlsWithSources, url)
-		}
+		entry := URLEntry{URL: url}
+		entry.Source = ps.urlSource[url]
+		entries = append(entries, entry)
 	}
 
-	data := map[string]interface{}{
-		"urls": urlsWithSources,
+	data := struct {
+		URLs []URLEntry `json:"urls"`
+	}{
+		URLs: entries,
 	}
 
 	jsonData, err := json.Marshal(data)

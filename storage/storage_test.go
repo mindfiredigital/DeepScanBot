@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"encoding/json"
 	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -67,5 +70,45 @@ func TestTextOutputUsesBufferedWriterUntilClose(t *testing.T) {
 	}
 	if got, want := string(contents), "https://example.com/one\nhttps://example.com/two\n"; got != want {
 		t.Errorf("output = %q, want %q", got, want)
+	}
+}
+
+func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
+	storage := NewPageStorage(true, -1)
+	storage.StoreSource("https://example.com/about", "href")
+	storage.StoreContent("https://example.com/about", nil, false)
+	storage.StoreContent("https://example.com/standalone", nil, false)
+
+	filename := filepath.Join(t.TempDir(), "results.json")
+	if err := storage.WriteJSONToFile(filename); err != nil {
+		t.Fatalf("write JSON output: %v", err)
+	}
+
+	contents, err := os.ReadFile(filename)
+	if err != nil {
+		t.Fatalf("read JSON output: %v", err)
+	}
+	var output struct {
+		URLs []URLEntry `json:"urls"`
+	}
+	if err := json.Unmarshal(contents, &output); err != nil {
+		t.Fatalf("unmarshal JSON output: %v", err)
+	}
+	want := []URLEntry{
+		{URL: "https://example.com/about", Source: "href"},
+		{URL: "https://example.com/standalone"},
+	}
+	if !reflect.DeepEqual(output.URLs, want) {
+		t.Errorf("URLs = %#v, want %#v", output.URLs, want)
+	}
+
+	var rawOutput struct {
+		URLs []map[string]string `json:"urls"`
+	}
+	if err := json.Unmarshal(contents, &rawOutput); err != nil {
+		t.Fatalf("unmarshal raw JSON output: %v", err)
+	}
+	if _, found := rawOutput.URLs[1]["source"]; found {
+		t.Error("unknown source should be omitted from JSON output")
 	}
 }
