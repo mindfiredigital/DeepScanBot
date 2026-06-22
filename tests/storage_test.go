@@ -82,7 +82,7 @@ func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
 	}
 
 	var rawOutput struct {
-		URLs []map[string]string `json:"urls"`
+		URLs []map[string]json.RawMessage `json:"urls"`
 	}
 	if err := json.Unmarshal(contents, &rawOutput); err != nil {
 		t.Fatalf("unmarshal raw JSON output: %v", err)

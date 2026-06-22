@@ -23,7 +23,7 @@ func main() {
 	showSource := flag.Bool("s", false, "Show the source of the URL based on where it was found")
 	insecure := flag.Bool("insecure", false, "Disable TLS verification")
 	uniqueUrls := flag.Bool("u", false, "Ensure unique URLs")
-	concurrency := flag.Int("concurrency", 10, "The maximum number of concurrent requests")
+	concurrency := flag.Int("concurrency", 0, "Maximum concurrent requests; 0 uses available CPU capacity")
 	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download, e.g. text/html,application/pdf,image/jpeg")
 	output := flag.String("output", "crawler_results", "Output filename without an extension")
 	ignoreRobots := flag.Bool("ignore-robots", false, "Ignore robots.txt crawl restrictions")

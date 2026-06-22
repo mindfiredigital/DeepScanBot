@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, error) {
+func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, int, error) {
 	client := &http.Client{
 		Timeout: timeout,
 	}
@@ -29,7 +29,7 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 	if proxyUrl != "" {
 		proxy, err := url.Parse(proxyUrl)
 		if err != nil {
-			return nil, 0, "", err
+			return nil, 0, "", 0, err
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 		hasCustomTransport = true
@@ -47,18 +47,18 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
-		return nil, 0, "", err
+		return nil, 0, "", 0, err
 	}
 	req.Header.Set("User-Agent", "DeepScanBot/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, 0, "", err
+		return nil, 0, "", 0, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return nil, 0, "", fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return nil, 0, "", resp.StatusCode, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
 	contentType := resp.Header.Get("Content-Type")
@@ -69,7 +69,7 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 		if size < 0 {
 			size = 0
 		}
-		return nil, size, contentType, nil
+		return nil, size, contentType, resp.StatusCode, nil
 	}
 
 	var bodyReader io.Reader = resp.Body
@@ -79,14 +79,14 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 
 	body, err := io.ReadAll(bodyReader)
 	if err != nil {
-		return nil, 0, contentType, err
+		return nil, 0, contentType, resp.StatusCode, err
 	}
 
 	if maxSize > 0 && len(body) > maxSize*1024 {
-		return nil, len(body), contentType, fmt.Errorf("page exceeds size limit (%d bytes)", len(body))
+		return nil, len(body), contentType, resp.StatusCode, fmt.Errorf("page exceeds size limit (%d bytes)", len(body))
 	}
 
-	return body, len(body), contentType, nil
+	return body, len(body), contentType, resp.StatusCode, nil
 }
 
 func isAllowedContentType(contentType string, allowedContentTypes []string) bool {

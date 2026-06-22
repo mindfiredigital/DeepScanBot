@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
+	"strconv"
 	"sync"
 )
 
@@ -16,8 +17,11 @@ type PageStorage struct {
 
 // URLEntry is one crawled URL and, when known, the HTML element that referenced it.
 type URLEntry struct {
-	URL    string `json:"url"`
-	Source string `json:"source,omitempty"`
+	URL        string `json:"url"`
+	Source     string `json:"source,omitempty"`
+	Depth      int    `json:"depth"`
+	StatusCode int    `json:"status_code,omitempty"`
+	Error      string `json:"error,omitempty"`
 }
 
 func NewPageStorage() *PageStorage {
@@ -47,10 +51,21 @@ func (ps *PageStorage) StoreSource(url, source string) {
 }
 
 func (ps *PageStorage) StoreContent(url string) {
+	ps.StoreResult(url, 0, 0, "")
+}
+
+// StoreResult records one discovered or fetched URL and its crawl outcome.
+func (ps *PageStorage) StoreResult(url string, depth, statusCode int, resultError string) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 
-	ps.results = append(ps.results, URLEntry{URL: url, Source: ps.urlSource[url]})
+	ps.results = append(ps.results, URLEntry{
+		URL:        url,
+		Source:     ps.urlSource[url],
+		Depth:      depth,
+		StatusCode: statusCode,
+		Error:      resultError,
+	})
 }
 
 // Results returns a snapshot of the URLs collected during a crawl.
@@ -85,11 +100,17 @@ func WriteTextToFile(filename string, entries []URLEntry, showSource bool) error
 
 	writer := bufio.NewWriter(file)
 	for _, entry := range entries {
+		line := entry.URL
 		if showSource && entry.Source != "" {
-			if _, err := writer.WriteString("[" + entry.Source + "] " + entry.URL + "\n"); err != nil {
-				return err
-			}
-		} else if _, err := writer.WriteString(entry.URL + "\n"); err != nil {
+			line = "[" + entry.Source + "] " + line
+		}
+		if entry.StatusCode != 0 {
+			line += " [status=" + strconv.Itoa(entry.StatusCode) + "]"
+		}
+		if entry.Error != "" {
+			line += " [error=" + entry.Error + "]"
+		}
+		if _, err := writer.WriteString(line + "\n"); err != nil {
 			return err
 		}
 	}

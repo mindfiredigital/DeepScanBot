@@ -17,7 +17,8 @@ DeepScanBot allows you to crawl websites with various configurations, including 
 - **TLS Verification**: Option to disable TLS verification for HTTPS requests.
 - **Unique URL Tracking**: Ensures URLs are crawled only once if enabled.
 - **Show URL Source**: Display where each URL was found (e.g., in `<a>` tags, `<script>` tags).
-- **Concurrency control**: Limit maximum concurrent requests to avoid overloading target servers.
+- **CPU-aware concurrency**: By default, request concurrency uses the available Go CPU capacity; it can be overridden.
+- **Per-page outcomes**: Results retain crawl depth, HTTP status, and fetch errors for successful and failed pages.
 - **Content-Type filtering**: Download only configured MIME types; HTML remains the default.
 
 ## Usage
@@ -48,7 +49,7 @@ go build
 -s: Show the source of the URL based on where it was found. Default: false.
 -insecure: Disable TLS verification. Default: false.
 -u: Ensure unique URLs are crawled. Default: false.
--concurrency <int>: Limit maximum concurrent request workers. Default: 10.
+-concurrency <int>: Limit maximum concurrent request workers. Default: 0 (available CPU capacity).
 -content-types <string>: Comma-separated MIME types to download. Default: text/html. Supports wildcards such as image/*.
 -ignore-robots: Ignore robots.txt crawl restrictions. Default: false.
 -cross-domain: Follow links to hosts other than the starting URL. Default: false.
