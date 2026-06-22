@@ -18,6 +18,7 @@ DeepScanBot allows you to crawl websites with various configurations, including 
 - **Unique URL Tracking**: Ensures URLs are crawled only once if enabled.
 - **Show URL Source**: Display where each URL was found (e.g., in `<a>` tags, `<script>` tags).
 - **Concurrency control**: Limit maximum concurrent requests to avoid overloading target servers.
+- **Content-Type filtering**: Download only configured MIME types; HTML remains the default.
 
 ## Usage
 
@@ -48,6 +49,7 @@ go build
 -insecure: Disable TLS verification. Default: false.
 -u: Ensure unique URLs are crawled. Default: false.
 -concurrency <int>: Limit maximum concurrent request workers. Default: 10.
+-content-types <string>: Comma-separated MIME types to download. Default: text/html. Supports wildcards such as image/*.
 -h: Show help message.
 
 # Example

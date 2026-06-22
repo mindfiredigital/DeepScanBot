@@ -18,7 +18,7 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	}
 
 	pageStorage := storage.NewPageStorage(false, -1)
-	pageStorage.StoreContent("https://example.com/current", nil, false)
+	pageStorage.StoreContent("https://example.com/current", false)
 	if err := pageStorage.Close(); err != nil {
 		t.Fatalf("close output: %v", err)
 	}
@@ -37,8 +37,8 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	t.Chdir(t.TempDir())
 
 	pageStorage := storage.NewPageStorage(false, -1)
-	pageStorage.StoreContent("https://example.com/one", nil, false)
-	pageStorage.StoreContent("https://example.com/two", nil, false)
+	pageStorage.StoreContent("https://example.com/one", false)
+	pageStorage.StoreContent("https://example.com/two", false)
 	if err := pageStorage.Close(); err != nil {
 		t.Fatalf("close output: %v", err)
 	}
@@ -55,8 +55,8 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
 	pageStorage := storage.NewPageStorage(true, -1)
 	pageStorage.StoreSource("https://example.com/about", "href")
-	pageStorage.StoreContent("https://example.com/about", nil, false)
-	pageStorage.StoreContent("https://example.com/standalone", nil, false)
+	pageStorage.StoreContent("https://example.com/about", false)
+	pageStorage.StoreContent("https://example.com/standalone", false)
 
 	filename := filepath.Join(t.TempDir(), "results.json")
 	if err := pageStorage.WriteJSONToFile(filename); err != nil {

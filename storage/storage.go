@@ -11,7 +11,6 @@ import (
 
 type PageStorage struct {
 	visitedUrls map[string]bool
-	pageContent map[string][]byte
 	urlSource   map[string]string
 	jsonOutput  bool
 	mutex       sync.Mutex
@@ -30,7 +29,6 @@ type URLEntry struct {
 func NewPageStorage(jsonOutput bool, maxSize int) *PageStorage {
 	ps := &PageStorage{
 		visitedUrls: make(map[string]bool),
-		pageContent: make(map[string][]byte),
 		urlSource:   make(map[string]string),
 		jsonOutput:  jsonOutput,
 		maxSize:     maxSize,
@@ -66,21 +64,13 @@ func (ps *PageStorage) StoreSource(url, source string) {
 	ps.urlSource[url] = source
 }
 
-func (ps *PageStorage) GetContent(url string) ([]byte, bool) {
-	ps.mutex.Lock()
-	defer ps.mutex.Unlock()
-	content, exists := ps.pageContent[url]
-	return content, exists
-}
-
 func (ps *PageStorage) IsJSONOutput() bool {
 	return ps.jsonOutput
 }
 
-func (ps *PageStorage) StoreContent(url string, content []byte, showSource bool) {
+func (ps *PageStorage) StoreContent(url string, showSource bool) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
-	ps.pageContent[url] = content
 
 	if ps.jsonOutput {
 		ps.urls = append(ps.urls, url)
