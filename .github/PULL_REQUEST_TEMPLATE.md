@@ -29,10 +29,10 @@ _Link any related issue(s) with references to help reviewers understand the cont
 
 _Please ensure the following have been completed before submitting:_
 
-- [ ] I have linted my code using `npm run lint`.
+- [ ] I have formatted my code using `gofmt`.
+- [ ] I have run tests using `go test ./...`.
 - [ ] I have updated the documentation as needed.
 - [ ] I have added or updated tests for the changes in this PR.
-- [ ] I have verified that my changes work in all supported environments (e.g., Chrome, Firefox, Safari).
 
 ## Screenshots (if applicable)
 
