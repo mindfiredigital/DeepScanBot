@@ -8,11 +8,30 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
 
+// FetchResult holds the result of a fetch operation including the Retry-After header value.
+type FetchResult struct {
+	Body        []byte
+	Size        int
+	ContentType string
+	StatusCode  int
+	RetryAfter  time.Duration
+	Err         error
+}
+
+// Fetch performs an HTTP GET request and returns the response body, size, content type, and status code.
 func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, int, error) {
+	result := FetchWithDetails(targetUrl, timeout, proxyUrl, disableRedirects, insecure, maxSize, allowedContentTypes)
+	return result.Body, result.Size, result.ContentType, result.StatusCode, result.Err
+}
+
+// FetchWithDetails performs an HTTP GET request and returns a FetchResult with detailed information
+// including the Retry-After duration from the response headers.
+func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) FetchResult {
 	client := &http.Client{
 		Timeout: timeout,
 	}
@@ -29,7 +48,7 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 	if proxyUrl != "" {
 		proxy, err := url.Parse(proxyUrl)
 		if err != nil {
-			return nil, 0, "", 0, err
+			return FetchResult{Err: err}
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 		hasCustomTransport = true
@@ -47,29 +66,35 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 
 	req, err := http.NewRequest("GET", targetUrl, nil)
 	if err != nil {
-		return nil, 0, "", 0, err
+		return FetchResult{Err: err}
 	}
 	req.Header.Set("User-Agent", "DeepScanBot/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, 0, "", 0, err
+		return FetchResult{StatusCode: 0, Err: err}
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
-		return nil, 0, "", resp.StatusCode, fmt.Errorf("bad status code: %d", resp.StatusCode)
+	result := FetchResult{
+		StatusCode:  resp.StatusCode,
+		ContentType: resp.Header.Get("Content-Type"),
+		RetryAfter:  parseRetryAfter(resp.Header.Get("Retry-After")),
 	}
 
-	contentType := resp.Header.Get("Content-Type")
-	if !isAllowedContentType(contentType, allowedContentTypes) {
-		// Avoid downloading bodies that the user did not opt in to inspect.
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		result.Err = fmt.Errorf("bad status code: %d", resp.StatusCode)
+		return result
+	}
+
+	if !isAllowedContentType(result.ContentType, allowedContentTypes) {
 		contentLength := resp.ContentLength
-		size := int(contentLength)
-		if size < 0 {
-			size = 0
+		result.Size = int(contentLength)
+		if result.Size < 0 {
+			result.Size = 0
 		}
-		return nil, size, contentType, resp.StatusCode, nil
+		result.Body = nil
+		return result
 	}
 
 	var bodyReader io.Reader = resp.Body
@@ -79,14 +104,52 @@ func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedi
 
 	body, err := io.ReadAll(bodyReader)
 	if err != nil {
-		return nil, 0, contentType, resp.StatusCode, err
+		result.Err = err
+		return result
 	}
 
+	result.Size = len(body)
 	if maxSize > 0 && len(body) > maxSize*1024 {
-		return nil, len(body), contentType, resp.StatusCode, fmt.Errorf("page exceeds size limit (%d bytes)", len(body))
+		result.Err = fmt.Errorf("page exceeds size limit (%d bytes)", len(body))
+		return result
 	}
 
-	return body, len(body), contentType, resp.StatusCode, nil
+	result.Body = body
+	return result
+}
+
+// parseRetryAfter parses the Retry-After HTTP header and returns the duration to wait.
+// It supports both seconds (integer) and HTTP-date formats.
+func parseRetryAfter(val string) time.Duration {
+	if val == "" {
+		return 0
+	}
+	val = strings.TrimSpace(val)
+
+	// Try parsing as seconds (integer)
+	if seconds, err := strconv.Atoi(val); err == nil && seconds > 0 {
+		return time.Duration(seconds) * time.Second
+	}
+
+	// Try parsing as HTTP-date (e.g., Wed, 21 Oct 2015 07:28:00 GMT)
+	if t, err := time.Parse(time.RFC1123, val); err == nil {
+		wait := time.Until(t)
+		if wait > 0 {
+			return wait
+		}
+		return 0
+	}
+
+	// Try other common date formats
+	if t, err := time.Parse(http.TimeFormat, val); err == nil {
+		wait := time.Until(t)
+		if wait > 0 {
+			return wait
+		}
+		return 0
+	}
+
+	return 0
 }
 
 func isAllowedContentType(contentType string, allowedContentTypes []string) bool {

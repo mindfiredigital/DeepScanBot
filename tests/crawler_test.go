@@ -27,7 +27,7 @@ func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {
 		t.Fatalf("start crawler: %v", err)
 	}
 
-	want := []storage.URLEntry{{URL: server.URL, Source: "href", StatusCode: http.StatusOK}}
+	want := []storage.URLEntry{{URL: server.URL, Source: "href", StatusCode: http.StatusOK, ContentType: "text/html", Result: "passed", Attempts: 1}}
 	if !reflect.DeepEqual(results, want) {
 		t.Errorf("results = %#v, want %#v", results, want)
 	}
@@ -62,7 +62,7 @@ func TestCrawlerRespectsRobots(t *testing.T) {
 	}
 
 	disallowed := crawler.NewCrawler(server.URL+"/private", 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false)
-	if results, err := disallowed.Start(); err != nil || len(results) != 1 || results[0].Error != "disallowed by robots.txt" {
+	if results, err := disallowed.Start(); err != nil || len(results) != 1 || results[0].SkippedReason != "disallowed by robots.txt" {
 		t.Fatalf("disallowed crawl results = %#v, error = %v", results, err)
 	}
 	if got := privateRequests.Load(); got != 0 {
@@ -129,8 +129,8 @@ func TestCrawlerDoesNotFollowExternalHostsByDefault(t *testing.T) {
 	if got := externalRequests.Load(); got != 0 {
 		t.Errorf("external requests = %d, want 0", got)
 	}
-	if len(results) != 1 || results[0].URL != server.URL {
-		t.Errorf("results = %#v, want only %q", results, server.URL)
+	if len(results) != 2 || results[0].URL != server.URL || results[1].SkippedReason != "outside domain scope" {
+		t.Errorf("results = %#v, want root plus outside-domain skipped result", results)
 	}
 }
 
@@ -176,5 +176,131 @@ func TestCrawlerStoresFailedFetchResult(t *testing.T) {
 	result := results[0]
 	if result.StatusCode != http.StatusServiceUnavailable || result.Error == "" {
 		t.Errorf("failed result = %#v, want status %d and an error", result, http.StatusServiceUnavailable)
+	}
+}
+
+func TestCrawlerRetriesTransientFailures(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = w.Write([]byte("User-agent: *\nAllow: /\n"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		if attempts.Add(1) < 3 {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		_, _ = w.Write([]byte("<html></html>"))
+	}))
+	defer server.Close()
+
+	c := crawler.NewCrawlerWithOptions(server.URL, 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false, crawler.Options{
+		Retries:      2,
+		RetryBackoff: time.Millisecond,
+	})
+	report, err := c.StartReport()
+	if err != nil {
+		t.Fatalf("start crawler: %v", err)
+	}
+	if got := attempts.Load(); got != 3 {
+		t.Fatalf("attempts = %d, want 3", got)
+	}
+	if report.Summary.Passed != 1 || report.Summary.RetriedRequests != 1 || report.URLs[0].Attempts != 3 {
+		t.Fatalf("report = %#v, want passed retried request with 3 attempts", report)
+	}
+}
+
+func TestCrawlerPerHostConcurrencyLimit(t *testing.T) {
+	var active atomic.Int32
+	var maxActive atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = w.Write([]byte("User-agent: *\nAllow: /\n"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		current := active.Add(1)
+		for {
+			seen := maxActive.Load()
+			if current <= seen || maxActive.CompareAndSwap(seen, current) {
+				break
+			}
+		}
+		defer active.Add(-1)
+		time.Sleep(10 * time.Millisecond)
+		if r.URL.Path == "/" {
+			_, _ = w.Write([]byte(`<a href="/a">a</a><a href="/b">b</a><a href="/c">c</a>`))
+			return
+		}
+		_, _ = w.Write([]byte("<html></html>"))
+	}))
+	defer server.Close()
+
+	c := crawler.NewCrawlerWithOptions(server.URL, 1, time.Second, "", -1, false, false, true, 4, []string{"text/html"}, false, false, crawler.Options{
+		PerHostConcurrency: 1,
+	})
+	if _, err := c.StartReport(); err != nil {
+		t.Fatalf("start crawler: %v", err)
+	}
+	if got := maxActive.Load(); got > 1 {
+		t.Fatalf("max active requests = %d, want at most 1", got)
+	}
+}
+
+func TestCrawlerSitemapDiscovery(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/robots.txt":
+			_, _ = w.Write([]byte("User-agent: *\nAllow: /\n"))
+		case "/sitemap.xml":
+			w.Header().Set("Content-Type", "application/xml")
+			_, _ = w.Write([]byte(`<urlset><url><loc>` + "http://" + r.Host + `/from-sitemap</loc></url></urlset>`))
+		default:
+			w.Header().Set("Content-Type", "text/html")
+			_, _ = w.Write([]byte("<html></html>"))
+		}
+	}))
+	defer server.Close()
+
+	c := crawler.NewCrawlerWithOptions(server.URL, 1, time.Second, "", -1, false, false, true, 2, []string{"text/html"}, false, false, crawler.Options{
+		IncludeSitemap: true,
+	})
+	results, err := c.Start()
+	if err != nil {
+		t.Fatalf("start crawler: %v", err)
+	}
+	urls := make(map[string]bool)
+	for _, result := range results {
+		urls[result.URL] = true
+	}
+	if !urls[server.URL+"/from-sitemap"] {
+		t.Fatalf("results = %#v, want sitemap URL", results)
+	}
+}
+
+func TestCrawlerResumeAvoidsAlreadyStoredURL(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/robots.txt" {
+			requests.Add(1)
+		}
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html></html>"))
+	}))
+	defer server.Close()
+
+	c := crawler.NewCrawlerWithOptions(server.URL, 0, time.Second, "", -1, false, false, true, 1, []string{"text/html"}, false, false, crawler.Options{
+		ResumeEntries: []storage.URLEntry{{URL: server.URL, Source: "href", Result: "passed", StatusCode: http.StatusOK}},
+	})
+	report, err := c.StartReport()
+	if err != nil {
+		t.Fatalf("start crawler: %v", err)
+	}
+	if got := requests.Load(); got != 0 {
+		t.Fatalf("requests = %d, want 0", got)
+	}
+	if report.Summary.SkippedByDuplicate != 1 {
+		t.Fatalf("summary = %#v, want one duplicate skip", report.Summary)
 	}
 }

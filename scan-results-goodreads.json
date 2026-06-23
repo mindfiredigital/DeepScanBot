@@ -1,0 +1,1388 @@
+{
+  "urls": [
+    {
+      "url": "https://www.goodreads.com/quotes",
+      "source": "href",
+      "depth": 0,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/opensearch.xml",
+      "source": "link",
+      "depth": 1
+    },
+    { "url": "https://www.goodreads.com/search", "source": "form", "depth": 1 },
+    {
+      "url": "https://www.goodreads.com/quotes/tag",
+      "source": "form",
+      "depth": 1
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/search",
+      "source": "form",
+      "depth": 1
+    },
+    {
+      "url": "https://www.goodreads.com/review/list?ref=nav_mybooks",
+      "source": "href",
+      "depth": 1,
+      "error": "disallowed by robots.txt"
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=9",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-marilyn-monroe",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=2",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/god",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/young-adult",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/book/popular_by_date/2026/6?ref=nav_brws_newrels",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/relationships",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/infinity",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/science",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/explore",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/user/new",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/52037",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/hope",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/action",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/dance",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/new",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/choiceawards?ref=nav_brws_gca",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/group?ref=nav_comm",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/24499-be-the-change-that-you-wish-to-see-in-the",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/about/us",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/sleep",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/about/terms",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/1077326.J_K_Rowling",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/865-be-who-you-are-and-say-what-you-feel-because",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/motivation",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/2253-live-as-if-you-were-to-die-tomorrow-learn-as",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/life-quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 202
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/14816053",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/2236198",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/art",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/simile",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/61105.Dr_Seuss",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/?ref=nav_home",
+      "source": "href",
+      "depth": 1,
+      "status_code": 202
+    },
+    {
+      "url": "https://www.goodreads.com/genres/ebooks",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/943-darkness-cannot-drive-out-darkness-only-light-can-do-that",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/hurt",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/heaven",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/9810.Albert_Einstein",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/1744830.William_W_Purkey",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/16949-a-friend-is-someone-who-knows-all-about-you-and",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/self-deprecation",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/sing",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/14304-it-is-better-to-be-hated-for-what-you-are",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/graphic-novels",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/historical-fiction",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/sail",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/cookbooks",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/7901-you-know-you-re-in-love-when-you-can-t-fall-asleep",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/those-who-matter",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/fitting-in",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/humor",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/education",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/23684401",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/23924.Martin_Luther_King_Jr_",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/group?ref=nav_comm_groups",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/universe",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres?ref=nav_brws_genres",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/love",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=5",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/inspirational",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/lying",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/happiness",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/41658",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/13755.Marcus_Tullius_Cicero",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/6810684",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/romance",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/poetry",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/adprefs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/news?content_type=author_blogs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/disappointed",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/individuality",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/love-quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/list?ref=nav_brws_lists",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/forgiveness",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/user/sign_up",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/lies",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/attributed-no-source",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/travel",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/my_authors",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/advertisers",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/program",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/19884-be-yourself-everyone-else-is-already-taken",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/1244.Mark_Twain",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/christian",
+      "source": "href",
+      "depth": 1,
+      "error": "Get \"https://www.goodreads.com/genres/christian\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/motivational",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/life",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/2340-twenty-years-from-now-you-will-be-more-disappointed-by",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/957894.Albert_Camus",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/12379-i-believe-that-everything-happens-for-a-reason-people-change",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/2448-to-live-is-the-rarest-thing-in-the-world-most",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/carpe-diem",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/science",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/12080.Ralph_Waldo_Emerson",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/764-a-room-without-books-is-like-a-body-without-a",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/10554-friendship-is-born-at-the-moment-when-one-man",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/8630-i-m-selfish-impatient-and-a-little-insecure-i-make-mistakes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/book?ref=nav_brws",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/peace",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/time",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=3",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=4",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-mark-twain",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/children-s",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/stupidity",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/comics",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/worst",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/biography",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/5810891.Mahatma_Gandhi",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/friendship",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/actions",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/book?ref=nav_brws_explore",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?ref=nav_comm_quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/business",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/4583-always-forgive-your-enemies-nothing-annoys-them-so-much",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/darkness",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/5543-insanity-is-doing-the-same-thing-over-and-over-again",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/human-nature",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/mistakes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/news?ref=nav_brws_news",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/fiction",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/self-help",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/inspiration",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/light",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/5399-if-you-want-to-know-what-a-man-s-like-take",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/history",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/intelligence",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/114059.Elbert_Hubbard",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/drive-out",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/enemies",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/be-yourself",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/memoir",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/poetry",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/3503.Maya_Angelou",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/spirituality",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/out-of-control",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/music",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/33394.H_Jackson_Brown_Jr_",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/3046572",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/death",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-to-gandhi",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/2534-we-accept-the-love-we-think-we-deserve",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/dream",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/accomplishment",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/258-in-three-words-i-can-sum-up-everything-i-ve-learned",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/friend_quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/inspirational-quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-albert-camus",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=100",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/insanity",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/writing",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/books",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/science-fiction",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/list?id=false",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/ccbaprefs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/music",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/giveaway?ref=nav_brws_giveaways",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/confidence",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/1198-i-am-so-clever-that-sometimes-i-don-t-understand-a",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=7",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/9131-if-you-tell-the-truth-you-don-t-have-to-remember",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/66-so-many-books-so-little-time",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/dreams",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/wish",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/thriller",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/philosophy",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/4590-without-music-life-would-be-a-mistake",
+      "source": "href",
+      "depth": 1,
+      "error": "Get \"https://www.goodreads.com/quotes/4590-without-music-life-would-be-a-mistake\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)"
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/10123-you-ve-gotta-dance-like-there-s-nobody-watching-love-like-you-ll",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/strategy",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/ataraxy",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/change",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/learning",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/faith",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/ask_the_author?ref=nav_comm_askauthor",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/54-don-t-walk-in-front-of-me-i-may-not-follow",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/horror",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/truth",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/jobs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/1598-you-only-live-once-but-if-you-do-it-right",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/924-here-s-to-the-crazy-ones-the-misfits-the-rebels-the",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/22302.Frank_Zappa",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/hate",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/best",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/5768330.Bernard_M_Baruch",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/romance",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/toggle_mobile",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/876-to-be-yourself-in-a-world-that-is-constantly-trying",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-to-einstein",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/psychology",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/user/sign_in?returnurl=undefined",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-ben-franklin",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/non-fiction",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/sports",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=6",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/about/privacy",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=8",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/1938.Friedrich_Nietzsche",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/mystery",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/conformity",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/misattributed-dr-seuss",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/5934-i-ve-learned-that-people-will-forget-what-you-said-people",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/soul",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/7617.Andr_Gide",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/memory",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes?page=99",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/wisdom",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/friends",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/reality",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/7715.Robert_Frost",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/work/quotes/19234046",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/help?action_type=help_web_footer",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/recommendations?ref=nav_brws_recs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/blog/show/3130?ref=challenge_faves_eb",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/religion",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/5255891.Steve_Jobs",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/classics",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/259666.Mae_West",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/success",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/genres/fantasy",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/life-lessons",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/author/show/3565.Oscar_Wilde",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/942-two-things-are-infinite-the-universe-and-human-stupidity-and",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/motivational-quotes",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    },
+    {
+      "url": "https://www.goodreads.com/quotes/tag/disappointment",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200
+    }
+  ]
+}
