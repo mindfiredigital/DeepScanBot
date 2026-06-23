@@ -3,16 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 	"web-crawler-assignment/crawler"
+	"web-crawler-assignment/logger"
 	"web-crawler-assignment/storage"
 )
 
+var log = logger.New("info")
+
 func main() {
+	showHelp := flag.Bool("h", false, "Show this help message")
 	url := flag.String("url", "", "The starting URL")
 	depth := flag.Int("depth", 2, "The maximum depth to crawl")
 	timeout := flag.Int("timeout", 2, "The timeout for each request in seconds")
@@ -34,27 +36,6 @@ func main() {
 	crawlDelay := flag.Duration("delay", 0, "Politeness delay between requests to the same host, e.g. 500ms")
 	includeSitemap := flag.Bool("sitemap", false, "Discover and crawl URLs from the starting host's /sitemap.xml")
 	resume := flag.Bool("resume", false, "Load existing output file and avoid recrawling URLs already present")
-	showHelp := flag.Bool("h", false, "Show this help message")
-
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s web crawler:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nDeepScanBot is a feature-rich web crawler for scanning websites, extracting links,\n")
-		fmt.Fprintf(os.Stderr, "and generating comprehensive reports. It supports retries, rate-limiting,\n")
-		fmt.Fprintf(os.Stderr, "sitemap discovery, resume mode, robots.txt compliance, and more.\n\n")
-		fmt.Fprintf(os.Stderr, "Flags:\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  # Basic crawl\n")
-		fmt.Fprintf(os.Stderr, "  deepscanbot -url https://example.com -depth 2\n\n")
-		fmt.Fprintf(os.Stderr, "  # Crawl with JSON output, 3 retries, and 500ms delay\n")
-		fmt.Fprintf(os.Stderr, "  deepscanbot -url https://example.com -json -retries 3 -retry-backoff 500ms -delay 1s\n\n")
-		fmt.Fprintf(os.Stderr, "  # Cross-domain crawl with sitemap discovery\n")
-		fmt.Fprintf(os.Stderr, "  deepscanbot -url https://example.com -cross-domain -sitemap -concurrency 10 -host-concurrency 2\n\n")
-		fmt.Fprintf(os.Stderr, "  # Resume an interrupted crawl\n")
-		fmt.Fprintf(os.Stderr, "  deepscanbot -url https://example.com -resume -output my_results.json -json\n\n")
-		fmt.Fprintf(os.Stderr, "  # Advanced: Goodreads crawl with rate-limit handling\n")
-		fmt.Fprintf(os.Stderr, "  deepscanbot -url https://www.goodreads.com -depth 2 -delay 2s -retries 5 -retry-backoff 2s -concurrency 2 -host-concurrency 1\n")
-	}
 
 	flag.Parse()
 
@@ -65,14 +46,14 @@ func main() {
 
 	startURL, err := validateStartURL(*url)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf(err.Error())
 	}
 
 	timeoutDuration := time.Duration(*timeout) * time.Second
 
 	outputFilename, err := buildOutputFilename(*output, *jsonOutput)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf(err.Error())
 	}
 	var resumeEntries []storage.URLEntry
 	if *resume {
@@ -80,7 +61,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("load resume file: %v", err)
 		}
-		log.Printf("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
+		log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 	}
 
 	c := crawler.NewCrawlerWithOptions(startURL, *depth, timeoutDuration, *proxy, *maxSize, *disableRedirects, *insecure, *uniqueUrls, *concurrency, parseContentTypes(*contentTypes), *ignoreRobots, *crossDomain, crawler.Options{
@@ -105,57 +86,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("write results: %v", err)
 	}
-	log.Printf("Results written to %s", outputFilename)
-
-	// Clearer result summary in CLI output
-	printResultSummary(report)
-}
-
-func printResultSummary(report storage.CrawlReport) {
-	sep := strings.Repeat("=", 60)
-	fmt.Fprintf(os.Stderr, "\n%s\n", sep)
-	fmt.Fprintf(os.Stderr, "  CRAWL RESULT SUMMARY\n")
-	fmt.Fprintf(os.Stderr, "%s\n", sep)
-	fmt.Fprintf(os.Stderr, "  Target URL:     %s\n", report.StartURL)
-	fmt.Fprintf(os.Stderr, "  Output file:    %s\n", report.OutputFile)
-	fmt.Fprintf(os.Stderr, "  Duration:       %d ms\n", report.DurationMS)
-	fmt.Fprintf(os.Stderr, "%s\n", sep)
-	fmt.Fprintf(os.Stderr, "  Total URLs:     %d\n", report.Summary.Total)
-	fmt.Fprintf(os.Stderr, "  ── Passed:      %d\n", report.Summary.Passed)
-	fmt.Fprintf(os.Stderr, "  ── Failed:      %d\n", report.Summary.Failed)
-	fmt.Fprintf(os.Stderr, "  ── Discovered:  %d\n", report.Summary.Discovered)
-	fmt.Fprintf(os.Stderr, "  ── Skipped:     %d\n", report.Summary.Skipped)
-	fmt.Fprintf(os.Stderr, "%s\n", sep)
-	if report.Summary.Skipped > 0 {
-		fmt.Fprintf(os.Stderr, "  Skip Breakdown:\n")
-		if report.Summary.SkippedByRobots > 0 {
-			fmt.Fprintf(os.Stderr, "    • Robots.txt:    %d\n", report.Summary.SkippedByRobots)
-		}
-		if report.Summary.SkippedByDomain > 0 {
-			fmt.Fprintf(os.Stderr, "    • Domain scope:  %d\n", report.Summary.SkippedByDomain)
-		}
-		if report.Summary.SkippedByDuplicate > 0 {
-			fmt.Fprintf(os.Stderr, "    • Duplicate:     %d\n", report.Summary.SkippedByDuplicate)
-		}
-		if report.Summary.SkippedByContent > 0 {
-			fmt.Fprintf(os.Stderr, "    • Content-type:  %d\n", report.Summary.SkippedByContent)
-		}
-		if report.Summary.SkippedByDepth > 0 {
-			fmt.Fprintf(os.Stderr, "    • Max depth:     %d\n", report.Summary.SkippedByDepth)
-		}
-		if report.Summary.SkippedByOther > 0 {
-			fmt.Fprintf(os.Stderr, "    • Other:         %d\n", report.Summary.SkippedByOther)
-		}
-		fmt.Fprintf(os.Stderr, "%s\n", sep)
-	}
-	if report.Summary.RetriedRequests > 0 {
-		fmt.Fprintf(os.Stderr, "  Retries:        %d requests were retried\n", report.Summary.RetriedRequests)
-	}
-	fmt.Fprintf(os.Stderr, "  Max Depth:      %d\n", report.Summary.MaxDepth)
-	if len(report.Skipped) > 0 {
-		fmt.Fprintf(os.Stderr, "  Skipped URLs:   %d (separate list in output)\n", len(report.Skipped))
-	}
-	fmt.Fprintf(os.Stderr, "%s\n\n", sep)
+	log.Infof("Results written to %s", outputFilename)
 }
 
 func buildOutputFilename(baseName string, jsonOutput bool) (string, error) {

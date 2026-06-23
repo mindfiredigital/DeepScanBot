@@ -46,30 +46,30 @@ go run main.go -url <starting_url> [options]
 
 ### Flags
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `-url` | string | (required) | The starting URL for the crawler |
-| `-depth` | int | 2 | Maximum depth to crawl |
-| `-timeout` | int | 2 | Timeout for each HTTP request in seconds |
-| `-proxy` | string | "" | Proxy URL. Example: `http://127.0.0.1:8080` |
-| `-json` | bool | false | Output results in JSON format |
-| `-size` | int | -1 | Page size limit in KB (-1 = no limit) |
-| `-dr` | bool | false | Disable following HTTP redirects |
-| `-s` | bool | false | Show the source of the URL (e.g., href, script, img) |
-| `-insecure` | bool | false | Disable TLS verification |
-| `-u` | bool | false | Ensure unique URLs are crawled |
-| `-concurrency` | int | 0 | Maximum concurrent request workers (0 = CPU cores) |
-| `-host-concurrency` | int | 0 | Maximum concurrent requests per host (0 = uses -concurrency) |
-| `-content-types` | string | "text/html" | Comma-separated MIME types to download. Supports wildcards like `image/*` |
-| `-output` | string | "crawler_results" | Output filename without extension |
-| `-ignore-robots` | bool | false | Ignore robots.txt crawl restrictions |
-| `-cross-domain` | bool | false | Follow links to hosts other than the starting URL |
-| `-retries` | int | 0 | Number of retry attempts for transient fetch failures |
-| `-retry-backoff` | duration | 1s | Base retry backoff duration (e.g., 500ms, 2s) |
-| `-delay` | duration | 0 | Politeness delay between requests to the same host (e.g., 500ms) |
-| `-sitemap` | bool | false | Discover and crawl URLs from the starting host's `/sitemap.xml` |
-| `-resume` | bool | false | Load existing output file and avoid recrawling URLs already present |
-| `-h` | bool | false | Show help message |
+| Flag                | Type     | Default           | Description                                                               |
+| ------------------- | -------- | ----------------- | ------------------------------------------------------------------------- |
+| `-url`              | string   | (required)        | The starting URL for the crawler                                          |
+| `-depth`            | int      | 2                 | Maximum depth to crawl                                                    |
+| `-timeout`          | int      | 2                 | Timeout for each HTTP request in seconds                                  |
+| `-proxy`            | string   | ""                | Proxy URL. Example: `http://127.0.0.1:8080`                               |
+| `-json`             | bool     | false             | Output results in JSON format                                             |
+| `-size`             | int      | -1                | Page size limit in KB (-1 = no limit)                                     |
+| `-dr`               | bool     | false             | Disable following HTTP redirects                                          |
+| `-s`                | bool     | false             | Show the source of the URL (e.g., href, script, img)                      |
+| `-insecure`         | bool     | false             | Disable TLS verification                                                  |
+| `-u`                | bool     | false             | Ensure unique URLs are crawled                                            |
+| `-concurrency`      | int      | 0                 | Maximum concurrent request workers (0 = CPU cores)                        |
+| `-host-concurrency` | int      | 0                 | Maximum concurrent requests per host (0 = uses -concurrency)              |
+| `-content-types`    | string   | "text/html"       | Comma-separated MIME types to download. Supports wildcards like `image/*` |
+| `-output`           | string   | "crawler_results" | Output filename without extension                                         |
+| `-ignore-robots`    | bool     | false             | Ignore robots.txt crawl restrictions                                      |
+| `-cross-domain`     | bool     | false             | Follow links to hosts other than the starting URL                         |
+| `-retries`          | int      | 0                 | Number of retry attempts for transient fetch failures                     |
+| `-retry-backoff`    | duration | 1s                | Base retry backoff duration (e.g., 500ms, 2s)                             |
+| `-delay`            | duration | 0                 | Politeness delay between requests to the same host (e.g., 500ms)          |
+| `-sitemap`          | bool     | false             | Discover and crawl URLs from the starting host's `/sitemap.xml`           |
+| `-resume`           | bool     | false             | Load existing output file and avoid recrawling URLs already present       |
+| `-h`                | bool     | false             | Show help message                                                         |
 
 ### Examples
 
@@ -233,17 +233,17 @@ The JSON report contains a detailed summary and two URL lists:
 
 ### URLEntry Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `url` | string | The discovered or crawled URL |
-| `source` | string | Where the URL was found: `href`, `script`, `img`, `link`, `iframe`, `form`, `sitemap` |
-| `depth` | int | Crawl depth at which the URL was found |
-| `status_code` | int | HTTP status code (only for fetched URLs) |
-| `content_type` | string | MIME type from the response (only for fetched URLs) |
-| `result` | string | `passed` (fetched successfully), `failed` (fetch error), `skipped` (not fetched), `discovered` (found but not fetched) |
-| `error` | string | Error message if the fetch failed |
+| Field            | Type   | Description                                                                                                                            |
+| ---------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`            | string | The discovered or crawled URL                                                                                                          |
+| `source`         | string | Where the URL was found: `href`, `script`, `img`, `link`, `iframe`, `form`, `sitemap`                                                  |
+| `depth`          | int    | Crawl depth at which the URL was found                                                                                                 |
+| `status_code`    | int    | HTTP status code (only for fetched URLs)                                                                                               |
+| `content_type`   | string | MIME type from the response (only for fetched URLs)                                                                                    |
+| `result`         | string | `passed` (fetched successfully), `failed` (fetch error), `skipped` (not fetched), `discovered` (found but not fetched)                 |
+| `error`          | string | Error message if the fetch failed                                                                                                      |
 | `skipped_reason` | string | Reason for skipping: `disallowed by robots.txt`, `outside domain scope`, `duplicate`, `content type not allowed`, `max depth exceeded` |
-| `attempts` | int | Number of fetch attempts (1+; >1 means retries were used) |
+| `attempts`       | int    | Number of fetch attempts (1+; >1 means retries were used)                                                                              |
 
 ### Text Output (default)
 
@@ -264,23 +264,29 @@ Text output shows one URL per line with optional metadata in brackets:
 The project is divided into the following packages:
 
 ### Package: `main`
+
 The entry point. Processes command-line arguments, initializes the Crawler, and outputs results.
 
 ### Package: `crawler`
+
 Core crawling logic: manages state, visited URLs, crawl depth, robots.txt compliance, concurrency control, retries, sitemap discovery, and rate-limit handling.
 
 ### Package: `fetcher`
+
 HTTP fetch layer. Handles requests with proxy, TLS, redirect options, and parses `Retry-After` headers for rate-limit backoff.
 
 ### Package: `parser`
+
 HTML parsing and link extraction using `golang.org/x/net/html`. Extracts links from `<a>`, `<script>`, `<img>`, `<link>`, `<iframe>`, and `<form>` elements.
 
 ### Package: `storage`
+
 Result storage and report generation. Supports JSON and text output, resume file loading, and comprehensive summary statistics.
 
 ## Error Handling
 
 The crawler handles:
+
 - Invalid URLs or unsupported protocols
 - HTTP errors (4xx, 5xx)
 - Timeout and connection errors

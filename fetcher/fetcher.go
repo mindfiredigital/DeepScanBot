@@ -4,13 +4,14 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"web-crawler-assignment/logger"
 )
 
 // FetchResult holds the result of a fetch operation including the Retry-After header value.
@@ -55,7 +56,8 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 	}
 
 	if insecure {
-		log.Println("-insecure flag, disable TLS verification")
+		fetcherLog := logger.New("info")
+		fetcherLog.Infof("-insecure flag, disable TLS verification")
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		hasCustomTransport = true
 	}
