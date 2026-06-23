@@ -12,7 +12,11 @@ import (
 	"web-crawler-assignment/logger"
 	"web-crawler-assignment/parser"
 	"web-crawler-assignment/storage"
+	"web-crawler-assignment/types"
 )
+
+// Options alias for backward compatibility.
+type Options = types.CrawlerOptions
 
 // Crawler orchestrates the web crawling process with concurrency control,
 // rate limiting, robots.txt compliance, and retry logic.
@@ -50,16 +54,6 @@ type Crawler struct {
 	skipped          atomic.Int64
 	deepestDepth     atomic.Int64
 	log              *logger.Logger
-}
-
-// Options holds optional crawler configuration.
-type Options struct {
-	Retries            int
-	RetryBackoff       time.Duration
-	CrawlDelay         time.Duration
-	PerHostConcurrency int
-	IncludeSitemap     bool
-	ResumeEntries      []storage.URLEntry
 }
 
 // NewCrawler creates a Crawler with default options.

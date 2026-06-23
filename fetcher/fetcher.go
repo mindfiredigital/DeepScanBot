@@ -12,17 +12,11 @@ import (
 	"time"
 
 	"web-crawler-assignment/logger"
+	"web-crawler-assignment/types"
 )
 
-// FetchResult holds the result of a fetch operation including the Retry-After header value.
-type FetchResult struct {
-	Body        []byte
-	Size        int
-	ContentType string
-	StatusCode  int
-	RetryAfter  time.Duration
-	Err         error
-}
+// FetchResult alias for backward compatibility.
+type FetchResult = types.FetchResult
 
 // Fetch performs an HTTP GET request and returns the response body, size, content type, and status code.
 func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, int, error) {

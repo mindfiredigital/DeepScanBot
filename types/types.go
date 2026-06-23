@@ -2,6 +2,8 @@ package types
 
 import "time"
 
+// ---- Crawl data types ----
+
 // URLEntry is one crawled URL and, when known, the HTML element that referenced it.
 type URLEntry struct {
 	URL           string `json:"url"`
@@ -45,4 +47,28 @@ type CrawlReport struct {
 	Summary    CrawlSummary `json:"summary"`
 	URLs       []URLEntry   `json:"urls"`
 	Skipped    []URLEntry   `json:"skipped,omitempty"`
+}
+
+// ---- Fetcher types ----
+
+// FetchResult holds the result of a fetch operation including the Retry-After header value.
+type FetchResult struct {
+	Body        []byte
+	Size        int
+	ContentType string
+	StatusCode  int
+	RetryAfter  time.Duration
+	Err         error
+}
+
+// ---- Crawler types ----
+
+// CrawlerOptions holds optional crawler configuration.
+type CrawlerOptions struct {
+	Retries            int
+	RetryBackoff       time.Duration
+	CrawlDelay         time.Duration
+	PerHostConcurrency int
+	IncludeSitemap     bool
+	ResumeEntries      []URLEntry
 }
