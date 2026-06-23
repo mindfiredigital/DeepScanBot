@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 	"web-crawler-assignment/storage"
 )
 
@@ -27,7 +28,7 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read output: %v", err)
 	}
-	if got, want := string(contents), "https://example.com/current\n"; got != want {
+	if got, want := string(contents), "https://example.com/current [result=discovered]\n"; got != want {
 		t.Errorf("output = %q, want %q", got, want)
 	}
 }
@@ -47,7 +48,7 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read output: %v", err)
 	}
-	if got, want := string(contents), "https://example.com/one\nhttps://example.com/two\n"; got != want {
+	if got, want := string(contents), "https://example.com/one [result=discovered]\nhttps://example.com/two [result=discovered]\n"; got != want {
 		t.Errorf("output = %q, want %q", got, want)
 	}
 }
@@ -74,8 +75,8 @@ func TestJSONOutputUsesStructuredURLEntries(t *testing.T) {
 		t.Fatalf("unmarshal JSON output: %v", err)
 	}
 	want := []storage.URLEntry{
-		{URL: "https://example.com/about", Source: "href"},
-		{URL: "https://example.com/standalone"},
+		{URL: "https://example.com/about", Source: "href", Result: "discovered"},
+		{URL: "https://example.com/standalone", Result: "discovered"},
 	}
 	if !reflect.DeepEqual(output.URLs, want) {
 		t.Errorf("URLs = %#v, want %#v", output.URLs, want)
@@ -104,6 +105,20 @@ func TestResultsReturnsSnapshot(t *testing.T) {
 	}
 }
 
+func TestMarkVisitedIfNewReportsWhetherURLWasReserved(t *testing.T) {
+	pageStorage := storage.NewPageStorage()
+
+	if !pageStorage.MarkVisitedIfNew("https://example.com/once") {
+		t.Fatal("first reservation returned false, want true")
+	}
+	if pageStorage.MarkVisitedIfNew("https://example.com/once") {
+		t.Fatal("second reservation returned true, want false")
+	}
+	if !pageStorage.HasVisited("https://example.com/once") {
+		t.Fatal("reserved URL was not marked visited")
+	}
+}
+
 func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
 	pageStorage := storage.NewPageStorage()
 	pageStorage.StoreSource("https://example.com/ok", "href")
@@ -112,8 +127,8 @@ func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
 
 	results := pageStorage.Results()
 	want := []storage.URLEntry{
-		{URL: "https://example.com/ok", Source: "href", Depth: 1, StatusCode: 200},
-		{URL: "https://example.com/timeout", Depth: 2, Error: "context deadline exceeded"},
+		{URL: "https://example.com/ok", Source: "href", Depth: 1, StatusCode: 200, Result: "passed"},
+		{URL: "https://example.com/timeout", Depth: 2, Result: "failed", Error: "context deadline exceeded"},
 	}
 	if !reflect.DeepEqual(results, want) {
 		t.Fatalf("stored results = %#v, want %#v", results, want)
@@ -146,9 +161,24 @@ func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read text output: %v", err)
 	}
-	wantText := "[href] https://example.com/ok [status=200]\n" +
-		"https://example.com/timeout [error=context deadline exceeded]\n"
+	wantText := "[href] https://example.com/ok [status=200] [result=passed]\n" +
+		"https://example.com/timeout [result=failed] [error=context deadline exceeded]\n"
 	if got := string(textContents); got != wantText {
 		t.Errorf("text output = %q, want %q", got, wantText)
+	}
+}
+
+func TestJSONReportSeparatesSkippedEntries(t *testing.T) {
+	entries := []storage.URLEntry{
+		{URL: "https://example.com/ok", Result: "passed", StatusCode: 200},
+		{URL: "https://example.com/private", Result: "skipped", SkippedReason: "disallowed by robots.txt"},
+	}
+
+	report := storage.NewCrawlReport("https://example.com", "", time.Now(), time.Now(), entries)
+	if report.Summary.Total != 2 || report.Summary.Passed != 1 || report.Summary.SkippedByRobots != 1 {
+		t.Fatalf("summary = %#v, want one passed and one robots skip", report.Summary)
+	}
+	if len(report.URLs) != 1 || len(report.Skipped) != 1 {
+		t.Fatalf("report URLs/skipped = %d/%d, want 1/1", len(report.URLs), len(report.Skipped))
 	}
 }

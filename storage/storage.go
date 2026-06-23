@@ -1,13 +1,17 @@
 package storage
 
 import (
-	"bufio"
-	"encoding/json"
-	"os"
-	"strconv"
 	"sync"
+
+	"web-crawler-assignment/types"
 )
 
+// Type aliases for backward compatibility — actual definitions are in types/types.go.
+type URLEntry = types.URLEntry
+type CrawlReport = types.CrawlReport
+type CrawlSummary = types.CrawlSummary
+
+// PageStorage tracks visited URLs and stores crawl results with thread safety.
 type PageStorage struct {
 	visitedUrls map[string]bool
 	urlSource   map[string]string
@@ -15,15 +19,7 @@ type PageStorage struct {
 	results     []URLEntry
 }
 
-// URLEntry is one crawled URL and, when known, the HTML element that referenced it.
-type URLEntry struct {
-	URL        string `json:"url"`
-	Source     string `json:"source,omitempty"`
-	Depth      int    `json:"depth"`
-	StatusCode int    `json:"status_code,omitempty"`
-	Error      string `json:"error,omitempty"`
-}
-
+// NewPageStorage creates a new PageStorage.
 func NewPageStorage() *PageStorage {
 	return &PageStorage{
 		visitedUrls: make(map[string]bool),
@@ -32,88 +28,100 @@ func NewPageStorage() *PageStorage {
 	}
 }
 
+// SeedEntries pre-populates the storage with existing entries (e.g., for resume mode).
+func (ps *PageStorage) SeedEntries(entries []URLEntry) {
+	ps.mutex.Lock()
+	defer ps.mutex.Unlock()
+	for _, entry := range entries {
+		if entry.URL == "" {
+			continue
+		}
+		ps.visitedUrls[entry.URL] = true
+		if entry.Source != "" {
+			ps.urlSource[entry.URL] = entry.Source
+		}
+		ps.results = append(ps.results, entry)
+	}
+}
+
+// MarkVisited marks a URL as visited.
 func (ps *PageStorage) MarkVisited(url string) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 	ps.visitedUrls[url] = true
 }
 
+// MarkVisitedIfNew marks a URL as visited and returns true if it wasn't already visited.
+func (ps *PageStorage) MarkVisitedIfNew(url string) bool {
+	ps.mutex.Lock()
+	defer ps.mutex.Unlock()
+	if ps.visitedUrls[url] {
+		return false
+	}
+	ps.visitedUrls[url] = true
+	return true
+}
+
+// HasVisited checks if a URL has been visited.
 func (ps *PageStorage) HasVisited(url string) bool {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 	return ps.visitedUrls[url]
 }
 
+// StoreSource associates a URL with its source.
 func (ps *PageStorage) StoreSource(url, source string) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
 	ps.urlSource[url] = source
 }
 
+// StoreEntry stores a URL entry, automatically populating the source if available.
+func (ps *PageStorage) StoreEntry(entry URLEntry) {
+	ps.mutex.Lock()
+	defer ps.mutex.Unlock()
+	if entry.Source == "" {
+		entry.Source = ps.urlSource[entry.URL]
+	}
+	ps.results = append(ps.results, entry)
+}
+
+// StoreContent records a discovered URL with zero values (backwards-compatible test helper).
 func (ps *PageStorage) StoreContent(url string) {
 	ps.StoreResult(url, 0, 0, "")
 }
 
 // StoreResult records one discovered or fetched URL and its crawl outcome.
 func (ps *PageStorage) StoreResult(url string, depth, statusCode int, resultError string) {
-	ps.mutex.Lock()
-	defer ps.mutex.Unlock()
-
-	ps.results = append(ps.results, URLEntry{
+	result := "passed"
+	if statusCode == 0 && resultError == "" {
+		result = "discovered"
+	}
+	if resultError != "" {
+		result = "failed"
+	}
+	ps.StoreEntry(URLEntry{
 		URL:        url,
-		Source:     ps.urlSource[url],
 		Depth:      depth,
 		StatusCode: statusCode,
+		Result:     result,
 		Error:      resultError,
 	})
 }
 
-// Results returns a snapshot of the URLs collected during a crawl.
+// StoreSkipped records a skipped URL (backwards-compatible test helper).
+func (ps *PageStorage) StoreSkipped(url string, depth int, reason string) {
+	ps.StoreEntry(URLEntry{
+		URL:           url,
+		Depth:         depth,
+		Result:        "skipped",
+		SkippedReason: reason,
+	})
+}
+
+// Results returns a snapshot of all stored URL entries.
 func (ps *PageStorage) Results() []URLEntry {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
-
 	return append([]URLEntry(nil), ps.results...)
-}
-
-func WriteJSONToFile(filename string, entries []URLEntry) error {
-	data := struct {
-		URLs []URLEntry `json:"urls"`
-	}{
-		URLs: entries,
-	}
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(filename, jsonData, 0644)
-}
-
-func WriteTextToFile(filename string, entries []URLEntry, showSource bool) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
-	for _, entry := range entries {
-		line := entry.URL
-		if showSource && entry.Source != "" {
-			line = "[" + entry.Source + "] " + line
-		}
-		if entry.StatusCode != 0 {
-			line += " [status=" + strconv.Itoa(entry.StatusCode) + "]"
-		}
-		if entry.Error != "" {
-			line += " [error=" + entry.Error + "]"
-		}
-		if _, err := writer.WriteString(line + "\n"); err != nil {
-			return err
-		}
-	}
-
-	return writer.Flush()
 }
