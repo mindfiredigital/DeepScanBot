@@ -29,7 +29,9 @@ _Link any related issue(s) with references to help reviewers understand the cont
 
 _Please ensure the following have been completed before submitting:_
 
-- [ ] I have formatted my code using `gofmt`.
+- [ ] I have formatted my code using `gofumpt`.
+- [ ] I have managed imports using `goimports` or `gci`.
+- [ ] I have run linter using `golangci-lint`.
 - [ ] I have run tests using `go test ./...`.
 - [ ] I have updated the documentation as needed.
 - [ ] I have added or updated tests for the changes in this PR.

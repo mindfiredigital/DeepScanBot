@@ -41,11 +41,13 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 ### Installation
 
 1. Install dependencies:
+
    ```bash
    go mod download
    ```
 
 2. Build the project:
+
    ```bash
    go build -o deepscanbot .
    ```
@@ -95,6 +97,7 @@ Feature requests are welcome! Please use the [feature request template](.github/
 ### Contributing Code
 
 1. Create a new branch from `development`:
+
    ```bash
    git checkout development
    git pull upstream development
@@ -106,17 +109,20 @@ Feature requests are welcome! Please use the [feature request template](.github/
 3. Add or update tests for your changes
 
 4. Ensure all tests pass:
+
    ```bash
    go test ./...
    ```
 
 5. Commit your changes with a clear message:
+
    ```bash
    git add .
    git commit -m "feat: add feature X"
    ```
 
 6. Push to your fork:
+
    ```bash
    git push origin feat/your-feature-name
    ```
@@ -135,6 +141,7 @@ Feature requests are welcome! Please use the [feature request template](.github/
 ### PR Title Convention
 
 Use conventional commits format:
+
 - `feat:` - New features
 - `fix:` - Bug fixes
 - `docs:` - Documentation changes
@@ -147,9 +154,15 @@ Use conventional commits format:
 ### Go Code Style
 
 - Follow [Effective Go](https://go.dev/doc/effective_go) guidelines
-- Use `gofmt` to format your code:
+- Use `gofumpt` (strict gofmt) to format your code:
   ```bash
-  gofmt -w .
+  gofumpt -w .
+  ```
+- Use `goimports` or `gci` for import management:
+  ```bash
+  goimports -w .
+  # or
+  gci write .
   ```
 - Follow the [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
@@ -164,7 +177,14 @@ Use conventional commits format:
 
 ### Commit Messages
 
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Use `cocogitto` or a custom commit hook to validate commit messages:
+```bash
+# Using cocogitto
+cog commit
+
+# Or use lefthook for pre-commit hooks
+lefthook install
+```
 
 ```
 <type>(<scope>): <subject>
@@ -175,6 +195,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 ```
 
 **Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation changes
@@ -184,6 +205,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - `chore` - Maintenance tasks
 
 **Example:**
+
 ```
 feat(crawler): add support for custom user agents
 
@@ -199,16 +221,19 @@ Closes #42
 ### Running Tests
 
 Run all tests:
+
 ```bash
 go test ./...
 ```
 
 Run tests for a specific package:
+
 ```bash
 go test ./crawler
 ```
 
 Run tests with verbose output:
+
 ```bash
 go test -v ./...
 ```
