@@ -11,16 +11,20 @@ func (c *Crawler) buildTransport() *http.Transport {
 	if c.proxyUrl == "" && !c.insecure {
 		return nil
 	}
+
 	transport := &http.Transport{}
+
 	if c.proxyUrl != "" {
 		proxy, err := url.Parse(c.proxyUrl)
 		if err == nil {
 			transport.Proxy = http.ProxyURL(proxy)
 		}
 	}
+
 	if c.insecure {
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
+
 	return transport
 }
 
@@ -32,8 +36,10 @@ func (c *Crawler) httpClient() *http.Client {
 			return http.ErrUseLastResponse
 		}
 	}
+
 	if transport := c.buildTransport(); transport != nil {
 		client.Transport = transport
 	}
+
 	return client
 }

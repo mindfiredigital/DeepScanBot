@@ -3,15 +3,16 @@ package tests
 import (
 	"reflect"
 	"testing"
+
 	"web-crawler-assignment/parser"
 )
 
 func TestParse(t *testing.T) {
 	tests := []struct {
-		name       string
-		body       []byte
-		baseURL    string
-		wantLinks  map[string]string
+		name      string
+		body      []byte
+		baseURL   string
+		wantLinks map[string]string
 	}{
 		{
 			name:    "resolve relative href and src",
@@ -29,10 +30,10 @@ func TestParse(t *testing.T) {
 				</html>
 			`),
 			wantLinks: map[string]string{
-				"https://example.com/about":         "href",
-				"https://example.com/blog/contact":   "href",
-				"https://example.com/home":          "href",
-				"https://other.com/page":            "href",
+				"https://example.com/about":            "href",
+				"https://example.com/blog/contact":     "href",
+				"https://example.com/home":             "href",
+				"https://other.com/page":               "href",
 				"https://example.com/static/js/app.js": "script",
 				"https://example.com/blog/relative.js": "script",
 			},
@@ -70,10 +71,10 @@ func TestParse(t *testing.T) {
 				</html>
 			`),
 			wantLinks: map[string]string{
-				"https://example.com/styles.css":   "link",
+				"https://example.com/styles.css":    "link",
 				"https://example.com/blog/logo.png": "img",
-				"https://example.com/embed/video":  "iframe",
-				"https://example.com/submit-form":  "form",
+				"https://example.com/embed/video":   "iframe",
+				"https://example.com/submit-form":   "form",
 			},
 		},
 		{

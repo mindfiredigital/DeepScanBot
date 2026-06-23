@@ -9,7 +9,7 @@ import (
 
 func Parse(body []byte, baseURLStr string) map[string]string {
 	links := make(map[string]string)
-	
+
 	base, err := url.Parse(baseURLStr)
 	if err != nil {
 		return links
@@ -21,12 +21,14 @@ func Parse(body []byte, baseURLStr string) map[string]string {
 	}
 
 	links = extractLinks(htmlData, base, links)
+
 	return links
 }
 
 func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[string]string {
 	if n.Type == html.ElementNode {
 		var targetAttr string
+
 		var sourceType string
 
 		switch n.Data {
@@ -57,6 +59,7 @@ func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[stri
 					if val == "" || strings.HasPrefix(val, "#") {
 						continue
 					}
+
 					if u, err := url.Parse(val); err == nil {
 						resolved := base.ResolveReference(u)
 						if resolved.Scheme == "http" || resolved.Scheme == "https" {
@@ -67,9 +70,10 @@ func extractLinks(n *html.Node, base *url.URL, links map[string]string) map[stri
 			}
 		}
 	}
+
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		links = extractLinks(c, base, links)
 	}
+
 	return links
 }
-

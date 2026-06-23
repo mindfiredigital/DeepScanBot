@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
 	"web-crawler-assignment/fetcher"
 )
 
@@ -23,14 +24,17 @@ func TestFetchProxyAndInsecure(t *testing.T) {
 func TestFetchHTTPStatus(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+
 		if r.URL.Path == "/404" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+
 		if r.URL.Path == "/500" {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("success"))
 	}))
@@ -41,9 +45,11 @@ func TestFetchHTTPStatus(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Expected success for 200 OK, got error: %v", err)
 	}
+
 	if string(body) != "success" {
 		t.Errorf("Expected body 'success', got '%s'", string(body))
 	}
+
 	if statusCode != http.StatusOK {
 		t.Errorf("status code = %d, want %d", statusCode, http.StatusOK)
 	}
@@ -53,6 +59,7 @@ func TestFetchHTTPStatus(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error for 404 status code, got nil")
 	}
+
 	if statusCode != http.StatusNotFound {
 		t.Errorf("status code = %d, want %d", statusCode, http.StatusNotFound)
 	}
@@ -66,6 +73,7 @@ func TestFetchHTTPStatus(t *testing.T) {
 
 func TestFetchUserAgent(t *testing.T) {
 	var capturedUserAgent string
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedUserAgent = r.Header.Get("User-Agent")
 		w.Header().Set("Content-Type", "text/html")
@@ -97,17 +105,20 @@ func TestFetchConfiguredContentTypes(t *testing.T) {
 		default:
 			w.Header().Set("Content-Type", "text/plain")
 		}
+
 		_, _ = w.Write([]byte(r.URL.Path))
 	}))
 	defer server.Close()
 
 	allowed := []string{"text/html", "application/pdf", "image/*"}
+
 	for _, path := range []string{"/html", "/pdf", "/jpeg"} {
 		t.Run(path, func(t *testing.T) {
 			body, _, _, _, err := fetcher.Fetch(server.URL+path, 2*time.Second, "", false, false, -1, allowed)
 			if err != nil {
 				t.Fatalf("fetch configured content type: %v", err)
 			}
+
 			if got, want := string(body), path; got != want {
 				t.Errorf("body = %q, want %q", got, want)
 			}
@@ -118,6 +129,7 @@ func TestFetchConfiguredContentTypes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fetch unconfigured content type: %v", err)
 	}
+
 	if body != nil {
 		t.Errorf("unconfigured content type body = %q, want nil", body)
 	}

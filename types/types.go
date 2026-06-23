@@ -17,22 +17,22 @@ type URLEntry struct {
 
 // CrawlSummary holds aggregate statistics from a crawl.
 type CrawlSummary struct {
-	Total               int            `json:"total"`
-	Passed              int            `json:"passed"`
-	Failed              int            `json:"failed"`
-	Skipped             int            `json:"skipped"`
-	Discovered          int            `json:"discovered"`
-	SkippedByRobots     int            `json:"skipped_by_robots"`
-	SkippedByDomain     int            `json:"skipped_by_domain"`
-	SkippedByDuplicate  int            `json:"skipped_by_duplicate"`
-	SkippedByContent    int            `json:"skipped_by_content_type"`
-	SkippedByDepth      int            `json:"skipped_by_depth"`
-	SkippedByOther      int            `json:"skipped_by_other"`
-	RetriedRequests     int            `json:"retried_requests"`
-	MaxDepth            int            `json:"max_depth"`
-	URLsByStatusCode    map[int]int    `json:"urls_by_status_code,omitempty"`
-	SkippedByReason     map[string]int `json:"skipped_by_reason,omitempty"`
-	RetryDistribution   map[int]int    `json:"retry_distribution,omitempty"`
+	Total              int            `json:"total"`
+	Passed             int            `json:"passed"`
+	Failed             int            `json:"failed"`
+	Skipped            int            `json:"skipped"`
+	Discovered         int            `json:"discovered"`
+	SkippedByRobots    int            `json:"skipped_by_robots"`
+	SkippedByDomain    int            `json:"skipped_by_domain"`
+	SkippedByDuplicate int            `json:"skipped_by_duplicate"`
+	SkippedByContent   int            `json:"skipped_by_content_type"`
+	SkippedByDepth     int            `json:"skipped_by_depth"`
+	SkippedByOther     int            `json:"skipped_by_other"`
+	RetriedRequests    int            `json:"retried_requests"`
+	MaxDepth           int            `json:"max_depth"`
+	URLsByStatusCode   map[int]int    `json:"urls_by_status_code,omitempty"`
+	SkippedByReason    map[string]int `json:"skipped_by_reason,omitempty"`
+	RetryDistribution  map[int]int    `json:"retry_distribution,omitempty"`
 }
 
 // CrawlReport contains the complete output of a crawl session.

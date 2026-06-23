@@ -15,6 +15,7 @@ type Logger struct {
 // New creates a new Logger that writes to stderr with the given level.
 func New(level string) *Logger {
 	var l slog.Level
+
 	switch level {
 	case "debug":
 		l = slog.LevelDebug

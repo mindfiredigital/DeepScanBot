@@ -1,0 +1,41 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.go"
+      run: golangci-lint run --fix --timeout 5m || true
+    format:
+      glob: "*.go"
+      run: gofumpt -w {staged_files}
+    imports:
+      glob: "*.go"
+      run: gci write -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" {staged_files}
+    conventional-commit:
+      run: |
+        if [ -n "${LEFTHOOK_COMMIT_MESSAGE}" ]; then
+          if ! echo "${LEFTHOOK_COMMIT_MESSAGE}" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert|merge)(\(.+\))?: .{1,100}"; then
+            echo "Error: Commit message does not follow Conventional Commits format."
+            echo "Format: <type>(<scope>): <subject>"
+            echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert, merge"
+            exit 1
+          fi
+        fi
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        if ! grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert|merge)(\(.+\))?: .{1,100}" {1}; then
+          echo "Error: Commit message does not follow Conventional Commits format."
+          echo "Format: <type>(<scope>): <subject>"
+          echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert, merge"
+          exit 1
+        fi
+
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: go test ./...
+    lint-all:
+      run: golangci-lint run --timeout 5m

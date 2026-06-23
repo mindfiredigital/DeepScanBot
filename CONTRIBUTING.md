@@ -46,13 +46,28 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
    go mod download
    ```
 
-2. Build the project:
+2. Install development tools:
+
+   ```bash
+   go install mvdan.cc/gofumpt@latest
+   go install github.com/daixiang0/gci@latest
+   go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+   go install github.com/evilmartians/lefthook@latest
+   ```
+
+3. Install git hooks:
+
+   ```bash
+   lefthook install
+   ```
+
+4. Build the project:
 
    ```bash
    go build -o deepscanbot .
    ```
 
-3. Verify the installation:
+5. Verify the installation:
    ```bash
    ./deepscanbot -h
    ```

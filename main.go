@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
 	"web-crawler-assignment/crawler"
 	"web-crawler-assignment/logger"
 	"web-crawler-assignment/storage"
@@ -55,12 +56,14 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+
 	var resumeEntries []storage.URLEntry
 	if *resume {
 		resumeEntries, err = storage.ReadEntriesFromFile(outputFilename)
 		if err != nil {
 			log.Fatalf("load resume file: %v", err)
 		}
+
 		log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 	}
 
@@ -77,15 +80,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
+
 	allEntries := append(append([]storage.URLEntry{}, report.URLs...), report.Skipped...)
+
 	if *jsonOutput {
 		err = storage.WriteJSONReportToFile(outputFilename, report)
 	} else {
 		err = storage.WriteTextToFile(outputFilename, allEntries, *showSource)
 	}
+
 	if err != nil {
 		log.Fatalf("write results: %v", err)
 	}
+
 	log.Infof("Results written to %s", outputFilename)
 }
 
@@ -94,9 +101,11 @@ func buildOutputFilename(baseName string, jsonOutput bool) (string, error) {
 	if baseName == "" {
 		return "", fmt.Errorf("output filename must not be empty")
 	}
+
 	if jsonOutput {
 		return baseName + ".json", nil
 	}
+
 	return baseName + ".txt", nil
 }
 
@@ -116,10 +125,12 @@ func validateStartURL(rawURL string) (string, error) {
 
 func parseContentTypes(value string) []string {
 	var contentTypes []string
+
 	for _, contentType := range strings.Split(value, ",") {
 		if contentType = strings.TrimSpace(contentType); contentType != "" {
 			contentTypes = append(contentTypes, contentType)
 		}
 	}
+
 	return contentTypes
 }

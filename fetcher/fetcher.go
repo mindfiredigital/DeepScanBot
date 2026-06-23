@@ -45,6 +45,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 		if err != nil {
 			return FetchResult{Err: err}
 		}
+
 		transport.Proxy = http.ProxyURL(proxy)
 		hasCustomTransport = true
 	}
@@ -52,6 +53,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 	if insecure {
 		fetcherLog := logger.New("info")
 		fetcherLog.Infof("-insecure flag, disable TLS verification")
+
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		hasCustomTransport = true
 	}
@@ -64,6 +66,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 	if err != nil {
 		return FetchResult{Err: err}
 	}
+
 	req.Header.Set("User-Agent", "DeepScanBot/1.0")
 
 	resp, err := client.Do(req)
@@ -85,11 +88,14 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 
 	if !isAllowedContentType(result.ContentType, allowedContentTypes) {
 		contentLength := resp.ContentLength
+
 		result.Size = int(contentLength)
 		if result.Size < 0 {
 			result.Size = 0
 		}
+
 		result.Body = nil
+
 		return result
 	}
 
@@ -111,6 +117,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 	}
 
 	result.Body = body
+
 	return result
 }
 
@@ -120,6 +127,7 @@ func parseRetryAfter(val string) time.Duration {
 	if val == "" {
 		return 0
 	}
+
 	val = strings.TrimSpace(val)
 
 	// Try parsing as seconds (integer)
@@ -133,6 +141,7 @@ func parseRetryAfter(val string) time.Duration {
 		if wait > 0 {
 			return wait
 		}
+
 		return 0
 	}
 
@@ -142,6 +151,7 @@ func parseRetryAfter(val string) time.Duration {
 		if wait > 0 {
 			return wait
 		}
+
 		return 0
 	}
 
@@ -153,6 +163,7 @@ func isAllowedContentType(contentType string, allowedContentTypes []string) bool
 	if err != nil {
 		mediaType = strings.TrimSpace(strings.Split(contentType, ";")[0])
 	}
+
 	if len(allowedContentTypes) == 0 {
 		return strings.EqualFold(mediaType, "text/html")
 	}
@@ -162,9 +173,11 @@ func isAllowedContentType(contentType string, allowedContentTypes []string) bool
 		if allowed == "" {
 			continue
 		}
+
 		if allowed == "*/*" || strings.EqualFold(mediaType, allowed) {
 			return true
 		}
+
 		if strings.HasSuffix(allowed, "/*") && strings.HasPrefix(strings.ToLower(mediaType), strings.TrimSuffix(allowed, "*")) {
 			return true
 		}
