@@ -1,7 +1,8 @@
-package storage
+package types
 
 import "time"
 
+// URLEntry is one crawled URL and, when known, the HTML element that referenced it.
 type URLEntry struct {
 	URL           string `json:"url"`
 	Source        string `json:"source,omitempty"`
@@ -14,6 +15,7 @@ type URLEntry struct {
 	Attempts      int    `json:"attempts,omitempty"`
 }
 
+// CrawlSummary holds aggregate statistics from a crawl.
 type CrawlSummary struct {
 	Total               int            `json:"total"`
 	Passed              int            `json:"passed"`
@@ -33,6 +35,7 @@ type CrawlSummary struct {
 	RetryDistribution   map[int]int    `json:"retry_distribution,omitempty"`
 }
 
+// CrawlReport contains the complete output of a crawl session.
 type CrawlReport struct {
 	StartURL   string       `json:"start_url,omitempty"`
 	OutputFile string       `json:"output_file,omitempty"`

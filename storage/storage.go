@@ -2,7 +2,14 @@ package storage
 
 import (
 	"sync"
+
+	"web-crawler-assignment/types"
 )
+
+// Type aliases for backward compatibility — actual definitions are in types/types.go.
+type URLEntry = types.URLEntry
+type CrawlReport = types.CrawlReport
+type CrawlSummary = types.CrawlSummary
 
 // PageStorage tracks visited URLs and stores crawl results with thread safety.
 type PageStorage struct {
