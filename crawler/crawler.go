@@ -194,7 +194,7 @@ func (c *Crawler) crawl(url string, depth int) {
 
 // handleDiscoveredLink processes a discovered link from a parsed page.
 func (c *Crawler) handleDiscoveredLink(targetURL, source string, depth int) {
-	if source == "href" || source == "iframe" || source == "sitemap" {
+	if source == "href" || source == "iframe" || source == "sitemap" || source == "script" || source == "img" || source == "link" || source == "form" {
 		c.enqueueCrawl(targetURL, source, depth)
 		return
 	}

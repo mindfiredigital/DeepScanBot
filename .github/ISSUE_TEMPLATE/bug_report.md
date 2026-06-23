@@ -1,9 +1,9 @@
 ---
 name: Bug Report
 about: Create a report to help us improve DeepScanBot
-title: '[BUG] '
+title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## Bug Description
@@ -43,6 +43,7 @@ If applicable, add screenshots or log output to help explain your problem.
 ## Additional Context
 
 Add any other context about the problem here, such as:
+
 - Target URL(s) where the issue occurs
 - Specific content types affected
 - Any workarounds you've tried
