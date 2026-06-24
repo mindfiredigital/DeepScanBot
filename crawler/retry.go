@@ -17,13 +17,16 @@ func (c *Crawler) retryDelay(attempt int, statusCode int, retryAfter time.Durati
 	if retryAfter > 0 {
 		return retryAfter
 	}
+
 	delay := time.Duration(attempt) * c.retryBackoff
 	if statusCode == http.StatusTooManyRequests {
 		delay *= 3
 	}
+
 	if delay > 30*time.Second {
 		delay = 30 * time.Second
 	}
+
 	return delay
 }
 
@@ -33,17 +36,20 @@ func (c *Crawler) fetchWithRetry(targetURL string) ([]byte, int, string, int, in
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		c.waitForHostDelay(targetURL)
 
-		result := fetcher.FetchWithDetails(targetURL, c.timeout, c.proxyUrl, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
+		result := fetcher.FetchWithDetails(targetURL, c.timeout, c.proxyURL, c.disableRedirects, c.insecure, c.maxSize, c.contentTypes)
 
 		if result.Err == nil {
 			return result.Body, result.Size, result.ContentType, result.StatusCode, attempt, nil
 		}
+
 		if attempt == maxAttempts || !isRetryable(result.StatusCode) {
 			return result.Body, result.Size, result.ContentType, result.StatusCode, attempt, result.Err
 		}
+
 		delay := c.retryDelay(attempt, result.StatusCode, result.RetryAfter)
 		c.log.Infof("Retrying URL %s after %s because status=%d error=%v", targetURL, delay, result.StatusCode, result.Err)
 		time.Sleep(delay)
 	}
+
 	return nil, 0, "", 0, maxAttempts, nil
 }

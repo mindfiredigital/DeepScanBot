@@ -8,11 +8,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/temoto/robotstxt"
 	"web-crawler-assignment/logger"
 	"web-crawler-assignment/parser"
 	"web-crawler-assignment/storage"
 	"web-crawler-assignment/types"
+
+	"github.com/temoto/robotstxt"
 )
 
 // Options alias for backward compatibility.
@@ -24,7 +25,7 @@ type Crawler struct {
 	startURL         string
 	maxDepth         int
 	timeout          time.Duration
-	proxyUrl         string
+	proxyURL         string
 	maxSize          int
 	disableRedirects bool
 	insecure         bool
@@ -57,33 +58,39 @@ type Crawler struct {
 }
 
 // NewCrawler creates a Crawler with default options.
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
-	return NewCrawlerWithOptions(startURL, maxDepth, timeout, proxyUrl, maxSize, disableRedirects, insecure, uniqueUrls, concurrency, contentTypes, ignoreRobots, crossDomain, Options{})
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyURL string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
+	return NewCrawlerWithOptions(startURL, maxDepth, timeout, proxyURL, maxSize, disableRedirects, insecure, uniqueUrls, concurrency, contentTypes, ignoreRobots, crossDomain, Options{})
 }
 
 // NewCrawlerWithOptions creates a Crawler with the given options.
-func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool, options Options) *Crawler {
+func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration, proxyURL string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool, options Options) *Crawler {
 	if concurrency <= 0 {
 		concurrency = runtime.GOMAXPROCS(0)
 	}
+
 	if options.PerHostConcurrency <= 0 {
 		options.PerHostConcurrency = concurrency
 	}
+
 	if options.Retries < 0 {
 		options.Retries = 0
 	}
+
 	if options.RetryBackoff <= 0 {
 		options.RetryBackoff = time.Second
 	}
+
 	if maxDepth < 0 {
 		maxDepth = 0
 	}
 
 	parsedStartURL, _ := url.Parse(startURL)
 	seedOrigin := ""
+
 	if parsedStartURL != nil && parsedStartURL.Scheme != "" && parsedStartURL.Host != "" {
 		seedOrigin = parsedStartURL.Scheme + "://" + parsedStartURL.Host
 	}
+
 	ps := storage.NewPageStorage()
 	ps.SeedEntries(options.ResumeEntries)
 
@@ -91,7 +98,7 @@ func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration,
 		startURL:         startURL,
 		maxDepth:         maxDepth,
 		timeout:          timeout,
-		proxyUrl:         proxyUrl,
+		proxyURL:         proxyURL,
 		maxSize:          maxSize,
 		disableRedirects: disableRedirects,
 		insecure:         insecure,
@@ -123,25 +130,30 @@ func (c *Crawler) Start() ([]storage.URLEntry, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return append(append([]storage.URLEntry{}, report.URLs...), report.Skipped...), nil
 }
 
 // StartReport runs the crawl and returns a detailed report.
 func (c *Crawler) StartReport() (storage.CrawlReport, error) {
 	startedAt := time.Now()
+
 	c.log.Infof("Starting crawl: url=%s max-depth=%d concurrency=%d per-host-concurrency=%d retries=%d delay=%s sitemap=%t resumed=%d",
 		c.startURL, c.maxDepth, cap(c.sem), c.perHostLimit, c.retries, c.crawlDelay, c.includeSitemap, len(c.resumeEntries))
 
 	c.enqueueCrawl(c.startURL, "href", 0)
+
 	if c.includeSitemap && c.maxDepth > 0 {
 		c.enqueueSitemapURLs()
 	}
+
 	c.wg.Wait()
 
 	finishedAt := time.Now()
 	report := storage.NewCrawlReport(c.startURL, "", startedAt, finishedAt, c.pageStorage.Results())
 	c.log.Infof("Crawl finished: url=%s total=%d passed=%d failed=%d skipped=%d duration=%s",
 		c.startURL, report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped, finishedAt.Sub(startedAt).Round(time.Millisecond))
+
 	return report, nil
 }
 
@@ -154,6 +166,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		c.skipped.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, Result: "skipped", SkippedReason: "disallowed by robots.txt"})
 		c.log.Infof("Skipping %s because robots.txt disallows it", url)
+
 		return
 	}
 
@@ -165,6 +178,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		c.failed.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "failed", Error: err.Error(), Attempts: attempts})
 		c.log.Errorf("Error fetching URL %s: %v", url, err)
+
 		return
 	}
 
@@ -172,6 +186,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		c.failed.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "failed", Error: "page exceeds configured size limit", Attempts: attempts})
 		c.log.Infof("Skipping URL %s due to size limit (%d bytes > %d bytes)", url, size, c.maxSize*1024)
+
 		return
 	}
 
@@ -179,6 +194,7 @@ func (c *Crawler) crawl(url string, depth int) {
 		c.skipped.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "skipped", SkippedReason: "content type not allowed", Attempts: attempts})
 		c.log.Infof("Skipping %s because content type %q is not allowed", url, contentType)
+
 		return
 	}
 
@@ -198,14 +214,17 @@ func (c *Crawler) handleDiscoveredLink(targetURL, source string, depth int) {
 		c.enqueueCrawl(targetURL, source, depth)
 		return
 	}
+
 	if !c.shouldFollow(targetURL) {
 		c.storeSkipped(targetURL, source, depth, "outside domain scope")
 		return
 	}
+
 	if c.uniqueUrls && !c.pageStorage.MarkVisitedIfNew(targetURL) {
 		c.storeSkipped(targetURL, source, depth, "duplicate")
 		return
 	}
+
 	c.pageStorage.StoreSource(targetURL, source)
 	c.pageStorage.StoreEntry(storage.URLEntry{URL: targetURL, Depth: depth, Result: "discovered"})
 }
@@ -216,16 +235,20 @@ func (c *Crawler) enqueueCrawl(targetURL, source string, depth int) {
 		c.storeSkipped(targetURL, source, depth, "max depth exceeded")
 		return
 	}
+
 	if !c.shouldFollow(targetURL) {
 		c.storeSkipped(targetURL, source, depth, "outside domain scope")
 		return
 	}
+
 	if c.uniqueUrls && !c.pageStorage.MarkVisitedIfNew(targetURL) {
 		c.storeSkipped(targetURL, source, depth, "duplicate")
 		return
 	}
+
 	c.pageStorage.StoreSource(targetURL, source)
 	c.wg.Add(1)
+
 	go c.crawl(targetURL, depth)
 }
 
@@ -241,7 +264,9 @@ func (c *Crawler) shouldFollow(targetURL string) bool {
 	if c.crossDomain {
 		return true
 	}
+
 	parsedURL, err := url.Parse(targetURL)
+
 	return err == nil && parsedURL.Host == c.seedHost
 }
 
@@ -251,6 +276,7 @@ func (c *Crawler) hostKey(targetURL string) string {
 	if err != nil || parsedURL.Host == "" {
 		return targetURL
 	}
+
 	return parsedURL.Host
 }
 
@@ -259,6 +285,7 @@ func (c *Crawler) acquireRequestSlots(targetURL string) func() {
 	hostSem := c.hostSemaphore(targetURL)
 	hostSem <- struct{}{}
 	c.sem <- struct{}{}
+
 	return func() {
 		<-c.sem
 		<-hostSem
@@ -270,9 +297,11 @@ func (c *Crawler) hostSemaphore(targetURL string) chan struct{} {
 	host := c.hostKey(targetURL)
 	c.hostMu.Lock()
 	defer c.hostMu.Unlock()
+
 	if c.hostSemaphores[host] == nil {
 		c.hostSemaphores[host] = make(chan struct{}, c.perHostLimit)
 	}
+
 	return c.hostSemaphores[host]
 }
 
@@ -281,9 +310,11 @@ func (c *Crawler) waitForHostDelay(targetURL string) {
 	if c.crawlDelay <= 0 {
 		return
 	}
+
 	host := c.hostKey(targetURL)
 	c.hostMu.Lock()
 	defer c.hostMu.Unlock()
+
 	if last := c.hostLastRequest[host]; !last.IsZero() {
 		if wait := c.crawlDelay - time.Since(last); wait > 0 {
 			c.hostMu.Unlock()
@@ -291,6 +322,7 @@ func (c *Crawler) waitForHostDelay(targetURL string) {
 			c.hostMu.Lock()
 		}
 	}
+
 	c.hostLastRequest[host] = time.Now()
 }
 

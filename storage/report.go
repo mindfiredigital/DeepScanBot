@@ -26,16 +26,20 @@ func NewCrawlReport(startURL, outputFile string, startedAt, finishedAt time.Time
 		if entry.Depth > report.Summary.MaxDepth {
 			report.Summary.MaxDepth = entry.Depth
 		}
+
 		if entry.Attempts > 1 {
 			report.Summary.RetriedRequests++
 			report.Summary.RetryDistribution[entry.Attempts]++
 		}
+
 		if entry.StatusCode > 0 {
 			report.Summary.URLsByStatusCode[entry.StatusCode]++
 		}
+
 		switch entry.Result {
 		case "skipped":
 			report.Summary.Skipped++
+
 			switch entry.SkippedReason {
 			case "disallowed by robots.txt":
 				report.Summary.SkippedByRobots++
@@ -50,6 +54,7 @@ func NewCrawlReport(startURL, outputFile string, startedAt, finishedAt time.Time
 			default:
 				report.Summary.SkippedByOther++
 			}
+
 			report.Summary.SkippedByReason[entry.SkippedReason]++
 			report.Skipped = append(report.Skipped, entry)
 		case "failed":
@@ -63,17 +68,22 @@ func NewCrawlReport(startURL, outputFile string, startedAt, finishedAt time.Time
 			report.URLs = append(report.URLs, entry)
 		}
 	}
+
 	if len(report.Skipped) == 0 {
 		report.Skipped = nil
 	}
+
 	if len(report.Summary.URLsByStatusCode) == 0 {
 		report.Summary.URLsByStatusCode = nil
 	}
+
 	if len(report.Summary.SkippedByReason) == 0 {
 		report.Summary.SkippedByReason = nil
 	}
+
 	if len(report.Summary.RetryDistribution) == 0 {
 		report.Summary.RetryDistribution = nil
 	}
+
 	return report
 }

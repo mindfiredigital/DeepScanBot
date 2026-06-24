@@ -7,9 +7,11 @@ import (
 )
 
 // Type aliases for backward compatibility — actual definitions are in types/types.go.
-type URLEntry = types.URLEntry
-type CrawlReport = types.CrawlReport
-type CrawlSummary = types.CrawlSummary
+type (
+	URLEntry     = types.URLEntry
+	CrawlReport  = types.CrawlReport
+	CrawlSummary = types.CrawlSummary
+)
 
 // PageStorage tracks visited URLs and stores crawl results with thread safety.
 type PageStorage struct {
@@ -32,14 +34,17 @@ func NewPageStorage() *PageStorage {
 func (ps *PageStorage) SeedEntries(entries []URLEntry) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
 	for _, entry := range entries {
 		if entry.URL == "" {
 			continue
 		}
+
 		ps.visitedUrls[entry.URL] = true
 		if entry.Source != "" {
 			ps.urlSource[entry.URL] = entry.Source
 		}
+
 		ps.results = append(ps.results, entry)
 	}
 }
@@ -55,10 +60,13 @@ func (ps *PageStorage) MarkVisited(url string) {
 func (ps *PageStorage) MarkVisitedIfNew(url string) bool {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
 	if ps.visitedUrls[url] {
 		return false
 	}
+
 	ps.visitedUrls[url] = true
+
 	return true
 }
 
@@ -66,6 +74,7 @@ func (ps *PageStorage) MarkVisitedIfNew(url string) bool {
 func (ps *PageStorage) HasVisited(url string) bool {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
 	return ps.visitedUrls[url]
 }
 
@@ -80,9 +89,11 @@ func (ps *PageStorage) StoreSource(url, source string) {
 func (ps *PageStorage) StoreEntry(entry URLEntry) {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
 	if entry.Source == "" {
 		entry.Source = ps.urlSource[entry.URL]
 	}
+
 	ps.results = append(ps.results, entry)
 }
 
@@ -97,9 +108,11 @@ func (ps *PageStorage) StoreResult(url string, depth, statusCode int, resultErro
 	if statusCode == 0 && resultError == "" {
 		result = "discovered"
 	}
+
 	if resultError != "" {
 		result = "failed"
 	}
+
 	ps.StoreEntry(URLEntry{
 		URL:        url,
 		Depth:      depth,
@@ -123,5 +136,6 @@ func (ps *PageStorage) StoreSkipped(url string, depth int, reason string) {
 func (ps *PageStorage) Results() []URLEntry {
 	ps.mutex.Lock()
 	defer ps.mutex.Unlock()
+
 	return append([]URLEntry(nil), ps.results...)
 }

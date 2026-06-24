@@ -1,0 +1,86 @@
+run:
+  timeout: 5m
+  tests: true
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/mindfiredigital/DeepScanBot)
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/mindfiredigital/DeepScanBot
+  govet:
+    check-shadowing: true
+  misspell:
+    locale: US
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+      - name: package-comments
+        disabled: true
+      - name: var-naming
+        disabled: false
+      - name: indent-error-flow
+        disabled: false
+  staticcheck:
+    checks:
+      - all
+  unused:
+    go: "1.22"
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - dogsled
+    - dupl
+    - errcheck
+    - errchkjson
+    - errorlint
+    - exhaustive
+    - gci
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - prealloc
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - wsl
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - noctx
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
