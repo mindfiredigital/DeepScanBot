@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"web-crawler-assignment/logger"
-	"web-crawler-assignment/types"
+	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/types"
 )
 
 // FetchResult alias for backward compatibility.

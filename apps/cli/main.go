@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"web-crawler-assignment/crawler"
-	"web-crawler-assignment/logger"
-	"web-crawler-assignment/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
+	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
 var log = logger.New("info")

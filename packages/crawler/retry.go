@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"web-crawler-assignment/fetcher"
+	"github.com/mindfiredigital/DeepScanBot/packages/fetcher"
 )
 
 // isRetryable checks if a status code indicates a retryable error.
