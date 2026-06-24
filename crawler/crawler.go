@@ -8,12 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/temoto/robotstxt"
 	"web-crawler-assignment/logger"
 	"web-crawler-assignment/parser"
 	"web-crawler-assignment/storage"
 	"web-crawler-assignment/types"
-
-	"github.com/temoto/robotstxt"
 )
 
 // Options alias for backward compatibility.
