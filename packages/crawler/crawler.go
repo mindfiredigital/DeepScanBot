@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/temoto/robotstxt"
+
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/parser"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
