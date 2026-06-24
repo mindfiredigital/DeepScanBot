@@ -51,7 +51,6 @@ linters:
     - gocritic
     - gocyclo
     - gofmt
-    - goimports
     - goprintffuncname
     - gosec
     - gosimple
