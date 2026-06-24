@@ -3,7 +3,7 @@ package storage
 import (
 	"sync"
 
-	"web-crawler-assignment/types"
+	"github.com/mindfiredigital/DeepScanBot/packages/types"
 )
 
 // Type aliases for backward compatibility — actual definitions are in types/types.go.

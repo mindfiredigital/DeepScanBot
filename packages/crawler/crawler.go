@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/temoto/robotstxt"
-	"web-crawler-assignment/logger"
-	"web-crawler-assignment/parser"
-	"web-crawler-assignment/storage"
-	"web-crawler-assignment/types"
+	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/parser"
+	"github.com/mindfiredigital/DeepScanBot/packages/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/types"
 )
 
 // Options alias for backward compatibility.

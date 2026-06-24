@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"web-crawler-assignment/parser"
+	"github.com/mindfiredigital/DeepScanBot/packages/parser"
 )
 
 func TestParse(t *testing.T) {

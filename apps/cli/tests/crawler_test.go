@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"web-crawler-assignment/crawler"
-	"web-crawler-assignment/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
+	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
 func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {

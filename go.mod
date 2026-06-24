@@ -1,4 +1,4 @@
-module web-crawler-assignment
+module github.com/mindfiredigital/DeepScanBot
 
 go 1.22.4
 

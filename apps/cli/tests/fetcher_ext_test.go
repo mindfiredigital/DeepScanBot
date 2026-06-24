@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"web-crawler-assignment/fetcher"
+	"github.com/mindfiredigital/DeepScanBot/packages/fetcher"
 )
 
 func TestFetchWithDetailsReturnsRetryAfter(t *testing.T) {

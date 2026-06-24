@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"web-crawler-assignment/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
 func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
