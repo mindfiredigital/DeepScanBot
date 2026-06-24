@@ -24,6 +24,7 @@ func WriteJSONReportToFile(filename string, report CrawlReport) error {
 		return err
 	}
 
+	//nolint:gosec // Output report files are intended to be world-readable
 	return os.WriteFile(filename, jsonData, 0o644)
 }
 

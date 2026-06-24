@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -19,14 +20,14 @@ import (
 type FetchResult = types.FetchResult
 
 // Fetch performs an HTTP GET request and returns the response body, size, content type, and status code.
-func Fetch(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, int, error) {
-	result := FetchWithDetails(targetUrl, timeout, proxyUrl, disableRedirects, insecure, maxSize, allowedContentTypes)
+func Fetch(targetURL string, timeout time.Duration, proxyURL string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) ([]byte, int, string, int, error) {
+	result := FetchWithDetails(targetURL, timeout, proxyURL, disableRedirects, insecure, maxSize, allowedContentTypes)
 	return result.Body, result.Size, result.ContentType, result.StatusCode, result.Err
 }
 
 // FetchWithDetails performs an HTTP GET request and returns a FetchResult with detailed information
 // including the Retry-After duration from the response headers.
-func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) FetchResult {
+func FetchWithDetails(targetURL string, timeout time.Duration, proxyURL string, disableRedirects bool, insecure bool, maxSize int, allowedContentTypes []string) FetchResult {
 	client := &http.Client{
 		Timeout: timeout,
 	}
@@ -40,8 +41,8 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 	transport := &http.Transport{}
 	hasCustomTransport := false
 
-	if proxyUrl != "" {
-		proxy, err := url.Parse(proxyUrl)
+	if proxyURL != "" {
+		proxy, err := url.Parse(proxyURL)
 		if err != nil {
 			return FetchResult{Err: err}
 		}
@@ -54,6 +55,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 		fetcherLog := logger.New("info")
 		fetcherLog.Infof("-insecure flag, disable TLS verification")
 
+		//nolint:gosec // InsecureSkipVerify is intentional for the -insecure flag
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		hasCustomTransport = true
 	}
@@ -62,7 +64,7 @@ func FetchWithDetails(targetUrl string, timeout time.Duration, proxyUrl string, 
 		client.Transport = transport
 	}
 
-	req, err := http.NewRequest("GET", targetUrl, nil)
+	req, err := http.NewRequestWithContext(context.Background(), "GET", targetURL, nil)
 	if err != nil {
 		return FetchResult{Err: err}
 	}

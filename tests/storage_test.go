@@ -14,6 +14,7 @@ import (
 func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	const filename = "crawler_results.txt"
 
+	//nolint:govet // testing.Chdir requires Go 1.24+, using available version
 	t.Chdir(t.TempDir())
 
 	if err := os.WriteFile(filename, []byte("result from a previous crawl\n"), 0o644); err != nil {
@@ -40,6 +41,7 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	const filename = "crawler_results.txt"
 
+	//nolint:govet // testing.Chdir requires Go 1.24+, using available version
 	t.Chdir(t.TempDir())
 
 	pageStorage := storage.NewPageStorage()
@@ -166,8 +168,8 @@ func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
 		URLs []storage.URLEntry `json:"urls"`
 	}
 
-	if err := json.Unmarshal(jsonContents, &jsonOutput); err != nil {
-		t.Fatalf("unmarshal JSON output: %v", err)
+	if unmarshalErr := json.Unmarshal(jsonContents, &jsonOutput); unmarshalErr != nil {
+		t.Fatalf("unmarshal JSON output: %v", unmarshalErr)
 	}
 
 	if !reflect.DeepEqual(jsonOutput.URLs, want) {
@@ -175,13 +177,13 @@ func TestResultOutcomeIsPersistedToJSONAndText(t *testing.T) {
 	}
 
 	textFilename := filepath.Join(dir, "results.txt")
-	if err := storage.WriteTextToFile(textFilename, results, true); err != nil {
-		t.Fatalf("write text output: %v", err)
+	if writeErr := storage.WriteTextToFile(textFilename, results, true); writeErr != nil {
+		t.Fatalf("write text output: %v", writeErr)
 	}
 
-	textContents, err := os.ReadFile(textFilename)
-	if err != nil {
-		t.Fatalf("read text output: %v", err)
+	textContents, readErr := os.ReadFile(textFilename)
+	if readErr != nil {
+		t.Fatalf("read text output: %v", readErr)
 	}
 
 	wantText := "[href] https://example.com/ok [status=200] [result=passed]\n" +

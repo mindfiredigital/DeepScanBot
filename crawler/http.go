@@ -8,20 +8,21 @@ import (
 
 // buildTransport creates an http.Transport with proxy and TLS settings, or nil if none are needed.
 func (c *Crawler) buildTransport() *http.Transport {
-	if c.proxyUrl == "" && !c.insecure {
+	if c.proxyURL == "" && !c.insecure {
 		return nil
 	}
 
 	transport := &http.Transport{}
 
-	if c.proxyUrl != "" {
-		proxy, err := url.Parse(c.proxyUrl)
+	if c.proxyURL != "" {
+		proxy, err := url.Parse(c.proxyURL)
 		if err == nil {
 			transport.Proxy = http.ProxyURL(proxy)
 		}
 	}
 
 	if c.insecure {
+		//nolint:gosec // InsecureSkipVerify is intentional for the -insecure flag
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 

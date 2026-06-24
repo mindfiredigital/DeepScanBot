@@ -10,13 +10,15 @@ import (
 )
 
 func TestFetchProxyAndInsecure(t *testing.T) {
-	_, _, _, _, err := fetcher.Fetch("https://localhost:9999", 1*time.Second, "http://127.0.0.1:8080", false, true, -1, nil)
-	if err == nil {
+	//nolint:dogsled // Fetch returns multiple values, only error is relevant for this test
+	_, _, _, _, fetchErr := fetcher.Fetch("https://localhost:9999", 1*time.Second, "http://127.0.0.1:8080", false, true, -1, nil)
+	if fetchErr == nil {
 		t.Log("Expected connection error or timeout, since proxy/server doesn't exist, got nil error")
 	}
 
-	_, _, _, _, err = fetcher.Fetch("https://example.com", 1*time.Second, "::invalid-proxy-url", false, true, -1, nil)
-	if err == nil {
+	//nolint:dogsled // Fetch returns multiple values, only error is relevant for this test
+	_, _, _, _, fetchErr = fetcher.Fetch("https://example.com", 1*time.Second, "::invalid-proxy-url", false, true, -1, nil)
+	if fetchErr == nil {
 		t.Fatal("Expected error on invalid proxy URL, got nil")
 	}
 }
@@ -55,8 +57,9 @@ func TestFetchHTTPStatus(t *testing.T) {
 	}
 
 	// Test 404
-	_, _, _, statusCode, err = fetcher.Fetch(server.URL+"/404", 2*time.Second, "", false, false, -1, nil)
-	if err == nil {
+	//nolint:dogsled // Fetch returns multiple values, statusCode and error are relevant
+	_, _, _, statusCode, fetchErr := fetcher.Fetch(server.URL+"/404", 2*time.Second, "", false, false, -1, nil)
+	if fetchErr == nil {
 		t.Error("Expected error for 404 status code, got nil")
 	}
 
@@ -65,8 +68,9 @@ func TestFetchHTTPStatus(t *testing.T) {
 	}
 
 	// Test 500
-	_, _, _, statusCode, err = fetcher.Fetch(server.URL+"/500", 2*time.Second, "", false, false, -1, nil)
-	if err == nil {
+	//nolint:dogsled // Fetch returns multiple values, only error is relevant for 500
+	_, _, _, _, fetchErr = fetcher.Fetch(server.URL+"/500", 2*time.Second, "", false, false, -1, nil)
+	if fetchErr == nil {
 		t.Error("Expected error for 500 status code, got nil")
 	}
 }
@@ -82,9 +86,10 @@ func TestFetchUserAgent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, _, _, _, err := fetcher.Fetch(server.URL, 2*time.Second, "", false, false, -1, nil)
-	if err != nil {
-		t.Fatalf("Fetch failed: %v", err)
+	//nolint:dogsled // Fetch returns multiple values, only error is relevant
+	_, _, _, _, fetchErr := fetcher.Fetch(server.URL, 2*time.Second, "", false, false, -1, nil)
+	if fetchErr != nil {
+		t.Fatalf("Fetch failed: %v", fetchErr)
 	}
 
 	expectedUA := "DeepScanBot/1.0"
@@ -125,9 +130,10 @@ func TestFetchConfiguredContentTypes(t *testing.T) {
 		})
 	}
 
-	body, _, _, _, err := fetcher.Fetch(server.URL+"/text", 2*time.Second, "", false, false, -1, allowed)
-	if err != nil {
-		t.Fatalf("fetch unconfigured content type: %v", err)
+	//nolint:dogsled // Fetch returns multiple values, body and error are relevant
+	body, _, _, _, fetchErr := fetcher.Fetch(server.URL+"/text", 2*time.Second, "", false, false, -1, allowed)
+	if fetchErr != nil {
+		t.Fatalf("fetch unconfigured content type: %v", fetchErr)
 	}
 
 	if body != nil {

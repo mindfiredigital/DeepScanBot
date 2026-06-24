@@ -15,6 +15,7 @@ import (
 )
 
 func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {
+	//nolint:govet // testing.Chdir requires Go 1.24+, using available version
 	t.Chdir(t.TempDir())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -45,7 +46,7 @@ func (c *Crawler) fetchSitemapURLs(sitemapURL string, depth int) ([]string, erro
 		return nil, nil
 	}
 
-	req, err := http.NewRequest(http.MethodGet, sitemapURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, sitemapURL, nil)
 	if err != nil {
 		return nil, err
 	}

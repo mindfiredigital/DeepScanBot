@@ -1,15 +1,14 @@
 pre-commit:
   parallel: true
   commands:
-    lint:
-      glob: "*.go"
-      run: golangci-lint run --fix --timeout 5m || true
     format:
       glob: "*.go"
       run: gofumpt -w {staged_files}
     imports:
       glob: "*.go"
       run: gci write -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" {staged_files}
+    lint:
+      run: golangci-lint run --fix --timeout 5m ./...
     conventional-commit:
       run: |
         if [ -n "${LEFTHOOK_COMMIT_MESSAGE}" ]; then

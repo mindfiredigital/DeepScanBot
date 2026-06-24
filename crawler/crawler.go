@@ -24,7 +24,7 @@ type Crawler struct {
 	startURL         string
 	maxDepth         int
 	timeout          time.Duration
-	proxyUrl         string
+	proxyURL         string
 	maxSize          int
 	disableRedirects bool
 	insecure         bool
@@ -57,12 +57,12 @@ type Crawler struct {
 }
 
 // NewCrawler creates a Crawler with default options.
-func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
-	return NewCrawlerWithOptions(startURL, maxDepth, timeout, proxyUrl, maxSize, disableRedirects, insecure, uniqueUrls, concurrency, contentTypes, ignoreRobots, crossDomain, Options{})
+func NewCrawler(startURL string, maxDepth int, timeout time.Duration, proxyURL string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool) *Crawler {
+	return NewCrawlerWithOptions(startURL, maxDepth, timeout, proxyURL, maxSize, disableRedirects, insecure, uniqueUrls, concurrency, contentTypes, ignoreRobots, crossDomain, Options{})
 }
 
 // NewCrawlerWithOptions creates a Crawler with the given options.
-func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration, proxyUrl string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool, options Options) *Crawler {
+func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration, proxyURL string, maxSize int, disableRedirects bool, insecure bool, uniqueUrls bool, concurrency int, contentTypes []string, ignoreRobots bool, crossDomain bool, options Options) *Crawler {
 	if concurrency <= 0 {
 		concurrency = runtime.GOMAXPROCS(0)
 	}
@@ -97,7 +97,7 @@ func NewCrawlerWithOptions(startURL string, maxDepth int, timeout time.Duration,
 		startURL:         startURL,
 		maxDepth:         maxDepth,
 		timeout:          timeout,
-		proxyUrl:         proxyUrl,
+		proxyURL:         proxyURL,
 		maxSize:          maxSize,
 		disableRedirects: disableRedirects,
 		insecure:         insecure,

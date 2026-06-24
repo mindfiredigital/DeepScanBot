@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 
@@ -50,7 +51,7 @@ func (c *Crawler) fetchRobots(origin string) *robotstxt.RobotsData {
 		client.Transport = transport
 	}
 
-	req, err := http.NewRequest(http.MethodGet, origin+"/robots.txt", nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, origin+"/robots.txt", nil)
 	if err != nil {
 		c.log.Errorf("Error creating robots.txt request: %v", err)
 		return nil
