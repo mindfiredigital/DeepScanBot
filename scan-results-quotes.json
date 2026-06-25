@@ -1,9 +1,9 @@
 {
   "start_url": "https://quotes.toscrape.com/",
   "output_file": "scan-results-quotes.json",
-  "started_at": "2026-06-25T12:32:47.768829989+05:30",
-  "finished_at": "2026-06-25T12:32:54.419092497+05:30",
-  "duration_ms": 6650,
+  "started_at": "2026-06-25T13:10:29.169600358+05:30",
+  "finished_at": "2026-06-25T13:10:36.216894869+05:30",
+  "duration_ms": 7047,
   "summary": {
     "total": 52,
     "passed": 47,
@@ -38,160 +38,7 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/miracle/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/J-K-Rowling",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/classic/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/love/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/life/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/friendship/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/misattributed-eleanor-roosevelt/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/failure/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/page/2/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Eleanor-Roosevelt",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/world/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/humor/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/inspirational/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/humor/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/simile/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/value/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Albert-Einstein",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/change/page/1/",
+      "url": "https://quotes.toscrape.com/tag/friends/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -209,169 +56,7 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/obvious/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Andre-Gide",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/choices/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/live/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/inspirational/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/life/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/books/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/simile/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/love/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/aliteracy/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/books/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/thinking/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/edison/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/friends/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Thomas-A-Edison",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/tag/paraphrased/page/1/",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/login",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Steve-Martin",
-      "source": "href",
-      "depth": 1,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    },
-    {
-      "url": "https://quotes.toscrape.com/author/Marilyn-Monroe",
+      "url": "https://quotes.toscrape.com/tag/love/page/1/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -389,7 +74,97 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/deep-thoughts/page/1/",
+      "url": "https://quotes.toscrape.com/tag/reading/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/inspirational/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/obvious/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/simile/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/Thomas-A-Edison",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/thinking/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/classic/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/adulthood/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/misattributed-eleanor-roosevelt/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/Steve-Martin",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/paraphrased/page/1/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -407,7 +182,7 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/author/Jane-Austen",
+      "url": "https://quotes.toscrape.com/author/Eleanor-Roosevelt",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -416,7 +191,115 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/abilities/page/1/",
+      "url": "https://quotes.toscrape.com/page/2/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/books/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/login",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/miracle/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/value/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/world/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/failure/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/Marilyn-Monroe",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/humor/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/humor/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/love/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/friendship/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/choices/page/1/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -434,7 +317,7 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/reading/",
+      "url": "https://quotes.toscrape.com/tag/life/page/1/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -443,7 +326,124 @@
       "attempts": 1
     },
     {
-      "url": "https://quotes.toscrape.com/tag/adulthood/page/1/",
+      "url": "https://quotes.toscrape.com/author/Jane-Austen",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/Andre-Gide",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/simile/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/life/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/Albert-Einstein",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/abilities/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/aliteracy/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/books/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/deep-thoughts/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/change/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/live/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/edison/page/1/",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/author/J-K-Rowling",
+      "source": "href",
+      "depth": 1,
+      "status_code": 200,
+      "content_type": "text/html; charset=utf-8",
+      "result": "passed",
+      "attempts": 1
+    },
+    {
+      "url": "https://quotes.toscrape.com/tag/inspirational/page/1/",
       "source": "href",
       "depth": 1,
       "status_code": 200,
@@ -454,14 +454,14 @@
   ],
   "skipped": [
     {
-      "url": "https://www.zyte.com",
+      "url": "https://www.goodreads.com/quotes",
       "source": "href",
       "depth": 1,
       "result": "skipped",
       "skipped_reason": "outside domain scope"
     },
     {
-      "url": "https://www.goodreads.com/quotes",
+      "url": "https://www.zyte.com",
       "source": "href",
       "depth": 1,
       "result": "skipped",

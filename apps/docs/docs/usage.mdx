@@ -11,7 +11,7 @@ Learn how to use DeepScanBot effectively for your web crawling needs.
 The simplest way to crawl a website:
 
 ```bash
-./deepscanbot -url https://example.com
+go run ./apps/cli -url https://example.com
 ```
 
 This will:
@@ -26,7 +26,7 @@ This will:
 Crawl only the specified URL without following links:
 
 ```bash
-./deepscanbot -url https://example.com -depth 0
+go run ./apps/cli -url https://example.com -depth 0
 ```
 
 ### Full Site Crawl
@@ -34,7 +34,7 @@ Crawl only the specified URL without following links:
 Crawl an entire site with greater depth:
 
 ```bash
-./deepscanbot -url https://example.com -depth 5 -concurrency 20
+go run ./apps/cli -url https://example.com -depth 5 -concurrency 20
 ```
 
 ### JSON Output
@@ -42,7 +42,7 @@ Crawl an entire site with greater depth:
 Export results in JSON format for programmatic processing:
 
 ```bash
-./deepscanbot -url https://example.com -json -output results
+go run ./apps/cli -url https://example.com -json -output results
 ```
 
 ### Crawl with Proxy
@@ -50,7 +50,7 @@ Export results in JSON format for programmatic processing:
 Route traffic through a proxy server:
 
 ```bash
-./deepscanbot -url https://example.com -proxy http://127.0.0.1:8080
+go run ./apps/cli -url https://example.com -proxy http://127.0.0.1:8080
 ```
 
 ### Content-Type Filtering
@@ -59,13 +59,13 @@ Only download specific file types:
 
 ```bash
 # Only HTML pages
-./deepscanbot -url https://example.com -content-types "text/html"
+go run ./apps/cli -url https://example.com -content-types "text/html"
 
 # HTML and PDF documents
-./deepscanbot -url https://example.com -content-types "text/html,application/pdf"
+go run ./apps/cli -url https://example.com -content-types "text/html,application/pdf"
 
 # All content types
-./deepscanbot -url https://example.com -content-types "*/*"
+go run ./apps/cli -url https://example.com -content-types "*/*"
 ```
 
 ### Unique URLs Only
@@ -73,7 +73,7 @@ Only download specific file types:
 Avoid processing duplicate URLs:
 
 ```bash
-./deepscanbot -url https://example.com -u
+go run ./apps/cli -url https://example.com -u
 ```
 
 ### Resume a Crawl
@@ -82,10 +82,10 @@ Stop and resume a crawl without recrawling:
 
 ```bash
 # Initial crawl
-./deepscanbot -url https://example.com -depth 3 -output my-crawl
+go run ./apps/cli -url https://example.com -depth 3 -output my-crawl
 
 # Resume (skips already crawled URLs)
-./deepscanbot -url https://example.com -depth 3 -resume -output my-crawl
+go run ./apps/cli -url https://example.com -depth 3 -resume -output my-crawl
 ```
 
 ### Politely Crawl
@@ -93,7 +93,7 @@ Stop and resume a crawl without recrawling:
 Add delays to avoid overwhelming servers:
 
 ```bash
-./deepscanbot -url https://example.com -delay 500ms -host-concurrency 2
+go run ./apps/cli -url https://example.com -delay 500ms -host-concurrency 2
 ```
 
 ## Output Formats
@@ -154,16 +154,16 @@ https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
 ### Crawl Documentation Site
 
 ```bash
-./deepscanbot -url https://docs.example.com -depth 3 -sitemap -json -output docs-crawl
+go run ./apps/cli -url https://docs.example.com -depth 3 -sitemap -json -output docs-crawl
 ```
 
 ### Monitor a Website
 
 ```bash
-./deepscanbot -url https://example.com -depth 1 -u -output monitor -dr
+go run ./apps/cli -url https://example.com -depth 1 -u -output monitor -dr
 ```
 
 ### Scrape PDF Documents
 
 ```bash
-./deepscanbot -url https://example.com -depth 2 -content-types "application/pdf" -size 10240 -output pdfs
+go run ./apps/cli -url https://example.com -depth 2 -content-types "application/pdf" -size 10240 -output pdfs

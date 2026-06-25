@@ -47,8 +47,8 @@ lefthook install
 ## Verify Installation
 
 ```bash
-# Test the CLI
-./deepscanbot -h
+# Test the CLI (using go run - no build required)
+go run ./apps/cli -h
 
 # Run tests
 go test ./...
@@ -61,13 +61,13 @@ golangci-lint run ./...
 
 ```bash
 # Crawl a website
-./deepscanbot -url https://example.com -depth 2
+go run ./apps/cli -url https://example.com -depth 2
 
 # Output as JSON
-./deepscanbot -url https://example.com -depth 2 -json
+go run ./apps/cli -url https://example.com -depth 2 -json
 
 # With specific content types
-./deepscanbot -url https://example.com -depth 2 -content-types "text/html,application/pdf"
+go run ./apps/cli -url https://example.com -depth 2 -content-types "text/html,application/pdf"
 ```
 
 ## Next Steps

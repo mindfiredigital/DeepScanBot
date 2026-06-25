@@ -69,7 +69,7 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 
 5. Verify the installation:
    ```bash
-   ./deepscanbot -h
+   go run ./apps/cli -h
    ```
 
 ### Project Structure
