@@ -26,6 +26,7 @@ func (c *Crawler) enqueueSitemapURLs() {
 	}
 
 	sitemapURL := c.seedOrigin + "/sitemap.xml"
+
 	urls, err := c.fetchSitemapURLs(sitemapURL, 0)
 	if err != nil {
 		c.log.Infof("Sitemap unavailable at %s: %v", sitemapURL, err)

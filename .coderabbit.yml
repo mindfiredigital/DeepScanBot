@@ -17,7 +17,6 @@ reviews:
     (4) Documentation updates.
     End with a "Breaking changes" section (write "None" if absent).
   high_level_summary_in_walkthrough: false
-
   collapse_walkthrough: false
   changed_files_summary: true
   sequence_diagrams: true
