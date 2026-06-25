@@ -35,11 +35,11 @@ cd DeepScanBot
 # Install dependencies
 go mod download
 
-# Build the crawler
-go build -o deepscanbot
+# Build the crawler (optional)
+go build -o deepscanbot ./apps/cli
 
-# Or run directly
-go run main.go -url <starting_url> [options]
+# Or run directly (no build required)
+go run ./apps/cli -url <starting_url> [options]
 ```
 
 ## Usage
@@ -76,7 +76,7 @@ go run main.go -url <starting_url> [options]
 #### 1. Basic Crawl
 
 ```bash
-deepscanbot -url https://example.com -depth 2
+go run ./apps/cli -url https://example.com -depth 2
 ```
 
 Crawls `https://example.com` up to 2 levels deep and outputs results to `crawler_results.txt`.
@@ -84,7 +84,7 @@ Crawls `https://example.com` up to 2 levels deep and outputs results to `crawler
 #### 2. JSON Output with Details
 
 ```bash
-deepscanbot -url https://example.com -depth 3 -json -s -u -output my_results
+go run ./apps/cli -url https://example.com -depth 3 -json -s -u -output my_results
 ```
 
 Outputs JSON to `my_results.json` with URL source tracking and deduplication.
@@ -92,7 +92,7 @@ Outputs JSON to `my_results.json` with URL source tracking and deduplication.
 #### 3. Crawl with Retry and Delay
 
 ```bash
-deepscanbot -url https://docs.example.com -depth 2 -retries 3 -retry-backoff 2s -delay 1s -host-concurrency 1
+go run ./apps/cli -url https://docs.example.com -depth 2 -retries 3 -retry-backoff 2s -delay 1s -host-concurrency 1
 ```
 
 Retries failed requests up to 3 times with exponential backoff, waits 1 second between requests to the same host, and allows only 1 concurrent request per host.
@@ -100,7 +100,7 @@ Retries failed requests up to 3 times with exponential backoff, waits 1 second b
 #### 4. Cross-Domain Crawl with Sitemap
 
 ```bash
-deepscanbot -url https://example.com -depth 3 -cross-domain -sitemap -concurrency 10 -host-concurrency 2 -json
+go run ./apps/cli -url https://example.com -depth 3 -cross-domain -sitemap -concurrency 10 -host-concurrency 2 -json
 ```
 
 Discovers URLs from sitemap.xml, follows links to any domain, with 10 total workers and 2 per host.
@@ -109,10 +109,10 @@ Discovers URLs from sitemap.xml, follows links to any domain, with 10 total work
 
 ```bash
 # First run (interrupted)
-deepscanbot -url https://example.com -depth 3 -json -output my_results
+go run ./apps/cli -url https://example.com -depth 3 -json -output my_results
 
 # Resume
-deepscanbot -url https://example.com -depth 3 -json -output my_results -resume
+go run ./apps/cli -url https://example.com -depth 3 -json -output my_results -resume
 ```
 
 Loaded existing results from `my_results.json` and skips already-crawled URLs.
@@ -120,7 +120,7 @@ Loaded existing results from `my_results.json` and skips already-crawled URLs.
 #### 6. Crawl Goodreads with Rate-Limit Handling
 
 ```bash
-deepscanbot -url https://www.goodreads.com -depth 2 -delay 2s -retries 5 -retry-backoff 2s -concurrency 2 -host-concurrency 1 -json -output goodreads_results
+go run ./apps/cli -url https://www.goodreads.com -depth 2 -delay 2s -retries 5 -retry-backoff 2s -concurrency 2 -host-concurrency 1 -json -output goodreads_results
 ```
 
 Uses 2-second politeness delay, 5 retries with exponential backoff, limited concurrency to handle Goodreads rate limits gracefully.
@@ -128,7 +128,7 @@ Uses 2-second politeness delay, 5 retries with exponential backoff, limited conc
 #### 7. Crawl PDF and Images
 
 ```bash
-deepscanbot -url https://example.com -depth 2 -content-types "text/html,application/pdf,image/jpeg,image/png" -json
+go run ./apps/cli -url https://example.com -depth 2 -content-types "text/html,application/pdf,image/jpeg,image/png" -json
 ```
 
 Downloads HTML, PDF, JPEG, and PNG files while still parsing HTML for links.
