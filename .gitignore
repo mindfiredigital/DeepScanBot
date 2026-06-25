@@ -1,4 +1,5 @@
-scan-results-goodreads.json
+scan-results-*.json
+scan-results-*.txt
 deepscanbot
 solved.txt
 

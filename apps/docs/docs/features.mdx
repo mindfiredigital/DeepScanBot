@@ -13,7 +13,7 @@ Multi-threaded architecture with configurable concurrency limits for optimal per
 
 ```bash
 # Set concurrency to 10
-./deepscanbot -url https://example.com -concurrency 10
+go run ./apps/cli -url https://example.com -concurrency 10
 ```
 
 ### Configurable Crawl Depth
@@ -21,10 +21,10 @@ Control how deep the crawler explores linked pages.
 
 ```bash
 # Single page only
-./deepscanbot -url https://example.com -depth 0
+go run ./apps/cli -url https://example.com -depth 0
 
 # Full site (3 levels deep)
-./deepscanbot -url https://example.com -depth 3
+go run ./apps/cli -url https://example.com -depth 3
 ```
 
 ### Robots.txt Compliance
@@ -32,7 +32,7 @@ Respects robots.txt rules with an option to ignore them.
 
 ```bash
 # Ignore robots.txt
-./deepscanbot -url https://example.com -ignore-robots
+go run ./apps/cli -url https://example.com -ignore-robots
 ```
 
 ### Retry Logic
@@ -40,7 +40,7 @@ Built-in retry mechanism with exponential backoff for transient failures.
 
 ```bash
 # Retry up to 3 times with 2 second backoff
-./deepscanbot -url https://example.com -retries 3 -retry-backoff 2s
+go run ./apps/cli -url https://example.com -retries 3 -retry-backoff 2s
 ```
 
 ## Advanced Features
@@ -50,24 +50,24 @@ Filter crawled pages by MIME types and size limits.
 
 ```bash
 # Only HTML and PDF files
-./deepscanbot -url https://example.com -content-types "text/html,application/pdf"
+go run ./apps/cli -url https://example.com -content-types "text/html,application/pdf"
 
 # Limit page size to 1MB
-./deepscanbot -url https://example.com -size 1024
+go run ./apps/cli -url https://example.com -size 1024
 ```
 
 ### Proxy Support
 Route traffic through HTTP/HTTPS proxies.
 
 ```bash
-./deepscanbot -url https://example.com -proxy http://127.0.0.1:8080
+go run ./apps/cli -url https://example.com -proxy http://127.0.0.1:8080
 ```
 
 ### Sitemap Discovery
 Automatically discover and crawl URLs from sitemap.xml.
 
 ```bash
-./deepscanbot -url https://example.com -sitemap
+go run ./apps/cli -url https://example.com -sitemap
 ```
 
 ### Resume Mode
@@ -75,17 +75,17 @@ Resume interrupted crawls without recrawling already visited URLs.
 
 ```bash
 # First crawl
-./deepscanbot -url https://example.com -output my-crawl
+go run ./apps/cli -url https://example.com -output my-crawl
 
 # Resume
-./deepscanbot -url https://example.com -resume -output my-crawl
+go run ./apps/cli -url https://example.com -resume -output my-crawl
 ```
 
 ### Cross-Domain Crawling
 Optionally follow links to external domains.
 
 ```bash
-./deepscanbot -url https://example.com -cross-domain
+go run ./apps/cli -url https://example.com -cross-domain
 ```
 
 ### Multiple Output Formats
@@ -93,10 +93,10 @@ Export results in JSON or plain text format.
 
 ```bash
 # Text output (default)
-./deepscanbot -url https://example.com -output results
+go run ./apps/cli -url https://example.com -output results
 
 # JSON output
-./deepscanbot -url https://example.com -json -output results
+go run ./apps/cli -url https://example.com -json -output results
 ```
 
 ### Politely Crawl
@@ -104,7 +104,7 @@ Configure delay between requests to avoid overwhelming servers.
 
 ```bash
 # Wait 1 second between requests
-./deepscanbot -url https://example.com -delay 1s
+go run ./apps/cli -url https://example.com -delay 1s
 ```
 
 ## All CLI Flags
