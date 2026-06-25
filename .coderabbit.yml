@@ -1,0 +1,163 @@
+language: "en-US"
+
+tone_instructions: "Senior Go backend engineer and code architect. Be concise and specific. Cite Go best practices, clean code principles, and microservice patterns when flagging issues. Suggest concrete fixes. Praise good patterns as well as flagging problems."
+
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+
+  high_level_summary: true
+  high_level_summary_instructions: >
+    Summarise the PR as a concise bullet-point list. Group changes by:
+    (1) Package structure or API changes,
+    (2) Bug fixes,
+    (3) Tooling / config changes,
+    (4) Documentation updates.
+    End with a "Breaking changes" section (write "None" if absent).
+  high_level_summary_in_walkthrough: false
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+
+  suggested_labels: true
+  auto_apply_labels: false
+  labeling_instructions:
+    - label: "architecture"
+      instructions: "Apply when the PR changes package structure, module boundaries, or introduces new packages."
+    - label: "refactor"
+      instructions: "Apply when the PR improves code structure without changing behavior."
+    - label: "bug"
+      instructions: "Apply when the PR fixes a defect or incorrect behavior."
+    - label: "enhancement"
+      instructions: "Apply when the PR adds new functionality or features."
+    - label: "tooling"
+      instructions: "Apply when the PR changes build scripts, linters, formatters, or CI configuration."
+    - label: "docs"
+      instructions: "Apply when the PR only changes documentation or comments."
+    - label: "tests"
+      instructions: "Apply when the PR adds or modifies test files."
+
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+
+  commit_status: true
+  fail_commit_status: false
+  review_status: true
+  review_details: true
+
+  poem: false
+  in_progress_fortune: false
+
+  auto_review:
+    enabled: true
+    base_branches:
+      - main
+      - development
+
+  path_filters:
+    - "!vendor/**"
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!**/*.snap"
+    - "!**/__snapshots__/**"
+    - "!.husky/**"
+    - "!coverage/**"
+    - "!.turbo/**"
+
+  path_instructions:
+    - path: "packages/**/*.go"
+      instructions: |
+        ## Go Package Review Checklist
+
+        ### Package Structure
+        - Packages should have a single responsibility
+        - Avoid circular dependencies between packages
+        - Internal packages should not be imported by external consumers
+
+        ### Code Quality
+        - Functions should be small and focused
+        - Error handling must be explicit (no panic in library code)
+        - Use meaningful variable and function names
+        - Add godoc comments for exported functions and types
+
+        ### Concurrency
+        - Use sync primitives correctly (Mutex, WaitGroup, atomic)
+        - Avoid race conditions
+        - Document goroutine lifecycle
+
+        ### Error Handling
+        - Return errors, don't log and swallow
+        - Wrap errors with context using fmt.Errorf("context: %w", err)
+        - Define sentinel errors for expected failure modes
+
+    - path: "apps/cli/*.go"
+      instructions: |
+        ## CLI Application Review Checklist
+
+        - Command-line flags should have clear help text
+        - Validate all user input before processing
+        - Use structured logging (not fmt.Println)
+        - Handle signals gracefully (SIGINT, SIGTERM)
+        - Exit with appropriate status codes (0 for success, non-zero for failure)
+
+    - path: "**/*_test.go"
+      instructions: |
+        ## Test Review Checklist
+
+        - Tests should be independent and repeatable
+        - Use table-driven tests for multiple scenarios
+        - Mock external dependencies (HTTP, file system)
+        - Test both success and failure paths
+        - Use meaningful test names that describe the scenario
+
+    - path: "go.mod"
+      instructions: |
+        - Module path must match the repository URL
+        - Dependencies should be pinned to specific versions
+        - No indirect dependencies unless necessary
+        - Go version should be specified
+
+    - path: ".golangci.yml"
+      instructions: |
+        - Linter configuration should be comprehensive but not overwhelming
+        - Enable security linters (gosec)
+        - Enable performance linters (prealloc, gocritic)
+        - Document why linters are disabled
+
+    - path: "lefthook.yml"
+      instructions: |
+        - Pre-commit hooks should run quickly (< 30s)
+        - Pre-push hooks can be more thorough
+        - Conventional commits should be enforced
+        - Formatting should be automated
+
+  tools:
+    markdownlint:
+      enabled: true
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    yamllint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CONTRIBUTING.md"
+      - "README.md"
+  learnings:
+    scope: auto

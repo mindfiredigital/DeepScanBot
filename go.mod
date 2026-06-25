@@ -1,5 +1,8 @@
-module web-crawler-assignment
+module github.com/mindfiredigital/DeepScanBot
 
 go 1.22.4
 
-require golang.org/x/net v0.26.0 // indirect
+require (
+	github.com/temoto/robotstxt v1.1.2
+	golang.org/x/net v0.26.0
+)
