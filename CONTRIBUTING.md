@@ -193,6 +193,7 @@ Use conventional commits format:
 ### Commit Messages
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Use `cocogitto` or a custom commit hook to validate commit messages:
+
 ```bash
 # Using cocogitto
 cog commit

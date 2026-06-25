@@ -250,10 +250,10 @@ The JSON report contains a detailed summary and two URL lists:
 Text output shows one URL per line with optional metadata in brackets:
 
 ```
-[https://example.com [status=200] [result=passed]
-[https://example.com/about [status=200] [result=passed]
-[https://example.com/not-found [status=404] [result=failed] [error=bad status code: 404]
-[https://external.com/page [result=skipped] [skipped=outside domain scope]
+[https://example.com] [status=200] [result=passed]
+[https://example.com/about] [status=200] [result=passed]
+[https://example.com/not-found] [status=404] [result=failed] [error=bad status code: 404]
+[https://external.com/page] [result=skipped] [skipped=outside domain scope]
 
 // With -s flag:
 [href] https://example.com
