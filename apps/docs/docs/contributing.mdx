@@ -1,0 +1,135 @@
+---
+sidebar_position: 7
+---
+
+# Contributing
+
+Thank you for your interest in contributing to DeepScanBot! This document provides guidelines and instructions for contributing to this project.
+
+## Code of Conduct
+
+By participating in this project, you agree to abide by the [Code of Conduct](https://github.com/mindfiredigital/DeepScanBot/blob/main/CODE_OF_CONDUCT.md).
+
+## Getting Started
+
+1. Fork the repository on GitHub
+2. Clone your fork locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/DeepScanBot.git
+   cd DeepScanBot
+   ```
+3. Add the upstream remote:
+   ```bash
+   git remote add upstream https://github.com/mindfiredigital/DeepScanBot.git
+   ```
+
+## Development Setup
+
+### Prerequisites
+- **Go** (version 1.22 or higher)
+- **Git**
+
+### Installation
+
+```bash
+# Download dependencies
+go mod download
+
+# Install development tools
+go install mvdan.cc/gofumpt@latest
+go install github.com/daixiang0/gci@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/evilmartians/lefthook@latest
+
+# Install git hooks
+lefthook install
+
+# Build the project
+go build -o deepscanbot ./apps/cli
+```
+
+## How to Contribute
+
+### Reporting Bugs
+If you find a bug, please create an issue using the bug report template. Include:
+- Clear description of the bug
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment details (OS, Go version, DeepScanBot version)
+
+### Suggesting Features
+Feature requests are welcome! Please use the feature request template and include:
+- Clear description of the feature
+- Problem statement and proposed solution
+- Use cases
+
+### Contributing Code
+
+1. Create a new branch from `development`:
+   ```bash
+   git checkout development
+   git pull upstream development
+   git checkout -b feat/your-feature-name
+   ```
+
+2. Make your changes following the coding standards
+
+3. Ensure all checks pass:
+   ```bash
+   gofumpt -w .
+   gci write -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" .
+   golangci-lint run
+   go test ./...
+   ```
+
+4. Commit with a conventional commit message:
+   ```bash
+   git add .
+   git commit -m "feat: add feature X"
+   ```
+
+5. Push to your fork and create a Pull Request
+
+## Code Style
+
+### Go Code Style
+- Follow [Effective Go](https://go.dev/doc/effective_go) guidelines
+- Use `gofumpt` for strict formatting
+- Use `gci` for import management
+
+### Naming Conventions
+- **Packages**: lowercase, single-word names
+- **Functions**: `MixedCaps` or `mixedCaps`
+- **Variables**: descriptive `mixedCaps`
+
+### Commit Messages
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
+
+**Examples:**
+```
+feat(crawler): add support for custom headers
+fix(parser): handle malformed HTML gracefully
+docs(usage): add proxy configuration examples
+```
+
+## Pull Request Process
+
+1. Ensure your branch is up to date with `development`
+2. Run all checks before submitting:
+   - `gofumpt -w .`
+   - `gci write ...`
+   - `golangci-lint run`
+   - `go test ./...`
+3. Use the PR template with clear description of changes
+4. Link related issues (e.g., "Closes #123")
+5. At least one maintainer must approve before merge

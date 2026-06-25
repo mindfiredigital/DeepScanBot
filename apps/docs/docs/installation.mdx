@@ -1,0 +1,77 @@
+---
+sidebar_position: 2
+---
+
+# Installation
+
+Set up DeepScanBot in a few simple steps.
+
+## Prerequisites
+
+- **Go** (version 1.22 or higher)
+- **Git**
+
+## Install Package
+
+```bash
+# Clone the repository
+git clone https://github.com/mindfiredigital/DeepScanBot.git
+cd DeepScanBot
+
+# Download dependencies
+go mod download
+
+# Build the binary
+go build -o deepscanbot ./apps/cli
+```
+
+## Install Development Tools
+
+```bash
+# Code formatting
+go install mvdan.cc/gofumpt@latest
+
+# Import management
+go install github.com/daixiang0/gci@latest
+
+# Linting
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Git hooks
+go install github.com/evilmartians/lefthook@latest
+
+# Install hooks
+lefthook install
+```
+
+## Verify Installation
+
+```bash
+# Test the CLI
+./deepscanbot -h
+
+# Run tests
+go test ./...
+
+# Run linter
+golangci-lint run ./...
+```
+
+## Quick Start
+
+```bash
+# Crawl a website
+./deepscanbot -url https://example.com -depth 2
+
+# Output as JSON
+./deepscanbot -url https://example.com -depth 2 -json
+
+# With specific content types
+./deepscanbot -url https://example.com -depth 2 -content-types "text/html,application/pdf"
+```
+
+## Next Steps
+
+- [Usage Guide](/docs/usage) - Detailed usage instructions
+- [Architecture](/docs/architecture) - System architecture overview
+- [Features](/docs/features) - Complete feature list

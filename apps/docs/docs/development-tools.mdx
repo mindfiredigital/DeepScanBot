@@ -1,0 +1,145 @@
+---
+sidebar_position: 6
+---
+
+# Development Tools
+
+This document describes the development toolchain used in DeepScanBot, including code formatting, linting, import management, and git hooks.
+
+## Toolchain Overview
+
+| Tool | Purpose | Version |
+|------|---------|---------|
+| [gofumpt](https://github.com/mvdan/gofumpt) | Strict Go formatting | v0.10.0+ |
+| [gci](https://github.com/daixiang0/gci) | Import management | v0.14.0+ |
+| [golangci-lint](https://github.com/golangci/golangci-lint) | Linting and static analysis | v1.64.8+ |
+| [lefthook](https://github.com/evilmartians/lefthook) | Git hooks manager | v1.13.6+ |
+
+## Installation
+
+Install all development tools with a single command:
+
+```bash
+go install mvdan.cc/gofumpt@latest
+go install github.com/daixiang0/gci@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/evilmartians/lefthook@latest
+```
+
+## Git Hooks (Lefthook)
+
+Lefthook manages git hooks to enforce code quality standards before commits and pushes.
+
+### Installation
+
+```bash
+lefthook install
+```
+
+### Available Hooks
+
+#### Pre-commit Hook
+Runs automatically before each commit:
+1. **Format** - Formats Go code with `gofumpt`
+2. **Imports** - Organizes imports with `gci`
+3. **Lint** - Runs `golangci-lint` with auto-fix
+4. **Conventional Commit** - Validates commit message format
+
+#### Commit-msg Hook
+Validates that commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+**Format:**
+```
+<type>(<scope>): <subject>
+```
+
+**Valid Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`, `merge`
+
+**Example:**
+```
+feat(crawler): add support for custom user agents
+```
+
+#### Pre-push Hook
+Runs automatically before pushing to remote:
+1. **Test** - Executes all tests with `go test ./...`
+2. **Lint-all** - Runs full `golangci-lint` analysis
+
+## Code Formatting (gofumpt)
+
+[gofumpt](https://github.com/mvdan/gofumpt) is a stricter version of `gofmt` that enforces additional formatting rules.
+
+```bash
+# Format all Go files
+gofumpt -w .
+
+# Format specific files
+gofumpt -w ./packages/crawler ./packages/fetcher
+```
+
+## Import Management (gci)
+
+[gci](https://github.com/daixiang0/gci) organizes Go imports into sections.
+
+```bash
+gci write -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" .
+```
+
+### Import Order
+1. **Standard library** - Go standard library packages
+2. **Default** - Third-party packages
+3. **Project prefix** - Internal packages
+
+## Linting (golangci-lint)
+
+[golangci-lint](https://github.com/golangci/golangci-lint) is a fast, parallel linter aggregator for Go.
+
+```bash
+# Run linter
+golangci-lint run
+
+# Run with auto-fix
+golangci-lint run --fix
+```
+
+### Enabled Linters
+The project uses 30+ linters including: `gofmt`, `govet`, `gosec`, `revive`, `staticcheck`, `errcheck`, `ineffassign`, `unused`, `misspell`, and many more.
+
+## Typical Development Workflow
+
+1. **Create a branch:**
+   ```bash
+   git checkout development
+   git checkout -b feat/your-feature-name
+   ```
+
+2. **Make changes** to the code
+
+3. **Commit** (hooks run automatically):
+   ```bash
+   git commit -m "feat(crawler): add new feature"
+   ```
+
+4. **Push** (hooks run automatically):
+   ```bash
+   git push origin feat/your-feature-name
+   ```
+
+## IDE Setup
+
+### Visual Studio Code
+
+**Recommended Extensions:**
+- **Go** (golang.go) - Official Go extension
+- **GitLens** (eamodio.gitlens) - Git integration
+- **Error Lens** (usernamehw.errorlens) - Inline error highlighting
+
+**Settings (`.vscode/settings.json`):**
+```json
+{
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "workspace",
+  "go.formatTool": "gofumpt",
+  "go.formatOnSave": true
+}
