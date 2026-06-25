@@ -16,10 +16,13 @@ import (
 
 func TestCrawlerStartReturnsResultsWithoutWritingFiles(t *testing.T) {
 	origDir, _ := os.Getwd()
+
 	tmpDir := t.TempDir()
+
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("chdir to temp dir: %v", err)
 	}
+
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

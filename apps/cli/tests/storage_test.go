@@ -15,10 +15,13 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	const filename = "crawler_results.txt"
 
 	origDir, _ := os.Getwd()
+
 	tmpDir := t.TempDir()
+
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("chdir to temp dir: %v", err)
 	}
+
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	if err := os.WriteFile(filename, []byte("result from a previous crawl\n"), 0o644); err != nil {
@@ -46,10 +49,13 @@ func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	const filename = "crawler_results.txt"
 
 	origDir, _ := os.Getwd()
+
 	tmpDir := t.TempDir()
+
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("chdir to temp dir: %v", err)
 	}
+
 	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	pageStorage := storage.NewPageStorage()
