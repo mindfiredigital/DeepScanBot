@@ -14,8 +14,15 @@ import (
 func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 	const filename = "crawler_results.txt"
 
-	//nolint:govet // testing.Chdir requires Go 1.24+, using available version
-	t.Chdir(t.TempDir())
+	origDir, _ := os.Getwd()
+
+	tmpDir := t.TempDir()
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir to temp dir: %v", err)
+	}
+
+	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	if err := os.WriteFile(filename, []byte("result from a previous crawl\n"), 0o644); err != nil {
 		t.Fatalf("seed previous output: %v", err)
@@ -41,8 +48,15 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 func TestTextOutputIsFlushedOnClose(t *testing.T) {
 	const filename = "crawler_results.txt"
 
-	//nolint:govet // testing.Chdir requires Go 1.24+, using available version
-	t.Chdir(t.TempDir())
+	origDir, _ := os.Getwd()
+
+	tmpDir := t.TempDir()
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir to temp dir: %v", err)
+	}
+
+	t.Cleanup(func() { _ = os.Chdir(origDir) })
 
 	pageStorage := storage.NewPageStorage()
 	pageStorage.StoreContent("https://example.com/one")
