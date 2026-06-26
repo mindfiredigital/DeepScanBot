@@ -69,7 +69,7 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 
 5. Verify the installation:
    ```bash
-   ./deepscanbot -h
+   go run ./apps/cli -h
    ```
 
 ### Project Structure
@@ -193,6 +193,7 @@ Use conventional commits format:
 ### Commit Messages
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. Use `cocogitto` or a custom commit hook to validate commit messages:
+
 ```bash
 # Using cocogitto
 cog commit
