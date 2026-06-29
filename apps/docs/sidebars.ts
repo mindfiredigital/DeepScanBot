@@ -9,18 +9,13 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Guides',
-      items: ['usage', 'features'],
+      label: 'Guide',
+      items: ['guide/usage', 'guide/features'],
     },
     {
       type: 'category',
-      label: 'Architecture',
-      items: ['architecture'],
-    },
-    {
-      type: 'category',
-      label: 'Development',
-      items: ['development-tools', 'contributing'],
+      label: 'Contribution Guide',
+      items: ['contribution-guide/how-to-contribute', 'contribution-guide/code-of-conduct'],
     },
   ],
 };
