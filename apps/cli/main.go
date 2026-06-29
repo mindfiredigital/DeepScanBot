@@ -28,7 +28,7 @@ func main() {
 	uniqueUrls := flag.Bool("u", false, "Ensure unique URLs")
 	concurrency := flag.Int("concurrency", 0, "Maximum concurrent requests; 0 uses available CPU capacity")
 	hostConcurrency := flag.Int("host-concurrency", 0, "Maximum concurrent requests per host; 0 uses -concurrency")
-	contentTypes := flag.String("content-types", "text/html", "Comma-separated MIME types to download (quote the list), e.g. \"text/html,application/pdf,image/jpeg\"")
+	contentTypes := flag.String("content-types", "text/html", "MIME types to download. Must be quoted as one argument, e.g. -content-types \"text/html application/pdf image/jpeg\" or -content-types \"text/html,application/pdf,image/jpeg\"")
 	output := flag.String("output", "crawler_results", "Output filename without an extension")
 	ignoreRobots := flag.Bool("ignore-robots", false, "Ignore robots.txt crawl restrictions")
 	crossDomain := flag.Bool("cross-domain", false, "Follow links to hosts other than the starting URL")
@@ -81,12 +81,10 @@ func main() {
 		log.Fatalf("error: %v", err)
 	}
 
-	allEntries := append(append([]storage.URLEntry{}, report.URLs...), report.Skipped...)
-
 	if *jsonOutput {
 		err = storage.WriteJSONReportToFile(outputFilename, report)
 	} else {
-		err = storage.WriteTextToFile(outputFilename, allEntries, *showSource)
+		err = storage.WriteTextToFile(outputFilename, report.URLs, *showSource)
 	}
 
 	if err != nil {
@@ -126,7 +124,6 @@ func validateStartURL(rawURL string) (string, error) {
 func parseContentTypes(value string) []string {
 	var contentTypes []string
 
-	// Support both comma-separated and space-separated values
 	for _, part := range strings.FieldsFunc(value, func(r rune) bool {
 		return r == ',' || r == ' '
 	}) {

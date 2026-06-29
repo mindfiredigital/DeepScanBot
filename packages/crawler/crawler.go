@@ -185,7 +185,6 @@ func (c *Crawler) crawl(url string, depth int) {
 	if c.maxSize > 0 && size > c.maxSize*1024 {
 		c.failed.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "failed", Error: "page exceeds configured size limit", Attempts: attempts})
-		c.log.Infof("Skipping URL %s due to size limit (%d bytes > %d bytes)", url, size, c.maxSize*1024)
 
 		return
 	}
@@ -193,7 +192,6 @@ func (c *Crawler) crawl(url string, depth int) {
 	if data == nil && contentType != "" {
 		c.skipped.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "skipped", SkippedReason: "content type not allowed", Attempts: attempts})
-		c.log.Infof("Skipping %s because content type %q is not allowed", url, contentType)
 
 		return
 	}
