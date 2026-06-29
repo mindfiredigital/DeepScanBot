@@ -87,29 +87,25 @@ const config: Config = {
               to: '/docs/introduction',
             },
             {
+              label: 'Usage Guide',
+              to: '/docs/guide/usage',
+            },
+            {
               label: 'Features',
-              to: '/docs/features',
-            },
-            {
-              label: 'Usage',
-              to: '/docs/usage',
-            },
-            {
-              label: 'Architecture',
-              to: '/docs/architecture',
+              to: '/docs/guide/features',
             },
           ],
         },
         {
-          title: 'Development',
+          title: 'Contribution',
           items: [
             {
-              label: 'Development Tools',
-              to: '/docs/development-tools',
+              label: 'How to Contribute',
+              to: '/docs/contribution-guide/how-to-contribute',
             },
             {
-              label: 'Contributing',
-              to: '/docs/contributing',
+              label: 'Code of Conduct',
+              to: '/docs/contribution-guide/code-of-conduct',
             },
           ],
         },
