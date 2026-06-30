@@ -64,7 +64,6 @@ func (c *Crawler) fetchRobots(origin string) *robotstxt.RobotsData {
 		c.log.Errorf("Error fetching robots.txt from %s: %v", origin, err)
 		return nil
 	}
-
 	defer response.Body.Close()
 
 	robotsData, err := robotstxt.FromResponse(response)

@@ -60,7 +60,7 @@ go run ./apps/cli -url <starting_url> [options]
 | `-u`                | bool     | false             | Ensure unique URLs are crawled                                            |
 | `-concurrency`      | int      | 0                 | Maximum concurrent request workers (0 = CPU cores)                        |
 | `-host-concurrency` | int      | 0                 | Maximum concurrent requests per host (0 = uses -concurrency)              |
-| `-content-types`    | string   | "text/html"       | Comma-separated MIME types to download. Supports wildcards like `image/*` |
+| `-content-types`    | string   | "text/html"       | MIME types to download (quote the list)                                   |
 | `-output`           | string   | "crawler_results" | Output filename without extension                                         |
 | `-ignore-robots`    | bool     | false             | Ignore robots.txt crawl restrictions                                      |
 | `-cross-domain`     | bool     | false             | Follow links to hosts other than the starting URL                         |

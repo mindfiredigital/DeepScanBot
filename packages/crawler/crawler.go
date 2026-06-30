@@ -162,6 +162,8 @@ func (c *Crawler) crawl(url string, depth int) {
 	defer c.wg.Done()
 	c.recordDepth(depth)
 
+	c.log.Infof("Crawling %s (depth=%d)", url, depth)
+
 	if !c.allowedByRobots(url) {
 		c.skipped.Add(1)
 		c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, Result: "skipped", SkippedReason: "disallowed by robots.txt"})
@@ -198,6 +200,7 @@ func (c *Crawler) crawl(url string, depth int) {
 
 	c.fetched.Add(1)
 	c.pageStorage.StoreEntry(storage.URLEntry{URL: url, Depth: depth, StatusCode: statusCode, ContentType: contentType, Result: "passed", Attempts: attempts})
+	c.log.Infof("Crawled %s [status=%d] [result=passed]", url, statusCode)
 
 	if depth < c.maxDepth && strings.Contains(strings.ToLower(contentType), "text/html") {
 		for link, source := range parser.Parse(data, url) {
@@ -264,8 +267,16 @@ func (c *Crawler) shouldFollow(targetURL string) bool {
 	}
 
 	parsedURL, err := url.Parse(targetURL)
+	if err != nil {
+		return false
+	}
 
-	return err == nil && parsedURL.Host == c.seedHost
+	return normalizeHost(parsedURL.Host) == normalizeHost(c.seedHost)
+}
+
+// normalizeHost strips the "www." prefix for consistent domain comparison.
+func normalizeHost(host string) string {
+	return strings.TrimPrefix(host, "www.")
 }
 
 // hostKey extracts the host portion from a URL for rate-limiting.
