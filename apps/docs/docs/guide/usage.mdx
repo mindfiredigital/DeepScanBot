@@ -55,14 +55,11 @@ go run ./apps/cli -url https://example.com -proxy http://127.0.0.1:8080
 
 ### Content-Type Filtering
 
-Only download specific file types:
+Only download specific file types. **Note:** the value must be quoted as a single argument.
 
 ```bash
 # Only HTML pages
 go run ./apps/cli -url https://example.com -content-types "text/html"
-
-# HTML and PDF documents
-go run ./apps/cli -url https://example.com -content-types "text/html,application/pdf"
 
 # All content types
 go run ./apps/cli -url https://example.com -content-types "*/*"
@@ -114,12 +111,36 @@ https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
   "start_url": "https://example.com",
   "started_at": "2024-01-01T00:00:00Z",
   "finished_at": "2024-01-01T00:00:05Z",
+  "duration_ms": 5234,
   "summary": {
-    "total": 10,
-    "passed": 8,
-    "failed": 1,
-    "skipped": 1,
-    "errors": 1
+    "total": 45,
+    "passed": 30,
+    "failed": 2,
+    "skipped": 8,
+    "discovered": 5,
+    "skipped_by_robots": 3,
+    "skipped_by_domain": 2,
+    "skipped_by_duplicate": 2,
+    "skipped_by_content_type": 1,
+    "skipped_by_depth": 0,
+    "skipped_by_other": 0,
+    "retried_requests": 2,
+    "max_depth": 3,
+    "urls_by_status_code": {
+      "200": 30,
+      "404": 1,
+      "500": 1
+    },
+    "skipped_by_reason": {
+      "disallowed by robots.txt": 3,
+      "outside domain scope": 2,
+      "duplicate": 2,
+      "content type not allowed": 1
+    },
+    "retry_distribution": {
+      "2": 1,
+      "3": 1
+    }
   },
   "urls": [
     {
@@ -127,16 +148,18 @@ https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
       "source": "href",
       "depth": 0,
       "status_code": 200,
-      "content_type": "text/html",
+      "content_type": "text/html; charset=utf-8",
       "result": "passed",
       "attempts": 1
     }
   ],
   "skipped": [
     {
-      "url": "https://example.com/admin",
+      "url": "https://external.com/page",
+      "source": "href",
+      "depth": 1,
       "result": "skipped",
-      "skipped_reason": "disallowed by robots.txt"
+      "skipped_reason": "outside domain scope"
     }
   ]
 }
@@ -161,9 +184,3 @@ go run ./apps/cli -url https://docs.example.com -depth 3 -sitemap -json -output 
 
 ```bash
 go run ./apps/cli -url https://example.com -depth 1 -u -output monitor -dr
-```
-
-### Scrape PDF Documents
-
-```bash
-go run ./apps/cli -url https://example.com -depth 2 -content-types "application/pdf" -size 10240 -output pdfs

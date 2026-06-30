@@ -46,11 +46,11 @@ go run ./apps/cli -url https://example.com -retries 3 -retry-backoff 2s
 ## Advanced Features
 
 ### Content Filtering
-Filter crawled pages by MIME types and size limits.
+Filter crawled pages by MIME types and size limits. **Note:** the value must be quoted as a single argument.
 
 ```bash
-# Only HTML and PDF files
-go run ./apps/cli -url https://example.com -content-types "text/html,application/pdf"
+# Only HTML pages
+go run ./apps/cli -url https://example.com -content-types "text/html"
 
 # Limit page size to 1MB
 go run ./apps/cli -url https://example.com -size 1024

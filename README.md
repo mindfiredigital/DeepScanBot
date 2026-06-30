@@ -125,14 +125,6 @@ go run ./apps/cli -url https://www.goodreads.com -depth 2 -delay 2s -retries 5 -
 
 Uses 2-second politeness delay, 5 retries with exponential backoff, limited concurrency to handle Goodreads rate limits gracefully.
 
-#### 7. Crawl PDF and Images
-
-```bash
-go run ./apps/cli -url https://example.com -depth 2 -content-types "text/html,application/pdf,image/jpeg,image/png" -json
-```
-
-Downloads HTML, PDF, JPEG, and PNG files while still parsing HTML for links.
-
 ## Output Schema
 
 ### JSON Output (`-json`)
