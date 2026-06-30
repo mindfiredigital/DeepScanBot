@@ -24,7 +24,6 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/mindfiredigital/DeepScanBot/tree/main/apps/docs',
         },
         blog: false,
         theme: {
