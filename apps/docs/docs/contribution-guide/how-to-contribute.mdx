@@ -10,7 +10,7 @@ Thank you for your interest in contributing to DeepScanBot! We welcome contribut
 
 ## Code of Conduct
 
-This project adheres to the [Contributor Covenant](https://www.contributor-covenant.org/). By participating, you are expected to uphold this code. Please report unacceptable behavior.
+This project adheres to our [Code of Conduct](/docs/contribution-guide/code-of-conduct). By participating, you are expected to uphold this code. Please report unacceptable behavior by opening an issue or emailing **deepscanbot@mindfiresolutions.com**.
 
 ## Getting Started
 
@@ -41,9 +41,20 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 go install github.com/evilmartians/lefthook@latest && lefthook install
 ```
 
-### 4. Create a Branch
+### 4. Sync and Create a Branch
+
+Make sure your fork is up to date with the base repository before creating a feature branch:
 
 ```bash
+# Add the upstream remote (one-time setup)
+git remote add upstream https://github.com/mindfiredigital/DeepScanBot.git
+
+# Sync with the latest development branch
+git checkout development
+git pull upstream development
+git push origin development
+
+# Create your feature branch
 git checkout -b feat/your-feature-name
 ```
 
