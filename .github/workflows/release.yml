@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
