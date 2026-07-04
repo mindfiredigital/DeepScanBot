@@ -1,135 +1,144 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # Features
 
-DeepScanBot comes with a comprehensive set of features for web crawling and scraping.
+DeepScanBot comes with a comprehensive set of features designed for production web crawling at scale.
+
+---
 
 ## Core Features
 
-### Concurrent Crawling
+### ⚡ Concurrent Crawling
 Multi-threaded architecture with configurable concurrency limits for optimal performance.
 
 ```bash
-# Set concurrency to 10
+# Use 10 concurrent workers
 go run ./apps/cli -url https://example.com -concurrency 10
+
+# Control per-host limits
+go run ./apps/cli -url https://example.com -concurrency 20 -host-concurrency 2
 ```
 
-### Configurable Crawl Depth
+The crawler automatically uses all available CPU cores by default. You can override this with the `-concurrency` flag for fine-grained control.
+
+### 🎯 Configurable Crawl Depth
 Control how deep the crawler explores linked pages.
 
 ```bash
-# Single page only
+# Single page only (no link following)
 go run ./apps/cli -url https://example.com -depth 0
 
-# Full site (3 levels deep)
+# Full site crawl (3 levels deep)
 go run ./apps/cli -url https://example.com -depth 3
 ```
 
-### Robots.txt Compliance
-Respects robots.txt rules with an option to ignore them.
+### 🛡️ Robots.txt Compliance
+DeepScanBot respects robots.txt rules by default, with an option to bypass when needed.
 
 ```bash
-# Ignore robots.txt
+# Bypass robots.txt restrictions
 go run ./apps/cli -url https://example.com -ignore-robots
 ```
 
-### Retry Logic
-Built-in retry mechanism with exponential backoff for transient failures.
+### 🔄 Retry Logic
+Automatic retry with exponential backoff for transient failures such as timeouts, rate limits (429), and server errors (5xx).
 
 ```bash
 # Retry up to 3 times with 2 second backoff
 go run ./apps/cli -url https://example.com -retries 3 -retry-backoff 2s
 ```
 
-## Advanced Features
+The crawler also respects `Retry-After` headers from servers, adding extra backoff for 429 responses.
 
-### Content Filtering
-Filter crawled pages by MIME types and size limits. **Note:** the value must be quoted as a single argument.
+### ⏱️ Politeness & Rate Limiting
+Avoid overwhelming servers with configurable delays and per-host concurrency limits.
 
 ```bash
-# Only HTML pages
+# Wait 1 second between requests to the same host
+go run ./apps/cli -url https://example.com -delay 1s -host-concurrency 1
+```
+
+## Advanced Features
+
+### 📁 Content Filtering
+Filter crawled pages by MIME type and enforce page size limits.
+
+```bash
+# Only crawl HTML pages
 go run ./apps/cli -url https://example.com -content-types "text/html"
 
 # Limit page size to 1MB
 go run ./apps/cli -url https://example.com -size 1024
 ```
 
-### Proxy Support
-Route traffic through HTTP/HTTPS proxies.
+### 🌐 Proxy Support
+Route traffic through HTTP/HTTPS proxy servers.
 
 ```bash
 go run ./apps/cli -url https://example.com -proxy http://127.0.0.1:8080
 ```
 
-### Sitemap Discovery
-Automatically discover and crawl URLs from sitemap.xml.
+### 🗺️ Sitemap Discovery
+Automatically discover and crawl URLs from the site's `sitemap.xml`, including nested sitemap indexes.
 
 ```bash
 go run ./apps/cli -url https://example.com -sitemap
 ```
 
-### Resume Mode
+### ▶️ Resume Mode
 Resume interrupted crawls without recrawling already visited URLs.
 
 ```bash
-# First crawl
+# Initial crawl (may be interrupted)
 go run ./apps/cli -url https://example.com -output my-crawl
 
-# Resume
+# Resume from where you left off
 go run ./apps/cli -url https://example.com -resume -output my-crawl
 ```
 
-### Cross-Domain Crawling
-Optionally follow links to external domains.
+### 🌍 Cross-Domain Crawling
+Optionally follow links to external domains beyond the starting URL.
 
 ```bash
 go run ./apps/cli -url https://example.com -cross-domain
 ```
 
-### Multiple Output Formats
-Export results in JSON or plain text format.
+### 📊 Multiple Output Formats
+Export results in JSON or plain text format with detailed analytics.
 
 ```bash
 # Text output (default)
 go run ./apps/cli -url https://example.com -output results
 
-# JSON output
+# JSON output with full summary
 go run ./apps/cli -url https://example.com -json -output results
 ```
 
-### Politely Crawl
-Configure delay between requests to avoid overwhelming servers.
-
-```bash
-# Wait 1 second between requests
-go run ./apps/cli -url https://example.com -delay 1s
-```
-
-## All CLI Flags
+## CLI Reference
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-url` | `""` | Starting URL |
+| `-url` | `""` | Starting URL **(required)** |
 | `-depth` | `2` | Maximum crawl depth |
-| `-timeout` | `2` | Request timeout (seconds) |
-| `-proxy` | `""` | Proxy URL |
-| `-json` | `false` | JSON output |
-| `-size` | `-1` | Page size limit (KB) |
-| `-dr` | `false` | Disable redirects |
-| `-s` | `false` | Show URL source |
-| `-insecure` | `false` | Disable TLS verification |
-| `-u` | `false` | Unique URLs only |
-| `-concurrency` | `0` | Max concurrent requests |
+| `-timeout` | `2` | Request timeout in seconds |
+| `-concurrency` | `0` | Max concurrent workers (0 = CPU cores) |
 | `-host-concurrency` | `0` | Max concurrent requests per host |
 | `-content-types` | `"text/html"` | Allowed MIME types |
 | `-output` | `"crawler_results"` | Output filename |
-| `-ignore-robots` | `false` | Ignore robots.txt |
-| `-cross-domain` | `false` | Follow external links |
+| `-json` | `false` | JSON output |
+| `-size` | `-1` | Page size limit in KB |
+| `-proxy` | `""` | Proxy URL |
+| `-u` | `false` | Unique URLs only |
+| `-s` | `false` | Show URL source |
+| `-dr` | `false` | Disable redirects |
+| `-insecure` | `false` | Disable TLS verification |
 | `-retries` | `0` | Retry attempts |
 | `-retry-backoff` | `"1s"` | Retry backoff duration |
 | `-delay` | `"0s"` | Politeness delay |
 | `-sitemap` | `false` | Discover sitemap.xml |
 | `-resume` | `false` | Resume mode |
+| `-ignore-robots` | `false` | Ignore robots.txt |
+| `-cross-domain` | `false` | Follow external links |
 | `-h` | `false` | Show help |
