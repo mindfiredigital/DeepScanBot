@@ -166,13 +166,31 @@ Whether you're auditing a website, collecting data for analysis, or monitoring c
 
 ## Quick Start
 
+### Via npm (Recommended)
+
+The fastest way to get started:
+
+```bash
+# Install via npm
+npm install -g @mindfiredigital/deep-scan-bot
+
+# Run a quick scan
+deepscanbot scan https://example.com depth=2 json=true
+```
+
+No Go installation required. The npm package automatically installs the correct pre-built binary for your platform.
+
+### Via Go (Development)
+
+For development or if you prefer to build from source:
+
 ```bash
 # Run without building (requires Go)
-go run ./apps/cli -url https://example.com -depth 2 -json
+go run ./apps/cli scan https://example.com depth=2 json=true
 
 # Or build once and use anywhere
 go build -o deepscanbot ./apps/cli
-./deepscanbot -url https://example.com -depth 2 -json
+./deepscanbot scan https://example.com depth=2 json=true
 ```
 
 ## What's Next?

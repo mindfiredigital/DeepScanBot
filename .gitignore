@@ -10,6 +10,9 @@ solved.txt
 *.prof
 *.mem
 
+# Build artifacts
+dist/
+
 # IDE
 .idea/
 .vscode/

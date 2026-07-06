@@ -8,12 +8,43 @@ Get DeepScanBot up and running in minutes.
 
 ---
 
-## Prerequisites
+## Quick Install (Recommended)
 
-Before you begin, ensure you have the following installed:
+The easiest way to install DeepScanBot is via npm. This method automatically downloads the correct pre-built binary for your operating system and architecture.
 
-- **Go** (version 1.22 or higher) — [Download Go](https://go.dev/dl/)
-- **Git** — [Download Git](https://git-scm.com/downloads)
+```bash
+npm install -g @mindfiredigital/deep-scan-bot
+```
+
+After installation, verify it works:
+
+```bash
+deepscanbot --version
+deepscanbot -h
+```
+
+**Supported platforms:**
+
+- macOS (Intel x64, Apple Silicon arm64)
+- Linux (amd64, arm64)
+- Windows (amd64)
+
+**Requirements:**
+
+- Node.js 18+ (for npm installation)
+- No Go installation required for end users
+
+## How It Works
+
+DeepScanBot is distributed as an npm package containing pre-built Go binaries for all supported platforms. During installation, the `postinstall` script:
+
+1. Detects your operating system and CPU architecture
+2. Locates the correct pre-built binary from the package
+3. Installs it to your npm global bin directory
+4. Sets executable permissions
+5. Verifies the binary works correctly
+
+This means you get the performance of a native Go binary with the convenience of npm package management.
 
 ## Install from Source
 
@@ -40,6 +71,16 @@ You can also run DeepScanBot directly using `go run` — no build step needed:
 ```bash
 go run ./apps/cli -url https://example.com -depth 2 -json
 ```
+
+## Install via Go (Development)
+
+For development purposes, you can install directly from source:
+
+```bash
+go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
+```
+
+This requires Go 1.22.4+ to be installed.
 
 ## Verify Installation
 

@@ -1,0 +1,110 @@
+# .goreleaser.yml
+# GoReleaser configuration for DeepScanBot CLI
+# Builds cross-platform binaries and prepares npm package assets
+
+version: 2
+
+project_name: deepscanbot
+
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: deepscanbot
+    main: ./apps/cli
+    binary: my-cli
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: binary-only
+    name_template: "my-cli_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    format: binary
+    allow_different_binary_count: true
+    files:
+      - none*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ .Version }}-SNAPSHOT-{{ .ShortCommit }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "🚀 Features"
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: "🧰 Maintenance"
+      order: 2
+
+release:
+  github:
+    owner: mindfiredigital
+    name: DeepScanBot
+  draft: true
+  prerelease: auto
+  mode: replace
+  header: |
+    ## DeepScanBot CLI {{ .Version }}
+
+    ### Changelog
+
+    {{ .Changelog }}
+
+  footer: |
+    ### Installation
+
+    ```bash
+    npm install -g @mindfiredigital/deepscanbot
+    ```
+
+    Or download the binary directly from the assets below.
+
+  name_template: "v{{ .Version }}"
+
+# npm package preparation - copies binaries to the npm package directory
+nfpms: []
+
+publishers:
+  - name: copy-to-npm
+    cmd: |
+      bash scripts/copy-to-npm.sh {{ .ArtifactPath }} {{ .Os }} {{ .Arch }} {{ .Version }}
+    dir: "{{ .ProjectName }}"

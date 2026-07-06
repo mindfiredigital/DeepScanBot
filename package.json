@@ -1,0 +1,60 @@
+{
+  "name": "@mindfiredigital/deep-scan-bot",
+  "version": "0.1.0",
+  "description": "DeepScanBot CLI - A web crawler and scanner built in Go, distributed as a pre-built binary via npm",
+  "author": "Mindfire Digital",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindfiredigital/DeepScanBot.git"
+  },
+  "homepage": "https://github.com/mindfiredigital/DeepScanBot#readme",
+  "bugs": {
+    "url": "https://github.com/mindfiredigital/DeepScanBot/issues"
+  },
+  "keywords": [
+    "crawler",
+    "scanner",
+    "cli",
+    "deepscan",
+    "web-crawler",
+    "security",
+    "vulnerability-scanner",
+    "binary"
+  ],
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "postinstall.js",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "bin": {
+    "deepscanbot": "./bin/deepscanbot"
+  },
+  "scripts": {
+    "postinstall": "node postinstall.js",
+    "prepublishOnly": "node scripts/prepublish-check.js",
+    "version": "node scripts/sync-version.js && git add package.json",
+    "test": "node scripts/verify-binary.js",
+    "build": "goreleaser build --snapshot --clean",
+    "pack": "npm pack",
+    "install:local": "npm install -g ./deep-scan-bot-*.tgz"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

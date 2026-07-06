@@ -10,16 +10,26 @@ Learn how to use DeepScanBot effectively for production web crawling.
 
 ## Basic Usage
 
-The simplest way to crawl a website:
+### Using the Installed Binary (Recommended)
+
+If you installed DeepScanBot via npm or have built the binary:
 
 ```bash
-go run ./apps/cli -url https://example.com
+deepscanbot scan https://example.com
 ```
 
 This will:
 - Crawl the start page
 - Follow links up to 2 levels deep
 - Output results to `crawler_results.txt`
+
+### Using Go Run (Development)
+
+For development without building:
+
+```bash
+go run ./apps/cli scan https://example.com
+```
 
 ## Common Use Cases
 
@@ -28,7 +38,11 @@ This will:
 Crawl only the specified URL without following any links:
 
 ```bash
-go run ./apps/cli -url https://example.com -depth 0
+# Using installed binary
+deepscanbot scan https://example.com depth=0
+
+# Or using go run
+go run ./apps/cli scan https://example.com depth=0
 ```
 
 ### Full Site Crawl
@@ -36,7 +50,11 @@ go run ./apps/cli -url https://example.com -depth 0
 Crawl an entire website with greater depth and higher concurrency:
 
 ```bash
-go run ./apps/cli -url https://example.com -depth 5 -concurrency 20
+# Using installed binary
+deepscanbot scan https://example.com depth=5 concurrency=20
+
+# Or using go run
+go run ./apps/cli scan https://example.com depth=5 concurrency=20
 ```
 
 ### JSON Output
@@ -44,7 +62,11 @@ go run ./apps/cli -url https://example.com -depth 5 -concurrency 20
 Export results in JSON format for programmatic processing and integration:
 
 ```bash
-go run ./apps/cli -url https://example.com -json -output results
+# Using installed binary
+deepscanbot scan https://example.com json=true output=results
+
+# Or using go run
+go run ./apps/cli scan https://example.com json=true output=results
 ```
 
 ### Crawl with Proxy
@@ -52,7 +74,11 @@ go run ./apps/cli -url https://example.com -json -output results
 Route all traffic through a proxy server:
 
 ```bash
-go run ./apps/cli -url https://example.com -proxy http://127.0.0.1:8080
+# Using installed binary
+deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
+
+# Or using go run
+go run ./apps/cli scan https://example.com proxy=http://127.0.0.1:8080
 ```
 
 ### Content-Type Filtering
@@ -61,10 +87,10 @@ Filter which file types to download. Multiple types must be quoted as a single a
 
 ```bash
 # Only HTML pages
-go run ./apps/cli -url https://example.com -content-types "text/html"
+deepscanbot scan https://example.com content-types="text/html"
 
 # Allow all content types
-go run ./apps/cli -url https://example.com -content-types "*/*"
+deepscanbot scan https://example.com content-types="*/*"
 ```
 
 ### Unique URLs Only
@@ -72,7 +98,7 @@ go run ./apps/cli -url https://example.com -content-types "*/*"
 Avoid processing duplicate URLs:
 
 ```bash
-go run ./apps/cli -url https://example.com -u
+deepscanbot scan https://example.com unique=true
 ```
 
 ### Resume a Crawl
@@ -81,10 +107,10 @@ Stop and resume a crawl without recrawling already visited URLs:
 
 ```bash
 # Initial crawl
-go run ./apps/cli -url https://example.com -depth 3 -output my-crawl
+deepscanbot scan https://example.com depth=3 output=my-crawl
 
 # Resume (skips already crawled URLs)
-go run ./apps/cli -url https://example.com -depth 3 -resume -output my-crawl
+deepscanbot scan https://example.com depth=3 resume=true output=my-crawl
 ```
 
 ### Polite Crawling
@@ -92,13 +118,13 @@ go run ./apps/cli -url https://example.com -depth 3 -resume -output my-crawl
 Add delays to avoid overwhelming servers:
 
 ```bash
-go run ./apps/cli -url https://example.com -delay 500ms -host-concurrency 2
+deepscanbot scan https://example.com delay=500ms host-concurrency=2
 ```
 
 ### Crawl with Retry and Error Handling
 
 ```bash
-go run ./apps/cli -url https://docs.example.com -depth 2 -retries 3 -retry-backoff 2s -delay 1s -host-concurrency 1
+deepscanbot scan https://docs.example.com depth=2 retries=3 retry-backoff=2s delay=1s host-concurrency=1
 ```
 
 Retries failed requests up to 3 times with exponential backoff, waits 1 second between requests to the same host, and allows only 1 concurrent request per host.
@@ -106,7 +132,7 @@ Retries failed requests up to 3 times with exponential backoff, waits 1 second b
 ### Cross-Domain Crawl with Sitemap
 
 ```bash
-go run ./apps/cli -url https://example.com -depth 3 -cross-domain -sitemap -concurrency 10 -host-concurrency 2 -json
+deepscanbot scan https://example.com depth=3 cross-domain=true sitemap=true concurrency=10 host-concurrency=2 json=true
 ```
 
 Discovers URLs from sitemap.xml, follows links to any domain, with 10 total workers and 2 per host.
@@ -187,5 +213,3 @@ https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
 
 | Code | Meaning |
 |------|---------|
-| `0` | Success |
-| `1` | Error (invalid arguments, crawl failure) |
