@@ -44,7 +44,7 @@ DeepScanBot is a **feature-rich, concurrent web crawler** that makes website cra
 ### Via npm (Recommended)
 
 ```bash
-npm install -g @mindfiredigital/deep-scan-bot
+npm install -g @mindfiredigital/deepscanbot
 ```
 
 After installation, the `deepscanbot` command will be available globally:
@@ -96,14 +96,14 @@ DeepScanBot uses a modern command-based CLI structure similar to git, docker, an
 deepscanbot <command> [options]
 ```
 
-| Command      | Description                            |
-|--------------|----------------------------------------|
-| `scan`       | Crawl and analyze a website            |
-| `version`    | Show installed version                 |
-| `doctor`     | Verify installation and environment    |
-| `config`     | Manage CLI configuration               |
-| `completion` | Generate shell completion script       |
-| `help`       | Show help for any command              |
+| Command      | Description                         |
+| ------------ | ----------------------------------- |
+| `scan`       | Crawl and analyze a website         |
+| `version`    | Show installed version              |
+| `doctor`     | Verify installation and environment |
+| `config`     | Manage CLI configuration            |
+| `completion` | Generate shell completion script    |
+| `help`       | Show help for any command           |
 
 ### Scan Command
 
@@ -113,28 +113,28 @@ deepscanbot scan <url> [key=value ...]
 
 Options are specified as `key=value` pairs after the URL.
 
-| Option                 | Description                                              | Default             |
-|------------------------|----------------------------------------------------------|---------------------|
-| `depth`                | Maximum crawl depth                                      | `2`                 |
-| `timeout`              | Request timeout in seconds                               | `2`                 |
-| `proxy`                | Proxy URL (e.g. `http://127.0.0.1:8080`)                 | `""`                |
-| `json`                 | Output as JSON                                           | `false`             |
-| `size`                 | Page size limit in KB (-1 = no limit)                    | `-1`                |
-| `disable-redirects`    | Disable following redirects                              | `false`             |
-| `show-source`          | Show source of each URL                                  | `false`             |
-| `insecure`             | Disable TLS verification                                 | `false`             |
-| `unique`               | Ensure unique URLs                                       | `false`             |
-| `concurrency`          | Maximum concurrent requests (0 = CPU count)              | `0`                 |
-| `host-concurrency`     | Max concurrent requests per host (0 = use concurrency)   | `0`                 |
-| `content-types`        | MIME types to download (quoted, space/comma separated)   | `"text/html"`       |
-| `output`               | Output filename without extension                        | `"crawler_results"` |
-| `ignore-robots`        | Ignore robots.txt restrictions                           | `false`             |
-| `cross-domain`         | Follow links to other hosts                              | `false`             |
-| `retries`              | Number of retry attempts                                 | `0`                 |
-| `retry-backoff`        | Base retry backoff duration (e.g. `500ms`, `2s`)         | `1s`                |
-| `delay`                | Politeness delay between requests to same host           | `0`                 |
-| `sitemap`              | Discover URLs from /sitemap.xml                          | `false`             |
-| `resume`               | Load existing output and avoid recrawling                | `false`             |
+| Option              | Description                                            | Default             |
+| ------------------- | ------------------------------------------------------ | ------------------- |
+| `depth`             | Maximum crawl depth                                    | `2`                 |
+| `timeout`           | Request timeout in seconds                             | `2`                 |
+| `proxy`             | Proxy URL (e.g. `http://127.0.0.1:8080`)               | `""`                |
+| `json`              | Output as JSON                                         | `false`             |
+| `size`              | Page size limit in KB (-1 = no limit)                  | `-1`                |
+| `disable-redirects` | Disable following redirects                            | `false`             |
+| `show-source`       | Show source of each URL                                | `false`             |
+| `insecure`          | Disable TLS verification                               | `false`             |
+| `unique`            | Ensure unique URLs                                     | `false`             |
+| `concurrency`       | Maximum concurrent requests (0 = CPU count)            | `0`                 |
+| `host-concurrency`  | Max concurrent requests per host (0 = use concurrency) | `0`                 |
+| `content-types`     | MIME types to download (quoted, space/comma separated) | `"text/html"`       |
+| `output`            | Output filename without extension                      | `"crawler_results"` |
+| `ignore-robots`     | Ignore robots.txt restrictions                         | `false`             |
+| `cross-domain`      | Follow links to other hosts                            | `false`             |
+| `retries`           | Number of retry attempts                               | `0`                 |
+| `retry-backoff`     | Base retry backoff duration (e.g. `500ms`, `2s`)       | `1s`                |
+| `delay`             | Politeness delay between requests to same host         | `0`                 |
+| `sitemap`           | Discover URLs from /sitemap.xml                        | `false`             |
+| `resume`            | Load existing output and avoid recrawling              | `false`             |
 
 ### Examples
 
@@ -181,7 +181,7 @@ Update package.json version
       ↓
 npm publish
       ↓
-npm install -g @mindfiredigital/deep-scan-bot
+npm install -g @mindfiredigital/deepscanbot
 ```
 
 ### Creating a Release
@@ -204,7 +204,7 @@ git push origin v1.0.0
 3. **Users can then install**:
 
 ```bash
-npm install -g @mindfiredigital/deep-scan-bot
+npm install -g @mindfiredigital/deepscanbot
 ```
 
 ### Versioning
@@ -218,7 +218,7 @@ This project follows [Semantic Versioning](https://semver.org/):
 Pre-release versions use the `-next` tag on npm:
 
 ```bash
-npm install -g @mindfiredigital/deep-scan-bot@next
+npm install -g @mindfiredigital/deepscanbot@next
 ```
 
 ## Publishing
@@ -295,16 +295,13 @@ project/
 ├── dist/                 # Pre-built binaries (generated)
 ├── bin/                  # Installed binary (generated by postinstall)
 ├── scripts/              # Helper scripts
-│   ├── copy-to-npm.sh
-│   ├── sync-version.js
-│   ├── verify-binary.js
-│   ├── generate-checksums.sh
 │   └── prepublish-check.js
 │
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml        # CI workflow
-│       └── release.yml   # Release workflow
+│       ├── ci.yml             # CI workflow
+│       └── release.yml        # Release workflow
+│       └── release-docs.yml   # Release docs workflow
 │
 ├── .goreleaser.yml       # GoReleaser configuration
 ├── package.json          # npm package configuration
@@ -316,13 +313,13 @@ project/
 
 ### Installation Issues
 
-**Problem**: `npm install -g @mindfiredigital/deep-scan-bot` fails
+**Problem**: `npm install -g @mindfiredigital/deepscanbot` fails
 
 **Solutions**:
 
 - Ensure you have Node.js 18+ installed: `node --version`
 - Check npm permissions: `npm config get prefix`
-- Try with sudo (Unix): `sudo npm install -g @mindfiredigital/deep-scan-bot`
+- Try with sudo (Unix): `sudo npm install -g @mindfiredigital/deepscanbot`
 - Clear npm cache: `npm cache clean --force`
 
 **Problem**: "Unsupported platform" error during installation

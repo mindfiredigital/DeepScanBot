@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
-	"github.com/spf13/cobra"
 )
 
 var log = logger.New("info")
@@ -40,6 +41,81 @@ type ScanOptions struct {
 	Resume           bool
 }
 
+func parseIntValue(val string) (int, bool) {
+	if i, err := strconv.Atoi(val); err == nil {
+		return i, true
+	}
+	return 0, false
+}
+
+func parseDurationValue(val string) (time.Duration, bool) {
+	if d, err := time.ParseDuration(val); err == nil {
+		return d, true
+	}
+	return 0, false
+}
+
+func applyScanOption(opts *ScanOptions, key, val string) {
+	switch key {
+	case "depth":
+		if d, ok := parseIntValue(val); ok {
+			opts.Depth = d
+		}
+	case "timeout":
+		if t, ok := parseIntValue(val); ok {
+			opts.Timeout = t
+		}
+	case "proxy":
+		opts.Proxy = val
+	case "json":
+		opts.JSON = val == "true"
+	case "size":
+		if s, ok := parseIntValue(val); ok {
+			opts.MaxSize = s
+		}
+	case "disable-redirects":
+		opts.DisableRedirects = val == "true"
+	case "show-source":
+		opts.ShowSource = val == "true"
+	case "insecure":
+		opts.Insecure = val == "true"
+	case "unique":
+		opts.Unique = val == "true"
+	case "concurrency":
+		if c, ok := parseIntValue(val); ok {
+			opts.Concurrency = c
+		}
+	case "host-concurrency":
+		if h, ok := parseIntValue(val); ok {
+			opts.HostConcurrency = h
+		}
+	case "content-types":
+		opts.ContentTypes = val
+	case "output":
+		opts.Output = val
+	case "ignore-robots":
+		opts.IgnoreRobots = val == "true"
+	case "cross-domain":
+		opts.CrossDomain = val == "true"
+	case "retries":
+		if r, ok := parseIntValue(val); ok {
+			opts.Retries = r
+		}
+	case "retry-backoff":
+		if d, ok := parseDurationValue(val); ok {
+			opts.RetryBackoff = d
+		}
+	case "delay":
+		if d, ok := parseDurationValue(val); ok {
+			opts.Delay = d
+		}
+	case "sitemap":
+		opts.Sitemap = val == "true"
+	case "resume":
+		opts.Resume = val == "true"
+	}
+}
+
 func parseKeyValue(args []string) (string, ScanOptions) {
 	opts := ScanOptions{
 		Depth:        2,
@@ -57,65 +133,7 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 			parts := strings.SplitN(arg, "=", 2)
 			key := strings.ToLower(strings.TrimSpace(parts[0]))
 			val := strings.TrimSpace(parts[1])
-
-			switch key {
-			case "depth":
-				if d, err := strconv.Atoi(val); err == nil {
-					opts.Depth = d
-				}
-			case "timeout":
-				if t, err := strconv.Atoi(val); err == nil {
-					opts.Timeout = t
-				}
-			case "proxy":
-				opts.Proxy = val
-			case "json":
-				opts.JSON = val == "true"
-			case "size":
-				if s, err := strconv.Atoi(val); err == nil {
-					opts.MaxSize = s
-				}
-			case "disable-redirects":
-				opts.DisableRedirects = val == "true"
-			case "show-source":
-				opts.ShowSource = val == "true"
-			case "insecure":
-				opts.Insecure = val == "true"
-			case "unique":
-				opts.Unique = val == "true"
-			case "concurrency":
-				if c, err := strconv.Atoi(val); err == nil {
-					opts.Concurrency = c
-				}
-			case "host-concurrency":
-				if h, err := strconv.Atoi(val); err == nil {
-					opts.HostConcurrency = h
-				}
-			case "content-types":
-				opts.ContentTypes = val
-			case "output":
-				opts.Output = val
-			case "ignore-robots":
-				opts.IgnoreRobots = val == "true"
-			case "cross-domain":
-				opts.CrossDomain = val == "true"
-			case "retries":
-				if r, err := strconv.Atoi(val); err == nil {
-					opts.Retries = r
-				}
-			case "retry-backoff":
-				if d, err := time.ParseDuration(val); err == nil {
-					opts.RetryBackoff = d
-				}
-			case "delay":
-				if d, err := time.ParseDuration(val); err == nil {
-					opts.Delay = d
-				}
-			case "sitemap":
-				opts.Sitemap = val == "true"
-			case "resume":
-				opts.Resume = val == "true"
-			}
+			applyScanOption(&opts, key, val)
 		} else if url == "" {
 			url = arg
 		}
@@ -255,10 +273,10 @@ var configCmd = &cobra.Command{
 }
 
 var completionCmd = &cobra.Command{
-	Use:   "completion [bash|zsh|fish|powershell]",
-	Short: "Generate shell completion script",
-	Long:  `Generate shell completion script for DeepScanBot commands.`,
-	Args:  cobra.OnlyValidArgs,
+	Use:       "completion [bash|zsh|fish|powershell]",
+	Short:     "Generate shell completion script",
+	Long:      `Generate shell completion script for DeepScanBot commands.`,
+	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Run: func(cmd *cobra.Command, args []string) {
 		shell := "bash"
