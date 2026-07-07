@@ -71,12 +71,7 @@
   "release": {
     "repositoryUrl": "https://github.com/mindfiredigital/DeepScanBot.git",
     "branches": [
-      "master",
-      "next",
-      {
-        "name": "beta",
-        "prerelease": true
-      }
+      "main"
     ]
   }
 }
