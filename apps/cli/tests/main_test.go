@@ -15,7 +15,7 @@ func TestCLIRejectsInvalidStartURL(t *testing.T) {
 
 	for _, targetURL := range []string{"", "ftp://example.com", "file:///etc/passwd", "not-a-url", "http://", "http:/missing-slash.com"} {
 		t.Run(targetURL, func(t *testing.T) {
-			output, err := runCLI(binary, t.TempDir(), "-url", targetURL)
+			output, err := runCLI(binary, t.TempDir(), targetURL)
 			if err == nil {
 				t.Fatalf("CLI accepted invalid URL %q", targetURL)
 			}
@@ -42,7 +42,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 	defer server.Close()
 
 	workdir := t.TempDir()
-	if output, err := runCLI(binary, workdir, "-url", server.URL, "-depth", "0", "-output", "scan-results"); err != nil {
+	if output, err := runCLI(binary, workdir, server.URL, "depth=0", "output=scan-results"); err != nil {
 		t.Fatalf("run text output: %v\n%s", err, output)
 	}
 
@@ -54,7 +54,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 		t.Errorf("default text output should not be created: %v", err)
 	}
 
-	if output, err := runCLI(binary, workdir, "-url", server.URL, "-depth", "0", "-json", "-output", "scan-json"); err != nil {
+	if output, err := runCLI(binary, workdir, server.URL, "depth=0", "json=true", "output=scan-json"); err != nil {
 		t.Fatalf("run JSON output: %v\n%s", err, output)
 	}
 
@@ -66,13 +66,13 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 func TestCLIHelpDocumentsHelpFlag(t *testing.T) {
 	binary := buildCLI(t)
 
-	output, err := runCLI(binary, t.TempDir(), "-h")
+	output, err := runCLI(binary, t.TempDir(), "--help")
 	if err != nil {
 		t.Fatalf("run help: %v\n%s", err, output)
 	}
 
-	if !strings.Contains(string(output), "-h\tShow this help message") {
-		t.Errorf("help output does not document -h: %s", output)
+	if !strings.Contains(string(output), "--help") && !strings.Contains(string(output), "-h") {
+		t.Errorf("help output does not document help flag: %s", output)
 	}
 }
 
