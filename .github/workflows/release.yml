@@ -1,16 +1,10 @@
-# .github/workflows/release.yml
-# Release workflow for DeepScanBot CLI
-#
-# Triggered by pushing a Git tag matching v* (e.g. v1.0.0).
-# Builds Go binaries via GoReleaser, copies them into the npm package,
-# and publishes to the configured npm registry.
-
-name: Release
+name: Deployment Workflow
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,31 +15,29 @@ env:
   GO_VERSION: "1.22.4"
   NODE_VERSION: "20"
   GORELEASER_VERSION: "~> v2"
-  # npm registry configuration (override via secrets/variables)
   NPM_REGISTRY: ${{ secrets.NPM_REGISTRY || 'https://registry.npmjs.org/' }}
-  NPM_CONFIG_REGISTRY: ${{ secrets.NPM_REGISTRY || 'https://registry.npmjs.org/' }}
 
 jobs:
-  release:
-    name: Build and Publish
+  build:
+    name: "@mindfiredigital/deep-scan-bot"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v3
 
-      - name: Setup Go
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: ${{ env.NPM_REGISTRY }}
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -57,108 +49,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: ${{ env.GORELEASER_VERSION }}
-          install-only: true
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Extract version from Git tag
-        id: version
+      - name: Lint code
+        run: golangci-lint run ./...
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Restore changes in json
         run: |
-          # Strip 'v' prefix from tag (e.g. v1.0.0 -> 1.0.0)
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          echo "Extracted version: ${VERSION} from tag: ${GITHUB_REF_NAME}"
+          git restore package-lock.json 2>/dev/null || true
 
-      - name: Run GoReleaser (release build)
-        run: goreleaser release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Copy binaries to npm package
+      - name: Set Git user name and email
         run: |
-          bash scripts/copy-to-npm.sh
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
 
-      - name: Update package.json version from Git tag
-        run: |
-          node scripts/sync-version.js
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-
-      - name: Generate SHA256 checksums
-        run: |
-          bash scripts/generate-checksums.sh
-
-      - name: Verify binaries
-        run: |
-          node scripts/verify-binary.js
-
-      - name: Authenticate with npm registry
-        run: |
-          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "//${{ env.NPM_REGISTRY#https:// }}/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-            echo "registry=${{ env.NPM_REGISTRY }}" >> ~/.npmrc
-            echo "Configured npm registry: ${{ env.NPM_REGISTRY }}"
-          else
-            echo "NPM_TOKEN not set. Using default authentication."
-          fi
-
-      - name: Publish to npm registry
-        run: |
-          if [ "${{ github.event.release.prerelease }}" == "true" ]; then
-            echo "Publishing prerelease..."
-            npm publish --tag next --access public
-          else
-            echo "Publishing release..."
-            npm publish --access public
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_REGISTRY: ${{ env.NPM_REGISTRY }}
-
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-package
-          path: |
-            dist/
-            bin/
-            package.json
-            postinstall.js
-            scripts/
-            README.md
-          retention-days: 30
-
-      - name: Upload checksums
-        uses: actions/upload-artifact@v4
-        with:
-          name: checksums
-          path: dist/checksums.txt
-          retention-days: 30
-
-  # Dry-run publish for verification (can be triggered manually)
-  dry-run:
-    name: Dry Run Publish
+  create-github-release:
+    name: Create GitHub release document and publish to npm
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    permissions:
+      contents: write
+      packages: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -168,16 +89,23 @@ jobs:
           version: ${{ env.GORELEASER_VERSION }}
           install-only: true
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Run GoReleaser (snapshot build)
         run: goreleaser release --snapshot --clean
 
       - name: Copy binaries to npm package
         run: bash scripts/copy-to-npm.sh
 
-      - name: Update package.json version
-        run: node scripts/sync-version.js
+      - name: Semantic Release and npm release
+        run: |
+          npx semantic-release
         env:
-          VERSION: "0.0.0-snapshot"
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Dry run npm publish
-        run: npm publish --dry-run
+      - name: Verify npm package files
+        run: |
+          echo "Files included in npm package:"
+          npm pack --dry-run

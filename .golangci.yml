@@ -3,42 +3,12 @@ run:
   tests: true
 
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-
-linters-settings:
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/mindfiredigital/DeepScanBot)
-  gofmt:
-    simplify: true
-  goimports:
-    local-prefixes: github.com/mindfiredigital/DeepScanBot
-  govet:
-    check-shadowing: true
-  misspell:
-    locale: US
-  revive:
-    rules:
-      - name: exported
-        disabled: false
-      - name: package-comments
-        disabled: true
-      - name: var-naming
-        disabled: false
-      - name: indent-error-flow
-        disabled: false
-  staticcheck:
-    checks:
-      - all
-  unused:
-    go: "1.22"
+  formats:
+    - format: colored-line-number
 
 linters:
-  disable-all: true
+  default: none
+
   enable:
     - bodyclose
     - dogsled
@@ -51,7 +21,6 @@ linters:
     - gocritic
     - gocyclo
     - gofmt
-    - goprintffuncname
     - gosec
     - gosimple
     - govet
@@ -70,17 +39,40 @@ linters:
     - unparam
     - unused
     - whitespace
-    - wsl
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/mindfiredigital/DeepScanBot)
+
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: github.com/mindfiredigital/DeepScanBot
+
+  misspell:
+    locale: US
+
+  revive:
+    rules:
+      - name: exported
+      - name: package-comments
+        disabled: true
+      - name: var-naming
+      - name: indent-error-flow
 
 issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
   exclude-rules:
     - path: _test\.go
       linters:
-        - gocyclo
-        - errcheck
         - dupl
+        - errcheck
         - gosec
+        - gocyclo
         - noctx
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  new: false

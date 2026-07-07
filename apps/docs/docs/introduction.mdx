@@ -4,15 +4,43 @@ sidebar_position: 1
 
 # Introduction
 
-A powerful, production-ready web crawler built with Go — designed for performance, reliability, and developer happiness.
+A powerful, production-ready web crawler — designed for performance, reliability, and developer happiness.
 
 ---
 
 ## What is DeepScanBot?
 
-DeepScanBot is a **feature-rich, concurrent web crawler** that recursively crawls websites, respects `robots.txt`, handles rate-limiting, and produces comprehensive JSON or text reports. Built entirely in Go, it delivers exceptional performance as a single, self-contained binary.
+**DeepScanBot** is a **high-performance, concurrent web crawler** that recursively crawls websites, respects `robots.txt`, handles rate-limiting, and produces comprehensive JSON or text reports.
 
-Whether you're auditing a website, collecting data for analysis, or monitoring changes across thousands of pages, DeepScanBot provides the tools you need — out of the box.
+### What Does DeepScanBot Do?
+
+DeepScanBot crawls websites starting from a given URL, follows links up to a configurable depth, and generates detailed reports about every discovered page. It handles the complexities of web crawling automatically:
+
+- **Discovers all pages** on a website by following internal links
+- **Respects crawl rules** defined in `robots.txt`
+- **Handles rate limits** with automatic retry and backoff
+- **Filters content** by MIME type for targeted crawling
+- **Exports results** in structured JSON or readable text formats
+
+### Who Is It For?
+
+| Role | How DeepScanBot Helps |
+|------|----------------------|
+| **Security Researchers** | Audit websites for exposed endpoints, analyze attack surface |
+| **SEO Specialists** | Discover all pages, find broken links, analyze site structure |
+| **QA Engineers** | Verify page availability, test website coverage |
+| **Data Analysts** | Collect structured data from websites for analysis |
+| **DevOps Engineers** | Monitor website health, validate deployments |
+| **Content Managers** | Audit content across large websites |
+
+### Key Use Cases
+
+- **Website Auditing**: Crawl your entire site to verify all pages are accessible
+- **SEO Analysis**: Discover all indexed pages and find crawl issues
+- **Security Assessment**: Map out website structure and identify exposed endpoints
+- **Data Collection**: Gather URLs and metadata for analysis
+- **Change Monitoring**: Track changes across thousands of pages
+- **Deployment Validation**: Verify all routes work after deployment
 
 ## Key Features
 
@@ -155,7 +183,7 @@ Whether you're auditing a website, collecting data for analysis, or monitoring c
 
 | Feature           | DeepScanBot                       | Other Crawlers                       |
 | ----------------- | --------------------------------- | ------------------------------------ |
-| **Language**      | Go (single binary)                | Often Python/Node (requires runtime) |
+| **Platform**      | Single binary, no runtime deps     | Often requires Python/Node runtime   |
 | **Concurrency**   | Built-in, configurable            | Often limited or complex setup       |
 | **Rate Limiting** | Per-host + global semaphores      | Manual or absent                     |
 | **Robots.txt**    | Automatic + bypass option         | Varies                               |
@@ -166,32 +194,26 @@ Whether you're auditing a website, collecting data for analysis, or monitoring c
 
 ## Quick Start
 
-### Via npm (Recommended)
-
 The fastest way to get started:
 
 ```bash
-# Install via npm
+# Install via npm (one-time setup)
 npm install -g @mindfiredigital/deep-scan-bot
 
-# Run a quick scan
-deepscanbot scan https://example.com depth=2 json=true
+# Crawl a website with default settings
+deepscanbot scan https://example.com
+
+# Crawl with custom options
+deepscanbot scan https://example.com depth=3 json=true concurrency=10
+
+# Show version
+deepscanbot version
+
+# Verify installation
+deepscanbot doctor
 ```
 
-No Go installation required. The npm package automatically installs the correct pre-built binary for your platform.
-
-### Via Go (Development)
-
-For development or if you prefer to build from source:
-
-```bash
-# Run without building (requires Go)
-go run ./apps/cli scan https://example.com depth=2 json=true
-
-# Or build once and use anywhere
-go build -o deepscanbot ./apps/cli
-./deepscanbot scan https://example.com depth=2 json=true
-```
+No additional runtime dependencies required. The npm package automatically installs the correct binary for your platform.
 
 ## What's Next?
 

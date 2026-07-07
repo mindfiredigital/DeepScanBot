@@ -134,7 +134,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Home | Deep Scan Bot"
-      description="DeepScanBot - A powerful, feature-rich web crawler built with Go">
+      description="DeepScanBot - A powerful, feature-rich web crawler">
       <HomepageHeader />
       <main>
         <section className={styles.features}>

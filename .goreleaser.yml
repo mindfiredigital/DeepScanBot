@@ -1,13 +1,8 @@
-# .goreleaser.yml
-# GoReleaser configuration for DeepScanBot CLI
-# Builds cross-platform binaries and prepares npm package assets
-
 version: 2
 
 project_name: deepscanbot
 
 env:
-  - GO111MODULE=on
   - CGO_ENABLED=0
 
 before:
@@ -18,42 +13,40 @@ before:
 builds:
   - id: deepscanbot
     main: ./apps/cli
-    binary: my-cli
+    binary: deepscanbot
+
+    env:
+      - CGO_ENABLED=0
+
+    goos:
+      - linux
+      - darwin
+      - windows
+
+    goarch:
+      - amd64
+      - arm64
+
+    ignore:
+      - goos: windows
+        goarch: arm64
+
     ldflags:
       - -s -w
       - -X main.version={{ .Version }}
       - -X main.commit={{ .Commit }}
       - -X main.date={{ .Date }}
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    goarm:
-      - "7"
-    ignore:
-      - goos: windows
-        goarch: arm64
+
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - id: binary-only
-    name_template: "my-cli_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    format: binary
-    allow_different_binary_count: true
-    files:
-      - none*
+  - id: binaries
+    formats: [binary]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}_v{{ .Arm }}{{ end }}"
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: checksums.txt
   algorithm: sha256
-
-snapshot:
-  name_template: "{{ .Version }}-SNAPSHOT-{{ .ShortCommit }}"
 
 changelog:
   sort: asc
@@ -63,48 +56,26 @@ changelog:
       - "^test:"
       - "^ci:"
       - "^chore:"
-      - Merge pull request
-      - Merge branch
-  groups:
-    - title: "🚀 Features"
-      regexp: "^.*feat[(\\w)]*:+.*$"
-      order: 0
-    - title: "🐛 Bug Fixes"
-      regexp: "^.*fix[(\\w)]*:+.*$"
-      order: 1
-    - title: "🧰 Maintenance"
-      order: 2
+      - "^Merge"
 
 release:
   github:
     owner: mindfiredigital
     name: DeepScanBot
+
   draft: true
   prerelease: auto
-  mode: replace
+
+  name_template: "v{{ .Version }}"
+
   header: |
     ## DeepScanBot CLI {{ .Version }}
 
-    ### Changelog
-
-    {{ .Changelog }}
-
   footer: |
-    ### Installation
+    ### Install from npm
 
     ```bash
     npm install -g @mindfiredigital/deepscanbot
     ```
 
-    Or download the binary directly from the assets below.
-
-  name_template: "v{{ .Version }}"
-
-# npm package preparation - copies binaries to the npm package directory
-nfpms: []
-
-publishers:
-  - name: copy-to-npm
-    cmd: |
-      bash scripts/copy-to-npm.sh {{ .ArtifactPath }} {{ .Os }} {{ .Arch }} {{ .Version }}
-    dir: "{{ .ProjectName }}"
+dist: dist

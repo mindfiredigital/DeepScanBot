@@ -10,9 +10,7 @@ Learn how to use DeepScanBot effectively for production web crawling.
 
 ## Basic Usage
 
-### Using the Installed Binary (Recommended)
-
-If you installed DeepScanBot via npm or have built the binary:
+After installing DeepScanBot via npm, use the `deepscanbot` command:
 
 ```bash
 deepscanbot scan https://example.com
@@ -23,14 +21,6 @@ This will:
 - Follow links up to 2 levels deep
 - Output results to `crawler_results.txt`
 
-### Using Go Run (Development)
-
-For development without building:
-
-```bash
-go run ./apps/cli scan https://example.com
-```
-
 ## Common Use Cases
 
 ### Single Page Crawl
@@ -38,11 +28,7 @@ go run ./apps/cli scan https://example.com
 Crawl only the specified URL without following any links:
 
 ```bash
-# Using installed binary
 deepscanbot scan https://example.com depth=0
-
-# Or using go run
-go run ./apps/cli scan https://example.com depth=0
 ```
 
 ### Full Site Crawl
@@ -50,11 +36,7 @@ go run ./apps/cli scan https://example.com depth=0
 Crawl an entire website with greater depth and higher concurrency:
 
 ```bash
-# Using installed binary
 deepscanbot scan https://example.com depth=5 concurrency=20
-
-# Or using go run
-go run ./apps/cli scan https://example.com depth=5 concurrency=20
 ```
 
 ### JSON Output
@@ -62,11 +44,7 @@ go run ./apps/cli scan https://example.com depth=5 concurrency=20
 Export results in JSON format for programmatic processing and integration:
 
 ```bash
-# Using installed binary
 deepscanbot scan https://example.com json=true output=results
-
-# Or using go run
-go run ./apps/cli scan https://example.com json=true output=results
 ```
 
 ### Crawl with Proxy
@@ -74,11 +52,7 @@ go run ./apps/cli scan https://example.com json=true output=results
 Route all traffic through a proxy server:
 
 ```bash
-# Using installed binary
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
-
-# Or using go run
-go run ./apps/cli scan https://example.com proxy=http://127.0.0.1:8080
 ```
 
 ### Content-Type Filtering
@@ -213,3 +187,5 @@ https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
 
 | Code | Meaning |
 |------|---------|
+| `0` | Success |
+| `1` | Error (invalid arguments, crawl failure) |

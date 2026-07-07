@@ -19,8 +19,8 @@ npm install -g @mindfiredigital/deep-scan-bot
 After installation, verify it works:
 
 ```bash
-deepscanbot --version
-deepscanbot -h
+deepscanbot --help
+deepscanbot doctor
 ```
 
 **Supported platforms:**
@@ -32,11 +32,11 @@ deepscanbot -h
 **Requirements:**
 
 - Node.js 18+ (for npm installation)
-- No Go installation required for end users
+- No additional runtime dependencies required
 
 ## How It Works
 
-DeepScanBot is distributed as an npm package containing pre-built Go binaries for all supported platforms. During installation, the `postinstall` script:
+DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the `postinstall` script:
 
 1. Detects your operating system and CPU architecture
 2. Locates the correct pre-built binary from the package
@@ -44,73 +44,19 @@ DeepScanBot is distributed as an npm package containing pre-built Go binaries fo
 4. Sets executable permissions
 5. Verifies the binary works correctly
 
-This means you get the performance of a native Go binary with the convenience of npm package management.
-
-## Install from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/mindfiredigital/DeepScanBot.git
-
-# Navigate to the project
-cd DeepScanBot
-
-# Download dependencies
-go mod download
-
-# Build the binary
-go build -o deepscanbot ./apps/cli
-```
-
-The build process produces a single, self-contained binary named `deepscanbot` in your current directory. No runtime dependencies required.
-
-## Run Without Building
-
-You can also run DeepScanBot directly using `go run` — no build step needed:
-
-```bash
-go run ./apps/cli -url https://example.com -depth 2 -json
-```
-
-## Install via Go (Development)
-
-For development purposes, you can install directly from source:
-
-```bash
-go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
-```
-
-This requires Go 1.22.4+ to be installed.
+This means you get the performance of a native binary with the convenience of npm package management.
 
 ## Verify Installation
 
 ```bash
-# Show help and available flags
-./deepscanbot -h
+# Show help and available commands
+deepscanbot --help
 
-# Run the test suite
-go test ./...
+# Run diagnostics
+deepscanbot doctor
 
 # Quick smoke test
-./deepscanbot -url https://example.com -depth 0 -json
-```
-
-## Install Development Tools (Optional)
-
-If you plan to contribute to the project:
-
-```bash
-# Code formatting
-go install mvdan.cc/gofumpt@latest
-
-# Import management
-go install github.com/daixiang0/gci@latest
-
-# Linting
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-# Git hooks
-go install github.com/evilmartians/lefthook@latest && lefthook install
+deepscanbot scan https://example.com depth=0 json=true
 ```
 
 ## Next Steps
@@ -126,7 +72,7 @@ go install github.com/evilmartians/lefthook@latest && lefthook install
     }}>
       <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📖</div>
       <a href="/docs/guide/usage"><strong>Usage Guide</strong></a>
-      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Learn how to use all CLI flags</p>
+      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Learn how to use all CLI options</p>
     </div>
   </div>
   <div className="col col--6" style={{ marginBottom: '1rem' }}>

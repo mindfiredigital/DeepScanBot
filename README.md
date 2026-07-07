@@ -6,20 +6,38 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/mindfiredigital/DeepScanBot)](https://golang.org/)
 [![License](https://img.shields.io/github/license/mindfiredigital/DeepScanBot)](LICENSE.md)
 
-A high-performance web crawler and scanner built in Go, distributed as a pre-built binary via npm.
+**A high-performance web crawler and scanner** — recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports. Available as a single, self-contained binary via npm.
+
+## What is DeepScanBot?
+
+DeepScanBot is a **feature-rich, concurrent web crawler** that makes website crawling fast, reliable, and developer-friendly. It handles the complexities of web crawling automatically:
+
+- **Discovers all pages** on a website by following internal links up to a configurable depth
+- **Respects crawl rules** defined in robots.txt with an option to bypass when needed
+- **Handles rate limits** with automatic retry and exponential backoff
+- **Filters content** by MIME type for targeted crawling
+- **Exports results** in structured JSON or readable text formats with detailed analytics
+
+### Who Is It For?
+
+- **Security Researchers** - Audit websites for exposed endpoints
+- **SEO Specialists** - Discover all pages, find broken links, analyze site structure
+- **QA Engineers** - Verify page availability, test website coverage
+- **Data Analysts** - Collect structured data from websites for analysis
+- **DevOps Engineers** - Monitor website health, validate deployments
 
 ## Features
 
-- **Web Crawling**: Recursively crawl websites with configurable depth
-- **Concurrent Requests**: High-performance concurrent crawling
-- **Cross-Platform**: macOS (Intel + Apple Silicon), Linux (amd64 + arm64), Windows (amd64)
-- **Multiple Output Formats**: Text and JSON output
-- **Proxy Support**: HTTP/HTTPS proxy support
-- **Robots.txt**: Optional robots.txt compliance
-- **Sitemap Support**: Discover URLs from sitemap.xml
-- **Resume Mode**: Resume interrupted crawls
-- **Retry Logic**: Configurable retry with backoff
-- **Crawl Delay**: Politeness delay between requests
+- **⚡ Concurrent Crawling**: Multi-threaded architecture with configurable concurrency, per-host rate limiting, and CPU-aware auto-scaling
+- **🛡️ Robots.txt Compliance**: Automatically respects robots.txt rules with optional bypass
+- **🔄 Retry & Rate-Limit Handling**: Automatic retry with exponential backoff and Retry-After header parsing
+- **📊 Rich Output**: JSON or text reports with detailed summaries, status code distribution, and skip reason breakdowns
+- **🗺️ Sitemap Discovery**: Auto-discover and crawl URLs from sitemap.xml, including nested sitemap indexes
+- **📁 Content-Type Filtering**: Filter downloads by MIME type, enforce page size limits
+- **🌐 Proxy Support**: Route traffic through HTTP/HTTPS proxy servers
+- **▶️ Resume Mode**: Resume interrupted crawls without recrawling already visited URLs
+- **🌍 Cross-Domain Crawling**: Optionally follow links to external domains
+- **🔒 TLS Options**: Disable TLS verification for self-signed certificates
 
 ## Installation
 
@@ -35,15 +53,7 @@ After installation, the `deepscanbot` command will be available globally:
 deepscanbot --help
 ```
 
-### Via Go (Development)
-
-```bash
-go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
-```
-
-### Via Binary Download
-
-Download the appropriate binary for your platform from the [GitHub Releases](https://github.com/mindfiredigital/DeepScanBot/releases) page.
+No additional runtime dependencies required. The npm package automatically installs the correct binary for your platform.
 
 ## Quick Start
 
@@ -150,59 +160,6 @@ deepscanbot scan https://docs.example.com \
   cross-domain=true \
   content-types="text/html application/pdf" \
   output=scan_results
-```
-
-## Development
-
-### Prerequisites
-
-- Go 1.22.4+
-- Node.js 18+ (for npm package development)
-- GoReleaser (for building releases)
-
-### Local Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/mindfiredigital/DeepScanBot.git
-cd DeepScanBot
-
-# Install Go dependencies
-go mod download
-
-# Build the CLI
-go build -o deepscanbot ./apps/cli
-
-# Run tests
-go test ./...
-
-# Run linting
-golangci-lint run ./...
-```
-
-### Building Manually
-
-```bash
-# Build for current platform
-go build -o deepscanbot ./apps/cli
-
-# Build for specific platform
-GOOS=linux GOARCH=amd64 go build -o deepscanbot-linux-amd64 ./apps/cli
-GOOS=darwin GOARCH=amd64 go build -o deepscanbot-darwin-amd64 ./apps/cli
-GOOS=windows GOARCH=amd64 go build -o deepscanbot-windows-amd64.exe ./apps/cli
-```
-
-### Building with GoReleaser
-
-```bash
-# Install GoReleaser
-# See: https://goreleaser.com/install/
-
-# Snapshot build (local testing)
-goreleaser release --snapshot --clean
-
-# Release build
-goreleaser release --clean
 ```
 
 ## Release Flow
@@ -384,24 +341,6 @@ project/
 - Add to PATH: `export PATH=$(npm bin -g):$PATH`
 - On Windows, restart your terminal after installation
 
-### Binary Issues
-
-**Problem**: Binary won't execute
-
-**Solutions**:
-
-- Check file permissions: `ls -la $(which deepscanbot)`
-- Reapply permissions: `chmod +x $(which deepscanbot)`
-- Verify binary integrity: `node scripts/verify-binary.js`
-
-**Problem**: Checksum verification fails
-
-**Solutions**:
-
-- Reinstall the package: `npm install -g @mindfiredigital/deep-scan-bot`
-- Check the checksums file: `cat dist/checksums.txt`
-- Verify against the GitHub Release checksums
-
 ### Crawling Issues
 
 **Problem**: No results or empty output
@@ -454,13 +393,3 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 ## License
 
 This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) for details.
-</parameter>
-<task_progress>
-- [x] Implement key=value parsing for scan command
-- [x] Rebuild successfully
-- [x] Test new key=value syntax
-- [x] Update README.md with key=value syntax
-- [ ] Update all other documentation files
-- [ ] Final validation
-</task_progress>
-</write_to_file>

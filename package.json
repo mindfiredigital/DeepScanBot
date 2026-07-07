@@ -1,7 +1,7 @@
 {
-  "name": "@mindfiredigital/deep-scan-bot",
-  "version": "0.1.0",
-  "description": "DeepScanBot CLI - A web crawler and scanner built in Go, distributed as a pre-built binary via npm",
+  "name": "@mindfiredigital/deepscanbot",
+  "version": "1.0.0",
+  "description": "DeepScanBot CLI - A high-performance web crawler and scanner. Recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports. Available as a single, self-contained binary via npm.",
   "author": "Mindfire Digital",
   "license": "MIT",
   "repository": {
@@ -12,6 +12,8 @@
   "bugs": {
     "url": "https://github.com/mindfiredigital/DeepScanBot/issues"
   },
+  "type": "commonjs",
+  "preferGlobal": true,
   "keywords": [
     "crawler",
     "scanner",
@@ -20,7 +22,15 @@
     "web-crawler",
     "security",
     "vulnerability-scanner",
-    "binary"
+    "binary",
+    "crawl",
+    "website-scanner",
+    "seo",
+    "audit",
+    "seo-audit",
+    "website-audit",
+    "pentesting",
+    "bug-bounty"
   ],
   "files": [
     "dist/**/*",
@@ -34,12 +44,17 @@
   },
   "scripts": {
     "postinstall": "node postinstall.js",
-    "prepublishOnly": "node scripts/prepublish-check.js",
-    "version": "node scripts/sync-version.js && git add package.json",
-    "test": "node scripts/verify-binary.js",
+    "prepublishOnly": "npm run verify",
     "build": "goreleaser build --snapshot --clean",
+    "verify": "node scripts/prepublish-check.js",
+    "test": "go test ./...",
     "pack": "npm pack",
-    "install:local": "npm install -g ./deep-scan-bot-*.tgz"
+    "prepare": "lefthook install",
+    "lint": "golangci-lint run ./..."
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -53,8 +68,15 @@
     "x64",
     "arm64"
   ],
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+  "release": {
+    "repositoryUrl": "https://github.com/mindfiredigital/DeepScanBot.git",
+    "branches": [
+      "master",
+      "next",
+      {
+        "name": "beta",
+        "prerelease": true
+      }
+    ]
   }
 }
