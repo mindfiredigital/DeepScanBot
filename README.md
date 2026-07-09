@@ -141,6 +141,97 @@ else
 fi
 ```
 
+## Dry Run Mode
+
+DeepScanBot supports `--dry-run` to preview destructive actions without making changes. This is useful for validating configuration, checking what would be overwritten, and integrating with CI/CD pipelines.
+
+### Usage
+
+```bash
+# Preview a scan without executing
+deepscanbot scan https://example.com --dry-run
+
+# Preview with JSON output for automation
+deepscanbot scan https://example.com --dry-run --json
+
+# Combine with other flags
+deepscanbot scan https://example.com --dry-run depth=5 json=true
+```
+
+### Dry Run Output
+
+#### Human-Readable
+
+```bash
+$ deepscanbot scan https://example.com --dry-run
+─── Dry Run ───
+Action:     scan
+Target URL: https://example.com
+Output:     crawler_results.txt
+Depth:      2
+Timeout:    2s
+Concurrency: 0
+Content:    text/html
+JSON:       false
+Resume:     false
+Proxy:
+Sitemap:    false
+Retries:    0
+────────────────
+No changes were made. Pass --dry-run to preview, or omit it to execute.
+```
+
+#### JSON Output
+
+```bash
+$ deepscanbot scan https://example.com --dry-run --json
+{
+  "status": "success",
+  "data": {
+    "action": "scan",
+    "target_url": "https://example.com",
+    "output_file": "crawler_results.txt",
+    "depth": 2,
+    "timeout_seconds": 2,
+    "concurrency": 0,
+    "content_types": ["text/html"],
+    "json_output": false,
+    "resume": false,
+    "proxy": "",
+    "ignore_robots": false,
+    "cross_domain": false,
+    "sitemap": false,
+    "retries": 0,
+    "existing_file_will_be_overwritten": true
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "dry-run",
+    "duration_ms": 0
+  }
+}
+```
+
+### Confirmation Flags
+
+For destructive operations (e.g., overwriting existing output files), use explicit confirmation flags:
+
+| Flag | Description |
+| ---- | ----------- |
+| `--yes` | Auto-confirm all destructive operations |
+| `--force` | Overwrite existing output file without prompting |
+
+```bash
+# Auto-confirm overwrite
+deepscanbot scan https://example.com --yes
+
+# Overwrite existing file
+deepscanbot scan https://example.com --force
+
+# Combine with non-interactive mode
+deepscanbot scan https://example.com --no-input --yes --force
+```
+
 ## Exit Codes
 
 DeepScanBot uses standardized exit codes to make CLI failures predictable for scripts, CI/CD pipelines, and AI agents. Every command returns a consistent exit code that tells you exactly what happened.

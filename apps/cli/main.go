@@ -23,9 +23,12 @@ const cliVersion = "1.0.0"
 
 var log = logger.New("info")
 
-// forceOverwrite is set by the --force flag; when true the scan command will
-// overwrite existing output files without prompting.
-var forceOverwrite bool
+// Global flags for destructive operations
+var (
+	forceOverwrite bool // --force: overwrite existing output without prompting
+	dryRun         bool // --dry-run: preview actions without executing
+	yesFlag        bool // --yes: auto-confirm destructive operations
+)
 
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
@@ -200,7 +203,13 @@ Examples:
   deepscanbot scan https://example.com delay=500ms concurrency=5
 
   # Non-interactive (CI/CD)
-  deepscanbot scan https://example.com --no-input --force`,
+  deepscanbot scan https://example.com --no-input --force
+
+  # Preview what would happen without making changes
+  deepscanbot scan https://example.com --dry-run
+
+  # Auto-confirm destructive operations
+  deepscanbot scan https://example.com --yes --force`,
 	Run: func(cmd *cobra.Command, args []string) {
 		url, opts := parseKeyValue(args)
 
@@ -210,8 +219,6 @@ Examples:
 
 		parsedURL, err := validateStartURL(url)
 		if err != nil {
-			// validateStartURL returns an *exitcode.ExitCode when the URL is
-			// invalid; for other error types it returns a generic error.
 			exitcode.HandleError(err)
 		}
 
@@ -228,21 +235,26 @@ Examples:
 			exitcode.HandleError(err)
 		}
 
-		// Guard against overwriting existing output in non-interactive mode.
-		// Users must explicitly pass --force to overwrite a file.
-		if !forceOverwrite {
-			if _, statErr := os.Stat(outputFilename); statErr == nil {
-				// File exists.
+		// --- Dry-run mode: preview actions and exit without making changes ---
+		if dryRun {
+			printDryRunPlan(parsedURL, outputFilename, opts)
+			return
+		}
+
+		// --- Confirmation check for destructive operations ---
+		// If the output file already exists, this is a destructive operation.
+		// Require either --force (explicit overwrite) or --yes (auto-confirm).
+		if _, statErr := os.Stat(outputFilename); statErr == nil {
+			// File exists — this is a destructive overwrite.
+			if !forceOverwrite && !yesFlag {
 				if !noinput.IsInteractive() {
 					exitcode.HandleError(&exitcode.ExitCode{
 						Code:    exitcode.InvalidInput,
-						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite in non-interactive mode.", outputFilename),
-						Hint:    "Pass --force to overwrite the file or choose a different output name with output=<filename>.",
+						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite without confirmation.", outputFilename),
+						Hint:    "Pass --force to overwrite or --yes to auto-confirm all destructive operations.",
 					})
 				}
-				// Interactive mode — in a real implementation we would prompt
-				// the user here.  For now we simply log a warning and proceed
-				// (backward-compatible behaviour).
+				// Interactive mode: warn and proceed (backward-compatible).
 				log.Warnf("Output file %q already exists. It will be overwritten.", outputFilename)
 			}
 		}
@@ -400,9 +412,11 @@ func init() {
 	// Add persistent flags shared by all commands
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
 	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
+	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Preview actions that would be performed without making changes")
 
-	// Add --force flag to scan command for overwriting existing output
+	// Add flags to scan command for safe destructive operations
 	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
+	scanCmd.Flags().BoolVar(&yesFlag, "yes", false, "Auto-confirm all destructive operations (e.g. overwriting files)")
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
@@ -471,6 +485,61 @@ func handleCobraError(err error) {
 		})
 	default:
 		exitcode.HandleError(err)
+	}
+}
+
+// printDryRunPlan displays the actions that would be performed during a scan
+// without actually executing them.  It supports both human-readable and JSON
+// output formats.
+func printDryRunPlan(targetURL, outputFilename string, opts ScanOptions) {
+	plan := map[string]interface{}{
+		"action":          "scan",
+		"target_url":      targetURL,
+		"output_file":     outputFilename,
+		"depth":           opts.Depth,
+		"timeout_seconds": opts.Timeout,
+		"concurrency":     opts.Concurrency,
+		"content_types":   parseContentTypes(opts.ContentTypes),
+		"json_output":     opts.JSON,
+		"resume":          opts.Resume,
+		"proxy":           opts.Proxy,
+		"ignore_robots":   opts.IgnoreRobots,
+		"cross_domain":    opts.CrossDomain,
+		"sitemap":         opts.Sitemap,
+		"retries":         opts.Retries,
+	}
+
+	// Check if the output file already exists (would be overwritten)
+	if _, err := os.Stat(outputFilename); err == nil {
+		plan["existing_file_will_be_overwritten"] = true
+	}
+
+	if opts.JSON {
+		formatter := output.NewFormatter(true)
+		meta := output.NewResponseMetadata("dry-run", 0)
+		err := formatter.WriteSuccess(os.Stdout, plan, meta)
+		if err != nil {
+			exitcode.HandleErrorWithMessage("write dry-run output", exitcode.ErrJSONOutput)
+		}
+	} else {
+		fmt.Println("─── Dry Run ───")
+		fmt.Printf("Action:     scan\n")
+		fmt.Printf("Target URL: %s\n", targetURL)
+		fmt.Printf("Output:     %s\n", outputFilename)
+		if v, ok := plan["existing_file_will_be_overwritten"]; ok && v.(bool) {
+			fmt.Println("⚠  Warning: output file already exists and will be overwritten")
+		}
+		fmt.Printf("Depth:      %d\n", opts.Depth)
+		fmt.Printf("Timeout:    %ds\n", opts.Timeout)
+		fmt.Printf("Concurrency: %d\n", opts.Concurrency)
+		fmt.Printf("Content:    %s\n", strings.Join(parseContentTypes(opts.ContentTypes), ", "))
+		fmt.Printf("JSON:       %v\n", opts.JSON)
+		fmt.Printf("Resume:     %v\n", opts.Resume)
+		fmt.Printf("Proxy:      %s\n", opts.Proxy)
+		fmt.Printf("Sitemap:    %v\n", opts.Sitemap)
+		fmt.Printf("Retries:    %d\n", opts.Retries)
+		fmt.Println("────────────────")
+		fmt.Println("No changes were made. Pass --dry-run to preview, or omit it to execute.")
 	}
 }
 
