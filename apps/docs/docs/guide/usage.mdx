@@ -262,6 +262,216 @@ All JSON responses follow this structure:
 - **Consistent Format**: All commands use the same JSON response structure
 - **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
 
+### Machine-Readable Command Tree (`help --json`)
+
+DeepScanBot can output its complete CLI structure as a machine-readable JSON command tree using `help --json`. This is designed for automation tools, IDEs, scripts, and AI agents that need to discover available commands, subcommands, flags, and options without parsing human-readable help text.
+
+#### Usage
+
+```bash
+# Full command tree
+deepscanbot --help --json
+
+# Shorthand alias
+deepscanbot -h --json
+
+# Subcommand help (still returns full tree with all commands)
+deepscanbot scan --help --json
+```
+
+#### Example Output
+
+```bash
+$ deepscanbot --help --json
+{
+  "status": "success",
+  "data": {
+    "cli_name": "deepscanbot",
+    "root_command": {
+      "use": "deepscanbot",
+      "short": "A high-performance web crawler and scanner",
+      "long": "DeepScanBot is a feature-rich, concurrent web crawler that ...",
+      "example": "  # Scan a website\n  deepscanbot scan https://example.com\n\n  # Show version\n  deepscanbot version",
+      "subcommands": [
+        {
+          "use": "completion [bash|zsh|fish|powershell]",
+          "short": "Generate shell completion script",
+          "long": "Generate shell completion script for DeepScanBot commands.",
+          "args": "[bash|zsh|fish|powershell]",
+          "flags": [
+            {
+              "name": "json",
+              "description": "Output results in JSON format",
+              "default_value": "false",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "use": "config",
+          "short": "Manage CLI configuration",
+          "flags": [
+            {
+              "name": "json",
+              "description": "Output results in JSON format",
+              "default_value": "false",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "use": "doctor",
+          "short": "Verify installation and environment",
+          "long": "Check that DeepScanBot is properly installed ...",
+          "flags": [
+            {
+              "name": "json",
+              "description": "Output results in JSON format",
+              "default_value": "false",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "use": "scan <url> [options]",
+          "short": "Crawl and analyze a website",
+          "long": "Scan crawls a website starting from the specified URL ...",
+          "example": "  # Basic scan\n  deepscanbot scan https://example.com\n\n  # Scan with depth and JSON output\n  deepscanbot scan https://example.com depth=3 json=true\n",
+          "args": "<arg>...",
+          "flags": [
+            {
+              "name": "content-types",
+              "description": "Content types to accept (comma-separated)",
+              "default_value": "text/html",
+              "type": "string"
+            },
+            {
+              "name": "concurrency",
+              "description": "Maximum number of concurrent requests",
+              "default_value": "8",
+              "type": "int"
+            },
+            {
+              "name": "cross-domain",
+              "description": "Allow following links to other domains",
+              "default_value": "false",
+              "type": "bool"
+            },
+            {
+              "name": "json",
+              "description": "Output results in JSON format",
+              "default_value": "false",
+              "type": "bool"
+            },
+            {
+              "name": "output",
+              "description": "Output file base name (without extension)",
+              "default_value": "crawler_results",
+              "type": "string"
+            },
+            {
+              "name": "depth",
+              "description": "Maximum crawl depth",
+              "default_value": "2",
+              "type": "int"
+            }
+          ]
+        },
+        {
+          "use": "version",
+          "short": "Show the installed version",
+          "flags": [
+            {
+              "name": "json",
+              "description": "Output results in JSON format",
+              "default_value": "false",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "flags": [
+        {
+          "name": "json",
+          "description": "Output results in JSON format",
+          "default_value": "false",
+          "type": "bool"
+        }
+      ]
+    }
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "help",
+    "duration_ms": 0
+  }
+}
+```
+
+> **Note**: The output above is abbreviated. The full output includes all flags for each command, including advanced options like `retries`, `retry-backoff`, `sitemap`, `timeout`, `proxy`, `delay`, `ignore-robots`, etc.
+
+#### Command Tree JSON Structure
+
+Each node in the command tree follows this schema:
+
+```json
+{
+  "cli_name": "deepscanbot",
+  "root_command": {
+    "use": "command use string",
+    "short": "Short description",
+    "long": "Long description (optional)",
+    "aliases": ["alias1", "alias2"],
+    "example": "Usage examples",
+    "args": "Argument description",
+    "deprecated": "Deprecation notice (if deprecated)",
+    "flags": [
+      {
+        "name": "flag-name",
+        "shorthand": "f",
+        "description": "Flag description",
+        "default_value": "default",
+        "required": false,
+        "type": "bool|string|int|duration",
+        "accepted_values": ["value1", "value2"]
+      }
+    ],
+    "subcommands": [
+      { ... }
+    ]
+  }
+}
+```
+
+#### Automation Use Cases
+
+The `help --json` output enables several automation scenarios:
+
+```bash
+# Discover available commands
+deepscanbot --help --json | jq '.data.root_command.subcommands[].use'
+
+# Find flags for a specific command
+deepscanbot --help --json | jq '.data.root_command.subcommands[] | select(.use | startswith("scan")) | .flags[].name'
+
+# Check if a flag exists
+deepscanbot --help --json | jq '[.data.root_command.subcommands[] | select(.use | startswith("scan")) | .flags[].name] | contains(["depth"])'
+
+# Validate CLI interface in CI
+deepscanbot --help --json | jq -e '.data.root_command.subcommands | length > 0' > /dev/null
+
+# Generate documentation automatically
+deepscanbot --help --json > cli-schema.json
+```
+
+#### Key Benefits for Automation
+
+- **No Parsing Needed**: Consumes valid JSON directly—no need to parse human-readable help text
+- **Complete Discovery**: Finds every command, subcommand, flag, and option
+- **Auto-Synchronizing**: Always reflects the current CLI state as new commands and flags are added
+- **Consistent Ordering**: Flags and subcommands always appear in alphabetical order for deterministic parsing
+- **Stable Schema**: The JSON structure is versioned alongside the CLI, ensuring backward compatibility
+
 ### Piping and Automation
 
 The JSON output mode is designed for easy integration with scripts and tools:

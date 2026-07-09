@@ -16,6 +16,9 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
+// cliVersion is the current version of the CLI
+const cliVersion = "1.0.0"
+
 var log = logger.New("info")
 
 // ScanOptions holds all scan configuration
@@ -367,6 +370,26 @@ func init() {
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
 	
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
+
+	// Override help to support --json flag for machine-readable command tree output
+	// Store the original help function to avoid recursion
+	originalHelpFunc := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		if jsonFlag {
+			tree := output.BuildCommandTree(rootCmd)
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("help", 0)
+			err := formatter.WriteSuccess(os.Stdout, tree, meta)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			return
+		}
+		// Fall back to default help using the original function
+		originalHelpFunc(cmd, args)
+	})
 }
 
 func main() {
