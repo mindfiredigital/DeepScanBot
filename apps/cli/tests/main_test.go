@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -100,4 +101,48 @@ func runCLI(binary, workdir string, args ...string) ([]byte, error) {
 	cmd.Dir = workdir
 
 	return cmd.CombinedOutput()
+}
+
+func runCLIWithSeparateOutput(binary, workdir string, args ...string) (stdout, stderr []byte, err error) {
+	cmd := exec.Command(binary, args...)
+	cmd.Dir = workdir
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, nil, err
+	}
+
+	stdout, err = readAll(stdoutPipe)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	stderr, err = readAll(stderrPipe)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := cmd.Wait(); err != nil {
+		// Check if it's an exit error
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return stdout, stderr, exitErr
+		}
+		return stdout, stderr, err
+	}
+
+	return stdout, stderr, nil
+}
+
+func readAll(pipe io.ReadCloser) ([]byte, error) {
+	defer pipe.Close()
+	return io.ReadAll(pipe)
 }

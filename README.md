@@ -86,6 +86,166 @@ deepscanbot doctor
 deepscanbot completion bash
 ```
 
+## JSON Output Mode
+
+DeepScanBot supports a consistent `--json` flag across all commands that return structured data. When enabled, all output is written as valid JSON to `stdout`, while progress messages and diagnostics are sent to `stderr`.
+
+### Usage
+
+```bash
+# Scan with JSON output
+deepscanbot scan https://example.com --json
+
+# Version with JSON output
+deepscanbot version --json
+
+# Doctor with JSON output
+deepscanbot doctor --json
+```
+
+### Sample JSON Output
+
+#### Scan Command
+
+```bash
+$ deepscanbot scan https://example.com depth=0 --json
+{
+  "status": "success",
+  "data": {
+    "start_url": "https://example.com",
+    "output_file": "crawler_results.json",
+    "started_at": "2024-01-15T10:30:00Z",
+    "finished_at": "2024-01-15T10:30:05Z",
+    "duration_ms": 5000,
+    "summary": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "discovered": 0,
+      "max_depth": 0
+    },
+    "urls": [
+      {
+        "url": "https://example.com",
+        "depth": 0,
+        "status_code": 200,
+        "content_type": "text/html",
+        "result": "passed"
+      }
+    ],
+    "skipped": null
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:05Z",
+    "command": "scan",
+    "duration_ms": 5000
+  }
+}
+```
+
+#### Version Command
+
+```bash
+$ deepscanbot version --json
+{
+  "status": "success",
+  "data": {
+    "version": "1.0.0",
+    "name": "DeepScanBot CLI"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "version",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Doctor Command
+
+```bash
+$ deepscanbot doctor --json
+{
+  "status": "success",
+  "data": {
+    "installed": true,
+    "executable": true,
+    "configured": true,
+    "checks_passed": 3,
+    "message": "All checks passed!"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "doctor",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Error Response
+
+```bash
+$ deepscanbot scan invalid-url --json
+{
+  "status": "error",
+  "error": {
+    "message": "invalid URL \"invalid-url\": must be an absolute http:// or https:// URL",
+    "code": "invalid_url"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "scan",
+    "duration_ms": 0
+  }
+}
+```
+
+### Key Features
+
+- **Valid JSON Only**: `stdout` contains only valid JSON when `--json` is enabled
+- **Separate Streams**: Progress messages, warnings, and logs are written to `stderr`
+- **Consistent Format**: All commands use the same JSON response structure
+- **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
+- **Extensible**: The centralized output formatting makes it easy to add new output formats in the future
+
+### Response Format
+
+All JSON responses follow this structure:
+
+```json
+{
+  "status": "success | error",
+  "data": { ... },        // Present on success
+  "error": {              // Present on error
+    "message": "Error description",
+    "code": "error_code"
+  },
+  "meta": {
+    "timestamp": "ISO8601 timestamp",
+    "command": "command_name",
+    "duration_ms": 1234
+  }
+}
+```
+
+### Piping and Automation
+
+The JSON output mode is designed for easy integration with scripts and tools:
+
+```bash
+# Parse with jq
+deepscanbot scan https://example.com --json | jq '.data.summary'
+
+# Extract specific fields
+deepscanbot version --json | jq -r '.data.version'
+
+# Check command success
+if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then
+  echo "Scan completed successfully"
+fi
+```
+
 ## Usage
 
 DeepScanBot uses a modern command-based CLI structure similar to git, docker, and kubectl.

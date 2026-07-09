@@ -12,6 +12,7 @@ import (
 
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
@@ -200,6 +201,12 @@ Examples:
 			log.Fatalf(err.Error())
 		}
 
+		// Check for --json flag (persistent flag from root command)
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		if jsonFlag {
+			opts.JSON = true
+		}
+
 		timeoutDuration := time.Duration(opts.Timeout) * time.Second
 
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
@@ -230,6 +237,10 @@ Examples:
 			log.Fatalf("error: %v", err)
 		}
 
+		// Create output formatter
+		formatter := output.NewFormatter(opts.JSON)
+
+		// Write to file
 		if opts.JSON {
 			err = storage.WriteJSONReportToFile(outputFilename, report)
 		} else {
@@ -238,6 +249,15 @@ Examples:
 
 		if err != nil {
 			log.Fatalf("write results: %v", err)
+		}
+
+		// If JSON mode, write report to stdout
+		if opts.JSON {
+			meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
+			err = formatter.WriteSuccess(os.Stdout, report, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
 		}
 
 		log.Infof("Results written to %s", outputFilename)
@@ -249,7 +269,33 @@ var versionCmd = &cobra.Command{
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("DeepScanBot CLI v1.0.0")
+		// Check for --json flag or json=true option
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		// Also check if json=true was passed as a key=value option
+		jsonOption := false
+		for _, arg := range args {
+			if strings.HasPrefix(strings.ToLower(arg), "json=") {
+				parts := strings.SplitN(arg, "=", 2)
+				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
+				break
+			}
+		}
+		
+		if jsonFlag || jsonOption {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("version", 0)
+			data := map[string]string{
+				"version": "1.0.0",
+				"name":    "DeepScanBot CLI",
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			fmt.Println("DeepScanBot CLI v1.0.0")
+		}
 	},
 }
 
@@ -258,11 +304,40 @@ var doctorCmd = &cobra.Command{
 	Short: "Verify installation and environment",
 	Long:  `Check that DeepScanBot is properly installed and the environment is configured correctly.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Running diagnostics...")
-		fmt.Println("✓ DeepScanBot is installed")
-		fmt.Println("✓ Binary is executable")
-		fmt.Println("✓ Environment is configured correctly")
-		fmt.Println("\nAll checks passed!")
+		// Check for --json flag or json=true option
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		// Also check if json=true was passed as a key=value option
+		jsonOption := false
+		for _, arg := range args {
+			if strings.HasPrefix(strings.ToLower(arg), "json=") {
+				parts := strings.SplitN(arg, "=", 2)
+				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
+				break
+			}
+		}
+		
+		if jsonFlag || jsonOption {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("doctor", 0)
+			data := map[string]interface{}{
+				"installed":      true,
+				"executable":     true,
+				"configured":     true,
+				"checks_passed":  3,
+				"message":        "All checks passed!",
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			fmt.Println("Running diagnostics...")
+			fmt.Println("✓ DeepScanBot is installed")
+			fmt.Println("✓ Binary is executable")
+			fmt.Println("✓ Environment is configured correctly")
+			fmt.Println("\nAll checks passed!")
+		}
 	},
 }
 
@@ -288,6 +363,9 @@ var completionCmd = &cobra.Command{
 }
 
 func init() {
+	// Add --json flag to root command so all subcommands can use it
+	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
+	
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 }
 
