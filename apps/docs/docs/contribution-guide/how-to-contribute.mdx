@@ -92,6 +92,39 @@ Ensure all tests pass:
 go test ./...
 ```
 
+### Local npm Package Testing
+
+Test the npm package locally before committing:
+
+```bash
+# Build binaries for all platforms
+goreleaser build --snapshot --clean
+
+# Verify binaries
+node scripts/verify-binary.js
+
+# Create npm package
+npm pack
+
+# Install locally for testing
+npm install -g ./deep-scan-bot-*.tgz
+
+# Test the installed binary
+deepscanbot --version
+deepscanbot -h
+
+# Uninstall after testing
+npm uninstall -g @mindfiredigital/deep-scan-bot
+```
+
+### Pre-publish Checks
+
+Before publishing, run the prepublish check:
+
+```bash
+node scripts/prepublish-check.js
+```
+
 ### Commit Messages
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/):

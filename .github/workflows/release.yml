@@ -1,7 +1,7 @@
-name: Release
+name: Deployment Workflow
 
 on:
-push:
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -9,60 +9,103 @@ push:
 permissions:
   contents: write
   packages: write
+  id-token: write
+
+env:
+  GO_VERSION: "1.22.4"
+  NODE_VERSION: "20"
+  GORELEASER_VERSION: "~> v2"
+  NPM_REGISTRY: ${{ secrets.NPM_REGISTRY || 'https://registry.npmjs.org/' }}
 
 jobs:
-  goreleaser:
-    name: Release Binaries
+  build:
+    name: "@mindfiredigital/deep-scan-bot"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-          check-latest: true
+          go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Install dependencies
-        run: go mod download
+        run: npm ci
+
+      - name: Lint code
+        run: golangci-lint run ./...
 
       - name: Run tests
-        run: go test -v -count=1 ./...
+        run: go test ./...
 
-      - name: Build binaries
+      - name: Restore changes in json
         run: |
-          mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/deepscanbot-linux-amd64 ./apps/cli
-          GOOS=linux GOARCH=arm64 go build -o dist/deepscanbot-linux-arm64 ./apps/cli
-          GOOS=darwin GOARCH=amd64 go build -o dist/deepscanbot-darwin-amd64 ./apps/cli
-          GOOS=darwin GOARCH=arm64 go build -o dist/deepscanbot-darwin-arm64 ./apps/cli
-          GOOS=windows GOARCH=amd64 go build -o dist/deepscanbot-windows-amd64.exe ./apps/cli
-          echo "✅ Binaries built"
+          git restore package-lock.json 2>/dev/null || true
 
-      - name: Generate checksums
+      - name: Set Git user name and email
         run: |
-          cd dist
-          sha256sum * > checksums.txt
-          echo "✅ Checksums generated"
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+  create-github-release:
+    name: Create GitHub release document and publish to npm
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
-          files: |
-            dist/deepscanbot-linux-amd64
-            dist/deepscanbot-linux-arm64
-            dist/deepscanbot-darwin-amd64
-            dist/deepscanbot-darwin-arm64
-            dist/deepscanbot-windows-amd64.exe
-            dist/checksums.txt
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: ${{ env.GORELEASER_VERSION }}
+          install-only: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run GoReleaser (snapshot build)
+        run: goreleaser release --snapshot --clean
+
+      - name: Copy binaries to npm package
+        run: bash scripts/copy-to-npm.sh
+
+      - name: Semantic Release and npm release
+        run: |
+          npx semantic-release
         env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify npm package files
+        run: |
+          echo "Files included in npm package:"
+          npm pack --dry-run

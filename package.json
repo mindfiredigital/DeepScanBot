@@ -1,0 +1,77 @@
+{
+  "name": "@mindfiredigital/deepscanbot",
+  "version": "1.0.0",
+  "description": "DeepScanBot CLI - A high-performance web crawler and scanner. Recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports. Available as a single, self-contained binary via npm.",
+  "author": "Mindfire Digital",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mindfiredigital/DeepScanBot.git"
+  },
+  "homepage": "https://github.com/mindfiredigital/DeepScanBot#readme",
+  "bugs": {
+    "url": "https://github.com/mindfiredigital/DeepScanBot/issues"
+  },
+  "type": "commonjs",
+  "preferGlobal": true,
+  "keywords": [
+    "crawler",
+    "scanner",
+    "cli",
+    "deepscan",
+    "web-crawler",
+    "security",
+    "vulnerability-scanner",
+    "binary",
+    "crawl",
+    "website-scanner",
+    "seo",
+    "audit",
+    "seo-audit",
+    "website-audit",
+    "pentesting",
+    "bug-bounty"
+  ],
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "postinstall.js",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "bin": {
+    "deepscanbot": "./bin/deepscanbot"
+  },
+  "scripts": {
+    "postinstall": "node postinstall.js",
+    "prepublishOnly": "npm run verify",
+    "build": "goreleaser build --snapshot --clean",
+    "verify": "node scripts/prepublish-check.js",
+    "test": "go test ./...",
+    "pack": "npm pack",
+    "prepare": "lefthook install",
+    "lint": "golangci-lint run ./..."
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "release": {
+    "repositoryUrl": "https://github.com/mindfiredigital/DeepScanBot.git",
+    "branches": [
+      "main"
+    ]
+  }
+}
