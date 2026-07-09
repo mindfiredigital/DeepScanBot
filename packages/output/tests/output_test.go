@@ -1,4 +1,4 @@
-package output
+package output_test
 
 import (
 	"bytes"
@@ -6,10 +6,12 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	output "github.com/mindfiredigital/DeepScanBot/packages/output"
 )
 
 func TestNewFormatter(t *testing.T) {
-	formatter := NewFormatter(true)
+	formatter := output.NewFormatter(true)
 	if formatter == nil {
 		t.Fatal("NewFormatter returned nil")
 	}
@@ -17,7 +19,7 @@ func TestNewFormatter(t *testing.T) {
 		t.Error("Expected JSON mode to be enabled")
 	}
 
-	formatter2 := NewFormatter(false)
+	formatter2 := output.NewFormatter(false)
 	if formatter2.IsJSONMode() {
 		t.Error("Expected JSON mode to be disabled")
 	}
@@ -25,14 +27,14 @@ func TestNewFormatter(t *testing.T) {
 
 func TestWriteSuccessJSON(t *testing.T) {
 	var buf bytes.Buffer
-	formatter := NewFormatter(true)
+	formatter := output.NewFormatter(true)
 
 	data := map[string]string{
 		"version": "1.0.0",
 		"name":    "DeepScanBot CLI",
 	}
 
-	meta := &ResponseMetadata{
+	meta := &output.ResponseMetadata{
 		Timestamp: time.Now(),
 		Command:   "version",
 		Duration:  0,
@@ -44,14 +46,14 @@ func TestWriteSuccessJSON(t *testing.T) {
 	}
 
 	// Parse the JSON output
-	var resp Response
+	var resp output.Response
 	decoder := json.NewDecoder(&buf)
 	if err := decoder.Decode(&resp); err != nil {
 		t.Fatalf("Failed to parse JSON output: %v", err)
 	}
 
 	// Verify structure
-	if resp.Status != StatusSuccess {
+	if resp.Status != output.StatusSuccess {
 		t.Errorf("Expected status 'success', got '%s'", resp.Status)
 	}
 
@@ -74,10 +76,10 @@ func TestWriteSuccessJSON(t *testing.T) {
 
 func TestWriteSuccessHumanReadable(t *testing.T) {
 	var buf bytes.Buffer
-	formatter := NewFormatter(false)
+	formatter := output.NewFormatter(false)
 
 	data := "Hello, World!"
-	meta := &ResponseMetadata{
+	meta := &output.ResponseMetadata{
 		Timestamp: time.Now(),
 		Command:   "test",
 		Duration:  100,
@@ -88,17 +90,17 @@ func TestWriteSuccessHumanReadable(t *testing.T) {
 		t.Fatalf("WriteSuccess failed: %v", err)
 	}
 
-	output := buf.String()
-	if !strings.Contains(output, "Hello, World!") {
-		t.Errorf("Expected human-readable output to contain 'Hello, World!', got: %s", output)
+	outputStr := buf.String()
+	if !strings.Contains(outputStr, "Hello, World!") {
+		t.Errorf("Expected human-readable output to contain 'Hello, World!', got: %s", outputStr)
 	}
 }
 
 func TestWriteErrorJSON(t *testing.T) {
 	var buf bytes.Buffer
-	formatter := NewFormatter(true)
+	formatter := output.NewFormatter(true)
 
-	meta := &ResponseMetadata{
+	meta := &output.ResponseMetadata{
 		Timestamp: time.Now(),
 		Command:   "scan",
 		Duration:  0,
@@ -110,14 +112,14 @@ func TestWriteErrorJSON(t *testing.T) {
 	}
 
 	// Parse the JSON output
-	var resp Response
+	var resp output.Response
 	decoder := json.NewDecoder(&buf)
 	if err := decoder.Decode(&resp); err != nil {
 		t.Fatalf("Failed to parse JSON output: %v", err)
 	}
 
 	// Verify structure
-	if resp.Status != StatusError {
+	if resp.Status != output.StatusError {
 		t.Errorf("Expected status 'error', got '%s'", resp.Status)
 	}
 
@@ -140,9 +142,9 @@ func TestWriteErrorJSON(t *testing.T) {
 
 func TestWriteErrorHumanReadable(t *testing.T) {
 	var buf bytes.Buffer
-	formatter := NewFormatter(false)
+	formatter := output.NewFormatter(false)
 
-	meta := &ResponseMetadata{
+	meta := &output.ResponseMetadata{
 		Timestamp: time.Now(),
 		Command:   "scan",
 		Duration:  0,
@@ -153,24 +155,24 @@ func TestWriteErrorHumanReadable(t *testing.T) {
 		t.Fatalf("WriteError failed: %v", err)
 	}
 
-	output := buf.String()
-	if !strings.Contains(output, "Error: Invalid URL") {
-		t.Errorf("Expected human-readable error output, got: %s", output)
+	outputStr := buf.String()
+	if !strings.Contains(outputStr, "Error: Invalid URL") {
+		t.Errorf("Expected human-readable error output, got: %s", outputStr)
 	}
 }
 
 func TestWriteDiagnostic(t *testing.T) {
 	// This test verifies that WriteDiagnostic doesn't panic
 	// We can't easily capture stderr in a test, but we can verify it doesn't crash
-	WriteDiagnostic("Test diagnostic message")
-	WriteDiagnosticf("Test diagnostic message with %s", "format")
+	output.WriteDiagnostic("Test diagnostic message")
+	output.WriteDiagnosticf("Test diagnostic message with %s", "format")
 }
 
 func TestNewResponseMetadata(t *testing.T) {
 	start := time.Now()
 	duration := 1500 * time.Millisecond
 
-	meta := NewResponseMetadata("scan", duration)
+	meta := output.NewResponseMetadata("scan", duration)
 
 	if meta == nil {
 		t.Fatal("NewResponseMetadata returned nil")
@@ -191,14 +193,14 @@ func TestNewResponseMetadata(t *testing.T) {
 
 func TestResponseJSONSerialization(t *testing.T) {
 	// Test that Response can be properly serialized to JSON
-	resp := Response{
-		Status: StatusSuccess,
+	resp := output.Response{
+		Status: output.StatusSuccess,
 		Data: map[string]interface{}{
-			"urls": []string{"http://example.com"},
+			"urls":  []string{"http://example.com"},
 			"count": 1,
 		},
 		Error: nil,
-		Meta: &ResponseMetadata{
+		Meta: &output.ResponseMetadata{
 			Timestamp: time.Now(),
 			Command:   "scan",
 			Duration:  5000,
@@ -222,7 +224,7 @@ func TestResponseJSONSerialization(t *testing.T) {
 }
 
 func TestErrorDetailJSONSerialization(t *testing.T) {
-	errorDetail := ErrorDetail{
+	errorDetail := output.ErrorDetail{
 		Message: "Something went wrong",
 		Code:    "internal_error",
 	}
@@ -247,7 +249,7 @@ func TestErrorDetailJSONSerialization(t *testing.T) {
 }
 
 func TestResponseMetadataJSONSerialization(t *testing.T) {
-	meta := ResponseMetadata{
+	meta := output.ResponseMetadata{
 		Timestamp: time.Now(),
 		Command:   "test",
 		Duration:  1000,
