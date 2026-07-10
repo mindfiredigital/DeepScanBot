@@ -129,19 +129,157 @@ func applyScanOption(opts *ScanOptions, key, val string) {
 	}
 }
 
+// mergeOptions combines flag-based options with key=value options.
+// Flag-based options take precedence over key=value options.
+func mergeOptions(cmd *cobra.Command, kvOpts ScanOptions) ScanOptions {
+	opts := ScanOptions{
+		// Start with flag defaults
+		Depth:           2,
+		Timeout:         2,
+		MaxSize:         -1,
+		ContentTypes:    "text/html",
+		Output:          "crawler_results",
+		RetryBackoff:    time.Second,
+		Concurrency:     8,
+		HostConcurrency: 2,
+	}
+
+	// Helper to get flag value if set
+	getFlagInt := func(name string, defaultVal int) int {
+		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
+			if val, ok := parseIntValue(f.Value.String()); ok {
+				return val
+			}
+		}
+		return defaultVal
+	}
+
+	getFlagDuration := func(name string, defaultVal time.Duration) time.Duration {
+		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
+			if val, ok := parseDurationValue(f.Value.String()); ok {
+				return val
+			}
+		}
+		return defaultVal
+	}
+
+	getFlagString := func(name string, defaultVal string) string {
+		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
+			return f.Value.String()
+		}
+		return defaultVal
+	}
+
+	getFlagBool := func(name string, defaultVal bool) bool {
+		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
+			return f.Value.String() == "true"
+		}
+		return defaultVal
+	}
+
+	// Start with flag defaults
+	opts.Depth = getFlagInt("depth", opts.Depth)
+	opts.Timeout = getFlagInt("timeout", opts.Timeout)
+	opts.Proxy = getFlagString("proxy", opts.Proxy)
+	opts.MaxSize = getFlagInt("size", opts.MaxSize)
+	opts.DisableRedirects = getFlagBool("disable-redirects", opts.DisableRedirects)
+	opts.ShowSource = getFlagBool("show-source", opts.ShowSource)
+	opts.Insecure = getFlagBool("insecure", opts.Insecure)
+	opts.Unique = getFlagBool("unique", opts.Unique)
+	opts.Concurrency = getFlagInt("concurrency", opts.Concurrency)
+	opts.HostConcurrency = getFlagInt("host-concurrency", opts.HostConcurrency)
+	opts.ContentTypes = getFlagString("content-types", opts.ContentTypes)
+	opts.Output = getFlagString("output", opts.Output)
+	opts.IgnoreRobots = getFlagBool("ignore-robots", opts.IgnoreRobots)
+	opts.CrossDomain = getFlagBool("cross-domain", opts.CrossDomain)
+	opts.Retries = getFlagInt("retries", opts.Retries)
+	opts.RetryBackoff = getFlagDuration("retry-backoff", opts.RetryBackoff)
+	opts.Delay = getFlagDuration("delay", opts.Delay)
+	opts.Sitemap = getFlagBool("sitemap", opts.Sitemap)
+	opts.Resume = getFlagBool("resume", opts.Resume)
+
+	// Override with key=value options (but only if flags weren't explicitly set)
+	if !cmd.Flags().Lookup("depth").Changed {
+		opts.Depth = kvOpts.Depth
+	}
+	if !cmd.Flags().Lookup("timeout").Changed {
+		opts.Timeout = kvOpts.Timeout
+	}
+	if !cmd.Flags().Lookup("proxy").Changed {
+		opts.Proxy = kvOpts.Proxy
+	}
+	if !cmd.Flags().Lookup("size").Changed {
+		opts.MaxSize = kvOpts.MaxSize
+	}
+	if !cmd.Flags().Lookup("disable-redirects").Changed {
+		opts.DisableRedirects = kvOpts.DisableRedirects
+	}
+	if !cmd.Flags().Lookup("show-source").Changed {
+		opts.ShowSource = kvOpts.ShowSource
+	}
+	if !cmd.Flags().Lookup("insecure").Changed {
+		opts.Insecure = kvOpts.Insecure
+	}
+	if !cmd.Flags().Lookup("unique").Changed {
+		opts.Unique = kvOpts.Unique
+	}
+	if !cmd.Flags().Lookup("concurrency").Changed {
+		opts.Concurrency = kvOpts.Concurrency
+	}
+	if !cmd.Flags().Lookup("host-concurrency").Changed {
+		opts.HostConcurrency = kvOpts.HostConcurrency
+	}
+	if !cmd.Flags().Lookup("content-types").Changed {
+		opts.ContentTypes = kvOpts.ContentTypes
+	}
+	if !cmd.Flags().Lookup("output").Changed {
+		opts.Output = kvOpts.Output
+	}
+	if !cmd.Flags().Lookup("ignore-robots").Changed {
+		opts.IgnoreRobots = kvOpts.IgnoreRobots
+	}
+	if !cmd.Flags().Lookup("cross-domain").Changed {
+		opts.CrossDomain = kvOpts.CrossDomain
+	}
+	if !cmd.Flags().Lookup("retries").Changed {
+		opts.Retries = kvOpts.Retries
+	}
+	if !cmd.Flags().Lookup("retry-backoff").Changed {
+		opts.RetryBackoff = kvOpts.RetryBackoff
+	}
+	if !cmd.Flags().Lookup("delay").Changed {
+		opts.Delay = kvOpts.Delay
+	}
+	if !cmd.Flags().Lookup("sitemap").Changed {
+		opts.Sitemap = kvOpts.Sitemap
+	}
+	if !cmd.Flags().Lookup("resume").Changed {
+		opts.Resume = kvOpts.Resume
+	}
+
+	return opts
+}
+
 func parseKeyValue(args []string) (string, ScanOptions) {
 	opts := ScanOptions{
-		Depth:        2,
-		Timeout:      2,
-		MaxSize:      -1,
-		ContentTypes: "text/html",
-		Output:       "crawler_results",
-		RetryBackoff: time.Second,
+		Depth:           2,
+		Timeout:         2,
+		MaxSize:         -1,
+		ContentTypes:    "text/html",
+		Output:          "crawler_results",
+		RetryBackoff:    time.Second,
+		Concurrency:     8,
+		HostConcurrency: 2,
 	}
 
 	var url string
 
 	for _, arg := range args {
+		// Skip flags (they start with - and are handled by Cobra)
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		
 		if strings.Contains(arg, "=") {
 			parts := strings.SplitN(arg, "=", 2)
 			key := strings.ToLower(strings.TrimSpace(parts[0]))
@@ -183,24 +321,29 @@ var scanCmd = &cobra.Command{
 	Long: `Scan crawls a website starting from the specified URL, following links
 up to a configurable depth, and produces a report of all discovered URLs.
 
-Options are specified as key=value pairs after the URL.
+Options can be specified as either flags (--depth=3) or key=value pairs (depth=3).
+Both formats are supported for backward compatibility.
 
 Examples:
-  deepscanbot scan https://example.com depth=3 json=true output=results
-  deepscanbot scan https://example.com concurrency=10 delay=500ms
-  deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 --retries=3`,
+  deepscanbot scan https://example.com --depth=3 --json --output=results
+  deepscanbot scan https://example.com --concurrency=10 --delay=500ms
+  deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
+  deepscanbot scan https://example.com depth=3 json=true output=results`,
 	Args: cobra.MinimumNArgs(1),
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
 
-  # Scan with depth and JSON output
+  # Scan with depth and JSON output (flag format)
+  deepscanbot scan https://example.com --depth=3 --json
+
+  # Scan with depth and JSON output (key=value format)
   deepscanbot scan https://example.com depth=3 json=true
 
   # Scan with proxy and custom output
-  deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 output=results
+  deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --output=results
 
   # Polite crawl with delays
-  deepscanbot scan https://example.com delay=500ms concurrency=5
+  deepscanbot scan https://example.com --delay=500ms --concurrency=5
 
   # Non-interactive (CI/CD)
   deepscanbot scan https://example.com --no-input --force
@@ -211,7 +354,11 @@ Examples:
   # Auto-confirm destructive operations
   deepscanbot scan https://example.com --yes --force`,
 	Run: func(cmd *cobra.Command, args []string) {
-		url, opts := parseKeyValue(args)
+		// Parse key=value options for backward compatibility
+		url, keyValueOpts := parseKeyValue(args)
+
+		// Merge with flag-based options (flags take precedence)
+		opts := mergeOptions(cmd, keyValueOpts)
 
 		if url == "" {
 			exitcode.HandleError(exitcode.ErrEmptyURL)
@@ -225,6 +372,9 @@ Examples:
 		// Check for --json flag (persistent flag from root command)
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		if jsonFlag {
+			opts.JSON = true
+		} else if keyValueOpts.JSON {
+			// If --json flag wasn't set but json=true was in key=value options, use that
 			opts.JSON = true
 		}
 
@@ -314,6 +464,11 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
+	Example: `  # Show version
+  deepscanbot version
+
+  # Show version in JSON format
+  deepscanbot version --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
@@ -349,6 +504,11 @@ var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Verify installation and environment",
 	Long:  `Check that DeepScanBot is properly installed and the environment is configured correctly.`,
+	Example: `  # Run diagnostics
+  deepscanbot doctor
+
+  # Run diagnostics with JSON output
+  deepscanbot doctor --json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
@@ -391,12 +551,25 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage CLI configuration",
 	Long:  `View and modify DeepScanBot configuration settings.`,
+	Example: `  # View current configuration
+  deepscanbot config`,
 }
 
 var completionCmd = &cobra.Command{
 	Use:       "completion [bash|zsh|fish|powershell]",
 	Short:     "Generate shell completion script",
 	Long:      `Generate shell completion script for DeepScanBot commands.`,
+	Example: `  # Generate bash completion
+  deepscanbot completion bash
+
+  # Generate zsh completion
+  deepscanbot completion zsh
+
+  # Generate fish completion
+  deepscanbot completion fish
+
+  # Generate PowerShell completion
+  deepscanbot completion powershell`,
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -417,6 +590,28 @@ func init() {
 	// Add flags to scan command for safe destructive operations
 	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
 	scanCmd.Flags().BoolVar(&yesFlag, "yes", false, "Auto-confirm all destructive operations (e.g. overwriting files)")
+
+	// Add standardized flags to scan command
+	// These flags support both --flag=value and key=value formats for backward compatibility
+	scanCmd.Flags().Int("depth", 2, "Maximum crawl depth (default: 2)")
+	scanCmd.Flags().Int("timeout", 2, "Request timeout in seconds (default: 2)")
+	scanCmd.Flags().String("proxy", "", "HTTP proxy URL (e.g., http://127.0.0.1:8080)")
+	scanCmd.Flags().Int("size", -1, "Maximum page size in bytes; -1 for unlimited (default: -1)")
+	scanCmd.Flags().Bool("disable-redirects", false, "Disable following HTTP redirects")
+	scanCmd.Flags().Bool("show-source", false, "Include source URL in output for discovered links")
+	scanCmd.Flags().Bool("insecure", false, "Skip TLS certificate validation")
+	scanCmd.Flags().Bool("unique", false, "Only process unique URLs (deduplicate)")
+	scanCmd.Flags().Int("concurrency", 8, "Maximum concurrent requests (default: 8)")
+	scanCmd.Flags().Int("host-concurrency", 2, "Maximum concurrent requests per host (default: 2)")
+	scanCmd.Flags().String("content-types", "text/html", "Content types to accept (comma-separated)")
+	scanCmd.Flags().String("output", "crawler_results", "Output file base name (without extension)")
+	scanCmd.Flags().Bool("ignore-robots", false, "Ignore robots.txt rules")
+	scanCmd.Flags().Bool("cross-domain", false, "Follow links to different domains")
+	scanCmd.Flags().Int("retries", 0, "Number of retries for failed requests (default: 0)")
+	scanCmd.Flags().Duration("retry-backoff", time.Second, "Initial backoff duration for retries (e.g., 1s, 500ms)")
+	scanCmd.Flags().Duration("delay", 0, "Delay between requests to the same host (e.g., 500ms, 1s)")
+	scanCmd.Flags().Bool("sitemap", false, "Discover URLs from sitemap.xml")
+	scanCmd.Flags().Bool("resume", false, "Resume from previous crawl results")
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 

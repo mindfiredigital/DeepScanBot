@@ -28,6 +28,10 @@ This will:
 Crawl only the specified URL without following any links:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --depth=0
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com depth=0
 ```
 
@@ -36,6 +40,10 @@ deepscanbot scan https://example.com depth=0
 Crawl an entire website with greater depth and higher concurrency:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --depth=5 --concurrency=20
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com depth=5 concurrency=20
 ```
 
@@ -44,6 +52,10 @@ deepscanbot scan https://example.com depth=5 concurrency=20
 Export results in JSON format for programmatic processing and integration:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --json --output=results
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com json=true output=results
 ```
 
@@ -52,6 +64,10 @@ deepscanbot scan https://example.com json=true output=results
 Route all traffic through a proxy server:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
 ```
 
@@ -60,10 +76,12 @@ deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
 Filter which file types to download. Multiple types must be quoted as a single argument.
 
 ```bash
-# Only HTML pages
-deepscanbot scan https://example.com content-types="text/html"
+# Using flag format
+deepscanbot scan https://example.com --content-types="text/html"
+deepscanbot scan https://example.com --content-types="*/*"
 
-# Allow all content types
+# Using key=value format (backward compatible)
+deepscanbot scan https://example.com content-types="text/html"
 deepscanbot scan https://example.com content-types="*/*"
 ```
 
@@ -72,6 +90,10 @@ deepscanbot scan https://example.com content-types="*/*"
 Avoid processing duplicate URLs:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --unique
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com unique=true
 ```
 
@@ -81,10 +103,10 @@ Stop and resume a crawl without recrawling already visited URLs:
 
 ```bash
 # Initial crawl
-deepscanbot scan https://example.com depth=3 output=my-crawl
+deepscanbot scan https://example.com --depth=3 --output=my-crawl
 
 # Resume (skips already crawled URLs)
-deepscanbot scan https://example.com depth=3 resume=true output=my-crawl
+deepscanbot scan https://example.com --depth=3 --resume --output=my-crawl
 ```
 
 ### Polite Crawling
@@ -92,12 +114,20 @@ deepscanbot scan https://example.com depth=3 resume=true output=my-crawl
 Add delays to avoid overwhelming servers:
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --delay=500ms --host-concurrency=2
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com delay=500ms host-concurrency=2
 ```
 
 ### Crawl with Retry and Error Handling
 
 ```bash
+# Using flag format
+deepscanbot scan https://docs.example.com --depth=2 --retries=3 --retry-backoff=2s --delay=1s --host-concurrency=1
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://docs.example.com depth=2 retries=3 retry-backoff=2s delay=1s host-concurrency=1
 ```
 
@@ -106,6 +136,10 @@ Retries failed requests up to 3 times with exponential backoff, waits 1 second b
 ### Cross-Domain Crawl with Sitemap
 
 ```bash
+# Using flag format
+deepscanbot scan https://example.com --depth=3 --cross-domain --sitemap --concurrency=10 --host-concurrency=2 --json
+
+# Using key=value format (backward compatible)
 deepscanbot scan https://example.com depth=3 cross-domain=true sitemap=true concurrency=10 host-concurrency=2 json=true
 ```
 
@@ -128,6 +162,8 @@ DeepScanBot supports a consistent `--json` flag across all commands that return 
 
 #### Usage
 
+All commands support the `--json` flag for machine-readable output:
+
 ```bash
 # Scan with JSON output
 deepscanbot scan https://example.com --json
@@ -137,6 +173,9 @@ deepscanbot version --json
 
 # Doctor with JSON output
 deepscanbot doctor --json
+
+# Help with JSON output (command tree)
+deepscanbot --help --json
 ```
 
 #### Scan Command JSON Output
@@ -261,6 +300,53 @@ All JSON responses follow this structure:
 - **Separate Streams**: Progress messages, warnings, and logs are written to `stderr`
 - **Consistent Format**: All commands use the same JSON response structure
 - **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
+
+### Standardized Flag Naming
+
+DeepScanBot uses consistent flag names across all commands:
+
+| Flag | Type | Description | Default |
+|------|------|-------------|---------|
+| `--depth` | int | Maximum crawl depth | `2` |
+| `--timeout` | int | Request timeout in seconds | `2` |
+| `--concurrency` | int | Maximum concurrent requests | `8` |
+| `--host-concurrency` | int | Maximum concurrent requests per host | `2` |
+| `--output` | string | Output file base name (without extension) | `crawler_results` |
+| `--json` | bool | Output results in JSON format | `false` |
+| `--dry-run` | bool | Preview actions without executing | `false` |
+| `--force` | bool | Overwrite existing output without prompting | `false` |
+| `--yes` | bool | Auto-confirm destructive operations | `false` |
+| `--no-input` | bool | Disable all interactive prompts | `false` |
+| `--proxy` | string | HTTP proxy URL | `""` |
+| `--delay` | duration | Delay between requests to same host (e.g., 500ms, 1s) | `0` |
+| `--retries` | int | Number of retries for failed requests | `0` |
+| `--retry-backoff` | duration | Initial backoff duration for retries | `1s` |
+| `--content-types` | string | Content types to accept (comma-separated) | `text/html` |
+| `--size` | int | Maximum page size in bytes (-1 for unlimited) | `-1` |
+| `--ignore-robots` | bool | Ignore robots.txt rules | `false` |
+| `--cross-domain` | bool | Follow links to different domains | `false` |
+| `--sitemap` | bool | Discover URLs from sitemap.xml | `false` |
+| `--resume` | bool | Resume from previous crawl results | `false` |
+| `--insecure` | bool | Skip TLS certificate validation | `false` |
+| `--unique` | bool | Only process unique URLs (deduplicate) | `false` |
+| `--show-source` | bool | Include source URL in output for discovered links | `false` |
+| `--disable-redirects` | bool | Disable following HTTP redirects | `false` |
+
+#### Flag Format vs Key=Value Format
+
+DeepScanBot supports two formats for specifying options:
+
+**Flag Format (Recommended):**
+```bash
+deepscanbot scan https://example.com --depth=3 --json --output=results
+```
+
+**Key=Value Format (Backward Compatible):**
+```bash
+deepscanbot scan https://example.com depth=3 json=true output=results
+```
+
+Both formats work identically. Flag-based options take precedence over key=value options when both are specified.
 
 ### Machine-Readable Command Tree (`help --json`)
 
