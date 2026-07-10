@@ -17,10 +17,24 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/version"
 )
 
-// cliVersion is the current version of the CLI
-const cliVersion = "1.0.0"
+// Version variables - these can be set at build time using ldflags
+var (
+	cliVersion   = "dev"     // -version flag
+	gitCommit    = ""        // -gitCommit flag
+	buildDate    = ""        // -buildDate flag
+)
+
+// versionInfo returns the current version information
+func versionInfo() *version.Info {
+	info := version.Default()
+	info.Version = cliVersion
+	info.GitCommit = gitCommit
+	info.BuildDate = buildDate
+	return info
+}
 
 var log = logger.NewWithLevel(logger.LevelInfo)
 
@@ -531,19 +545,17 @@ var versionCmd = &cobra.Command{
 			}
 		}
 
+		info := versionInfo()
+
 		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
-			data := map[string]string{
-				"version": "1.0.0",
-				"name":    "DeepScanBot CLI",
-			}
-			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			err := formatter.WriteSuccess(os.Stdout, info.JSON(), meta)
 			if err != nil {
 				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
-			fmt.Println("DeepScanBot CLI v1.0.0")
+			fmt.Println(info.String())
 		}
 	},
 }

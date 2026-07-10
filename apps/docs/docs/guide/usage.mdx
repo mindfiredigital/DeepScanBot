@@ -21,6 +21,81 @@ This will:
 - Follow links up to 2 levels deep
 - Output results to `crawler_results.txt`
 
+## Version Information
+
+### View Version
+
+Display the current version of DeepScanBot:
+
+```bash
+deepscanbot version
+```
+
+Output:
+```
+DeepScanBot CLI v1.0.0 (abc1234) built on 2024-01-15T10:30:00Z
+```
+
+### Version in JSON Format
+
+Get version information in JSON format for scripts and automation:
+
+```bash
+deepscanbot version --json
+```
+
+Output:
+```json
+{
+  "status": "success",
+  "data": {
+    "version": "1.0.0",
+    "name": "DeepScanBot CLI",
+    "git_commit": "abc1234",
+    "build_date": "2024-01-15T10:30:00Z",
+    "go_version": "go1.21.0",
+    "platform": "linux/amd64"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "version",
+    "duration_ms": 0
+  }
+}
+```
+
+### Version Information Fields
+
+The version command provides the following information:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `version` | Semantic version number | `1.0.0` |
+| `name` | CLI name | `DeepScanBot CLI` |
+| `git_commit` | Git commit hash (if available) | `abc1234` |
+| `build_date` | ISO 8601 build timestamp | `2024-01-15T10:30:00Z` |
+| `go_version` | Go compiler version | `go1.21.0` |
+| `platform` | OS/architecture | `linux/amd64` |
+
+### Checking Version in Scripts
+
+You can check the version in shell scripts:
+
+```bash
+#!/bin/bash
+# Get version number
+VERSION=$(deepscanbot version --json | jq -r '.data.version')
+echo "DeepScanBot version: $VERSION"
+
+# Check if version meets minimum requirement
+MIN_VERSION="1.0.0"
+CURRENT=$(deepscanbot version --json | jq -r '.data.version')
+
+if [ "$CURRENT" != "$MIN_VERSION" ]; then
+    echo "Warning: Expected version $MIN_VERSION, got $CURRENT"
+fi
+```
+
 ## Common Use Cases
 
 ### Single Page Crawl
