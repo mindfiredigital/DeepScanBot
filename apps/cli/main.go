@@ -21,13 +21,20 @@ import (
 // cliVersion is the current version of the CLI
 const cliVersion = "1.0.0"
 
-var log = logger.New("info")
+var log = logger.NewWithLevel(logger.LevelInfo)
 
 // Global flags for destructive operations
 var (
 	forceOverwrite bool // --force: overwrite existing output without prompting
 	dryRun         bool // --dry-run: preview actions without executing
 	yesFlag        bool // --yes: auto-confirm destructive operations
+)
+
+// Log level flags
+var (
+	quietFlag   bool // --quiet: suppress non-essential output
+	verboseFlag bool // --verbose: display additional informational messages
+	debugFlag   bool // --debug: display detailed debugging information
 )
 
 // ScanOptions holds all scan configuration
@@ -586,6 +593,11 @@ func init() {
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
 	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Preview actions that would be performed without making changes")
+	
+	// Add logging level flags
+	rootCmd.PersistentFlags().BoolVar(&quietFlag, "quiet", false, "Suppress non-essential output (only show warnings and errors)")
+	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "Display additional informational messages")
+	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Display detailed debugging information")
 
 	// Add flags to scan command for safe destructive operations
 	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
@@ -630,6 +642,10 @@ func init() {
 		if noInput {
 			noinput.SetNoInputFlag()
 		}
+		
+		// Configure logging level based on flags
+		configureLogLevel(cmd)
+		
 		if originalPersistentPreRun != nil {
 			return originalPersistentPreRun(cmd, args)
 		}
@@ -654,6 +670,26 @@ func init() {
 		// Fall back to default help using the original function
 		originalHelpFunc(cmd, args)
 	})
+}
+
+// configureLogLevel sets the logging level based on --quiet, --verbose, and --debug flags
+func configureLogLevel(cmd *cobra.Command) {
+	quiet, _ := cmd.Flags().GetBool("quiet")
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	debug, _ := cmd.Flags().GetBool("debug")
+	
+	switch {
+	case debug:
+		log.SetLevel(logger.LevelDebug)
+		log.Debugf("Debug logging enabled")
+	case verbose:
+		log.SetLevel(logger.LevelVerbose)
+		log.Infof("Verbose logging enabled")
+	case quiet:
+		log.SetLevel(logger.LevelQuiet)
+	default:
+		log.SetLevel(logger.LevelInfo)
+	}
 }
 
 func main() {

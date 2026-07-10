@@ -142,6 +142,9 @@ deepscanbot scan https://example.com depth=2 --depth=3  # Uses --depth=3
 | `--json` | bool | `false` | Output results in JSON format |
 | `--no-input` | bool | `false` | Disable all interactive prompts; fail if required input is missing |
 | `--dry-run` | bool | `false` | Preview actions that would be performed without making changes |
+| `--quiet` | bool | `false` | Suppress non-essential output (only show warnings and errors) |
+| `--verbose` | bool | `false` | Display additional informational messages |
+| `--debug` | bool | `false` | Display detailed debugging information |
 | `--help` / `-h` | bool | `false` | Show help for any command |
 
 ### Scan Command Flags

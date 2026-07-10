@@ -575,6 +575,119 @@ if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; t
 fi
 ```
 
+## Logging and Verbosity
+
+DeepScanBot provides three logging levels to control output verbosity:
+
+### Logging Levels
+
+#### `--quiet`
+Suppress non-essential output. Only warnings and errors are displayed.
+
+```bash
+deepscanbot scan https://example.com --quiet
+```
+
+#### `--verbose`
+Display additional informational messages about the crawl progress.
+
+```bash
+deepscanbot scan https://example.com --verbose
+```
+
+#### `--debug`
+Display detailed debugging information for troubleshooting.
+
+```bash
+deepscanbot scan https://example.com --debug
+```
+
+### Logging Level Precedence
+
+When multiple logging flags are specified, they are evaluated in this order (highest priority first):
+
+1. `--debug` (most verbose)
+2. `--verbose`
+3. `--quiet` (least verbose)
+4. Default (info level)
+
+**Example:**
+```bash
+# This will use debug mode (highest priority)
+deepscanbot scan https://example.com --quiet --verbose --debug
+```
+
+### Output Streams
+
+DeepScanBot uses separate output streams for different types of information:
+
+- **stdout**: Command results only (JSON output, text reports)
+- **stderr**: Progress messages, warnings, errors, and logs
+
+This separation ensures that:
+- Scripts can capture clean command output from stdout
+- Progress information doesn't interfere with automation
+- Logs are always visible in interactive terminals
+
+**Example:**
+```bash
+# Capture only the JSON result
+result=$(deepscanbot scan https://example.com --json)
+
+# Redirect logs to a file
+deepscanbot scan https://example.com --json 2> scan.log
+
+# Discard logs
+deepscanbot scan https://example.com --json 2>/dev/null
+```
+
+### Terminal-Aware Behavior
+
+DeepScanBot automatically detects whether output is connected to a terminal (TTY) or a non-interactive environment:
+
+- **Terminal (TTY)**: Full interactive experience with progress indicators
+- **Non-TTY (piped/redirected)**: Automatic disabling of spinners, progress bars, and animations
+
+This ensures that:
+- Interactive users see rich progress information
+- Automated scripts get clean, parseable output
+- Machine-readable output (`--json`) is never polluted by UI elements
+
+**Example:**
+```bash
+# Interactive terminal - shows progress bars and spinners
+deepscanbot scan https://example.com
+
+# Piped to file - no spinners or progress bars
+deepscanbot scan https://example.com > output.txt
+
+# Piped to another command - clean output
+deepscanbot scan https://example.com --json | jq '.data.summary'
+```
+
+### Examples
+
+#### Quiet Mode for CI/CD
+
+```bash
+# Minimal output for CI/CD pipelines
+deepscanbot scan https://example.com --quiet --no-input --force
+```
+
+#### Verbose Mode for Monitoring
+
+```bash
+# Detailed progress for manual monitoring
+deepscanbot scan https://example.com --verbose --concurrency=10
+```
+
+#### Debug Mode for Troubleshooting
+
+```bash
+# Maximum detail for debugging issues
+deepscanbot scan https://example.com --debug --proxy=http://127.0.0.1:8080
+```
+
 ## Exit Codes
 
 | Code | Meaning |

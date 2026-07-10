@@ -9,24 +9,41 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
+// LogLevel represents the logging level
+type LogLevel string
+
+const (
+	LevelQuiet   LogLevel = "quiet"
+	LevelInfo    LogLevel = "info"
+	LevelVerbose LogLevel = "verbose"
+	LevelDebug   LogLevel = "debug"
+)
+
 // Logger wraps slog.Logger to provide a consistent logging interface.
 type Logger struct {
 	*slog.Logger
+	level LogLevel
 }
 
 // New creates a new Logger that writes to stderr with the given level.
 func New(level string) *Logger {
+	return NewWithLevel(LogLevel(level))
+}
+
+// NewWithLevel creates a new Logger with a specific LogLevel
+func NewWithLevel(level LogLevel) *Logger {
 	var l slog.Level
 
 	switch level {
-	case "debug":
+	case LevelDebug:
 		l = slog.LevelDebug
-	case "info":
+	case LevelVerbose:
 		l = slog.LevelInfo
-	case "warn":
+	case LevelInfo:
+		l = slog.LevelInfo
+	case LevelQuiet:
+		// Quiet mode shows warnings and errors, so use Warn level
 		l = slog.LevelWarn
-	case "error":
-		l = slog.LevelError
 	default:
 		l = slog.LevelInfo
 	}
@@ -41,7 +58,64 @@ func New(level string) *Logger {
 		},
 	})
 
-	return &Logger{slog.New(handler)}
+	return &Logger{
+		Logger: slog.New(handler),
+		level:  level,
+	}
+}
+
+// Level returns the current log level
+func (l *Logger) Level() LogLevel {
+	return l.level
+}
+
+// SetLevel changes the logging level dynamically
+func (l *Logger) SetLevel(level LogLevel) {
+	l.level = level
+	
+	var lvl slog.Level
+	switch level {
+	case LevelDebug:
+		lvl = slog.LevelDebug
+	case LevelVerbose:
+		lvl = slog.LevelInfo
+	case LevelInfo:
+		lvl = slog.LevelInfo
+	case LevelQuiet:
+		// Quiet mode shows warnings and errors, so use Warn level
+		lvl = slog.LevelWarn
+	default:
+		lvl = slog.LevelInfo
+	}
+
+	// Note: slog.Logger doesn't support changing level dynamically,
+	// so we need to create a new handler
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: lvl,
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	})
+	
+	l.Logger = slog.New(handler)
+}
+
+// IsQuiet returns true if the logger is in quiet mode
+func (l *Logger) IsQuiet() bool {
+	return l.level == LevelQuiet
+}
+
+// IsVerbose returns true if the logger is in verbose mode
+func (l *Logger) IsVerbose() bool {
+	return l.level == LevelVerbose || l.level == LevelDebug
+}
+
+// IsDebug returns true if the logger is in debug mode
+func (l *Logger) IsDebug() bool {
+	return l.level == LevelDebug
 }
 
 // Infof logs a formatted info message.
