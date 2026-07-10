@@ -113,6 +113,27 @@ var (
 		Hint:    "Retry with reduced concurrency or check the target URL.",
 	}
 
+	// ErrTimeout is returned when an operation exceeds its configured timeout.
+	ErrTimeout = &ExitCode{
+		Code:    Timeout,
+		Message: "Operation timed out.",
+		Hint:    "Increase the timeout using --timeout flag (e.g., --timeout=5m).",
+	}
+
+	// ErrStdinRead is returned when reading from stdin fails.
+	ErrStdinRead = &ExitCode{
+		Code:    InvalidInput,
+		Message: "Failed to read input from stdin.",
+		Hint:    "Ensure stdin is valid and not closed.",
+	}
+
+	// ErrFileRead is returned when reading from a file fails.
+	ErrFileRead = &ExitCode{
+		Code:    InvalidInput,
+		Message: "Failed to read input file.",
+		Hint:    "Check that the file exists and is readable.",
+	}
+
 	// ErrWriteOutput is returned when writing the output file fails.
 	ErrWriteOutput = &ExitCode{
 		Code:    InternalError,

@@ -12,6 +12,7 @@ import (
 
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
+	"github.com/mindfiredigital/DeepScanBot/packages/input"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
@@ -59,6 +60,8 @@ type ScanOptions struct {
 	Delay            time.Duration
 	Sitemap          bool
 	Resume           bool
+	InputFile        string
+	UseStdin         bool
 }
 
 func parseIntValue(val string) (int, bool) {
@@ -133,6 +136,10 @@ func applyScanOption(opts *ScanOptions, key, val string) {
 		opts.Sitemap = val == "true"
 	case "resume":
 		opts.Resume = val == "true"
+	case "input-file":
+		opts.InputFile = val
+	case "stdin":
+		opts.UseStdin = val == "true"
 	}
 }
 
@@ -263,6 +270,12 @@ func mergeOptions(cmd *cobra.Command, kvOpts ScanOptions) ScanOptions {
 	if !cmd.Flags().Lookup("resume").Changed {
 		opts.Resume = kvOpts.Resume
 	}
+	if !cmd.Flags().Lookup("input-file").Changed {
+		opts.InputFile = kvOpts.InputFile
+	}
+	if !cmd.Flags().Lookup("stdin").Changed {
+		opts.UseStdin = kvOpts.UseStdin
+	}
 
 	return opts
 }
@@ -392,9 +405,31 @@ Examples:
 			exitcode.HandleError(err)
 		}
 
+		// --- Read URLs from stdin or file if specified ---
+		var urlsToScan []string
+		if opts.InputFile != "" || opts.UseStdin {
+			inputURLs, err := input.ReadInput(opts.InputFile, opts.UseStdin)
+			if err != nil {
+				exitcode.HandleErrorWithMessage("read input", exitcode.ErrFileRead)
+			}
+			if len(inputURLs) == 0 {
+				exitcode.HandleError(&exitcode.ExitCode{
+					Code:    exitcode.InvalidInput,
+					Message: "No URLs provided via input.",
+					Hint:    "Provide URLs via stdin or --input-file flag.",
+				})
+			}
+			urlsToScan = inputURLs
+			log.Infof("Loaded %d URLs from %s", len(urlsToScan), 
+				map[bool]string{true: "stdin", false: "file " + opts.InputFile}[opts.UseStdin])
+		} else {
+			// Use the positional URL argument
+			urlsToScan = []string{parsedURL}
+		}
+
 		// --- Dry-run mode: preview actions and exit without making changes ---
 		if dryRun {
-			printDryRunPlan(parsedURL, outputFilename, opts)
+			printDryRunPlan(parsedURL, outputFilename, opts, len(urlsToScan))
 			return
 		}
 
@@ -426,7 +461,13 @@ Examples:
 			log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 		}
 
-		c := crawler.NewCrawlerWithOptions(parsedURL, opts.Depth, timeoutDuration, opts.Proxy, opts.MaxSize, opts.DisableRedirects, opts.Insecure, opts.Unique, opts.Concurrency, parseContentTypes(opts.ContentTypes), opts.IgnoreRobots, opts.CrossDomain, crawler.Options{
+		// For now, we only support scanning a single URL at a time
+		// In the future, this could be extended to scan multiple URLs
+		if len(urlsToScan) > 1 {
+			log.Warnf("Multiple URLs provided, only scanning the first one: %s", urlsToScan[0])
+		}
+
+		c := crawler.NewCrawlerWithOptions(urlsToScan[0], opts.Depth, timeoutDuration, opts.Proxy, opts.MaxSize, opts.DisableRedirects, opts.Insecure, opts.Unique, opts.Concurrency, parseContentTypes(opts.ContentTypes), opts.IgnoreRobots, opts.CrossDomain, crawler.Options{
 			Retries:            opts.Retries,
 			RetryBackoff:       opts.RetryBackoff,
 			CrawlDelay:         opts.Delay,
@@ -624,6 +665,8 @@ func init() {
 	scanCmd.Flags().Duration("delay", 0, "Delay between requests to the same host (e.g., 500ms, 1s)")
 	scanCmd.Flags().Bool("sitemap", false, "Discover URLs from sitemap.xml")
 	scanCmd.Flags().Bool("resume", false, "Resume from previous crawl results")
+	scanCmd.Flags().String("input-file", "", "Read URLs from a file (one per line)")
+	scanCmd.Flags().Bool("stdin", false, "Read URLs from standard input (one per line)")
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
@@ -722,7 +765,7 @@ func handleCobraError(err error) {
 // printDryRunPlan displays the actions that would be performed during a scan
 // without actually executing them.  It supports both human-readable and JSON
 // output formats.
-func printDryRunPlan(targetURL, outputFilename string, opts ScanOptions) {
+func printDryRunPlan(targetURL, outputFilename string, opts ScanOptions, urlCount int) {
 	plan := map[string]interface{}{
 		"action":          "scan",
 		"target_url":      targetURL,
@@ -738,6 +781,7 @@ func printDryRunPlan(targetURL, outputFilename string, opts ScanOptions) {
 		"cross_domain":    opts.CrossDomain,
 		"sitemap":         opts.Sitemap,
 		"retries":         opts.Retries,
+		"urls_provided":   urlCount,
 	}
 
 	// Check if the output file already exists (would be overwritten)

@@ -170,6 +170,9 @@ deepscanbot scan https://example.com depth=2 --depth=3  # Uses --depth=3
 | `--unique` | bool | `false` | Only process unique URLs (deduplicate) |
 | `--show-source` | bool | `false` | Include source URL in output for discovered links |
 | `--disable-redirects` | bool | `false` | Disable following HTTP redirects |
+| `--timeout` | duration | `2s` | Operation timeout (e.g., 30s, 2m, 5m) |
+| `--input-file` | string | `""` | Read URLs from a file (one per line) |
+| `--stdin` | bool | `false` | Read URLs from standard input (one per line) |
 | `--force` | bool | `false` | Overwrite existing output file without prompting |
 | `--yes` | bool | `false` | Auto-confirm all destructive operations (e.g. overwriting files) |
 

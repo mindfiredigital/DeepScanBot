@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"net/url"
 	"runtime"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/temoto/robotstxt"
 
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/parser"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
@@ -141,20 +143,46 @@ func (c *Crawler) StartReport() (storage.CrawlReport, error) {
 	c.log.Infof("Starting crawl: url=%s max-depth=%d concurrency=%d per-host-concurrency=%d retries=%d delay=%s sitemap=%t resumed=%d",
 		c.startURL, c.maxDepth, cap(c.sem), c.perHostLimit, c.retries, c.crawlDelay, c.includeSitemap, len(c.resumeEntries))
 
-	c.enqueueCrawl(c.startURL, "href", 0)
-
-	if c.includeSitemap && c.maxDepth > 0 {
-		c.enqueueSitemapURLs()
+	// Create a context with timeout if configured
+	var cancel context.CancelFunc
+	ctx := context.Background()
+	if c.timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, c.timeout)
+		defer cancel()
 	}
 
-	c.wg.Wait()
+	// Channel to capture the report
+	type reportResult struct {
+		report storage.CrawlReport
+		err    error
+	}
+	resultChan := make(chan reportResult, 1)
 
-	finishedAt := time.Now()
-	report := storage.NewCrawlReport(c.startURL, "", startedAt, finishedAt, c.pageStorage.Results())
-	c.log.Infof("Crawl finished: url=%s total=%d passed=%d failed=%d skipped=%d duration=%s",
-		c.startURL, report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped, finishedAt.Sub(startedAt).Round(time.Millisecond))
+	go func() {
+		c.enqueueCrawl(c.startURL, "href", 0)
 
-	return report, nil
+		if c.includeSitemap && c.maxDepth > 0 {
+			c.enqueueSitemapURLs()
+		}
+
+		c.wg.Wait()
+
+		finishedAt := time.Now()
+		report := storage.NewCrawlReport(c.startURL, "", startedAt, finishedAt, c.pageStorage.Results())
+		c.log.Infof("Crawl finished: url=%s total=%d passed=%d failed=%d skipped=%d duration=%s",
+			c.startURL, report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped, finishedAt.Sub(startedAt).Round(time.Millisecond))
+
+		resultChan <- reportResult{report: report, err: nil}
+	}()
+
+	// Wait for either completion or timeout
+	select {
+	case result := <-resultChan:
+		return result.report, result.err
+	case <-ctx.Done():
+		c.log.Errorf("Crawl timed out after %s", c.timeout)
+		return storage.CrawlReport{}, exitcode.ErrTimeout
+	}
 }
 
 // crawl processes a single URL: checks robots.txt, fetches, stores results, and parses links.

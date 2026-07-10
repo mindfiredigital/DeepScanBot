@@ -688,9 +688,173 @@ deepscanbot scan https://example.com --verbose --concurrency=10
 deepscanbot scan https://example.com --debug --proxy=http://127.0.0.1:8080
 ```
 
+## Timeout Support
+
+DeepScanBot supports configurable timeouts for long-running operations to prevent indefinite hangs.
+
+### Timeout Flag
+
+The `--timeout` flag specifies the maximum duration for the entire crawl operation:
+
+```bash
+# Set timeout to 30 seconds
+deepscanbot scan https://example.com --timeout=30
+
+# Set timeout to 2 minutes
+deepscanbot scan https://example.com --timeout=2m
+
+# Set timeout to 5 minutes
+deepscanbot scan https://example.com --timeout=5m
+```
+
+### Timeout Format
+
+Timeouts accept Go duration formats:
+- `30s` - 30 seconds
+- `2m` - 2 minutes
+- `5m` - 5 minutes
+- `1h` - 1 hour
+
+### Timeout Behavior
+
+When a timeout is reached:
+- The crawl is gracefully cancelled
+- A clear error message is displayed
+- The exit code is 31 (Timeout)
+- A hint suggests increasing the timeout
+
+**Example:**
+```bash
+$ deepscanbot scan https://example.com --timeout=5s
+Error: Operation timed out after 5s.
+Hint: Increase the timeout using --timeout flag (e.g., --timeout=5m).
+```
+
+### Default Timeout
+
+The default timeout is 2 seconds. For most websites, you'll want to increase this:
+
+```bash
+# Reasonable default for most crawls
+deepscanbot scan https://example.com --timeout=30s
+
+# For large sites
+deepscanbot scan https://example.com --timeout=5m
+```
+
+## stdin and File Input
+
+DeepScanBot supports reading URLs from standard input (stdin) or files for batch processing.
+
+### Reading from stdin
+
+Use the `--stdin` flag to read URLs from standard input (one URL per line):
+
+```bash
+# Pipe URLs from a command
+echo -e "https://example.com\nhttps://example.org" | deepscanbot scan --stdin
+
+# Read from a file using cat
+cat urls.txt | deepscanbot scan --stdin
+
+# Generate URLs and pipe
+seq 1 10 | sed 's|.*|https://example.com/page&|' | deepscanbot scan --stdin
+```
+
+### Reading from a File
+
+Use the `--input-file` flag to read URLs from a file (one URL per line):
+
+```bash
+# Read URLs from a file
+deepscanbot scan --input-file=urls.txt
+
+# Combine with other options
+deepscanbot scan --input-file=urls.txt --depth=2 --json --output=results
+```
+
+### Input File Format
+
+The input file should contain one URL per line:
+
+```
+https://example.com
+https://example.org
+https://example.net/page1
+https://example.net/page2
+```
+
+Empty lines are ignored.
+
+### Input Precedence
+
+When both `--input-file` and `--stdin` are provided, file input takes precedence:
+
+```bash
+# This will use urls.txt, not stdin
+cat urls2.txt | deepscanbot scan --stdin --input-file=urls.txt
+```
+
+### Positional URL vs Input
+
+The positional URL argument and stdin/file input are mutually exclusive:
+
+- If you provide a positional URL (e.g., `deepscanbot scan https://example.com`), it takes precedence
+- If you use `--stdin` or `--input-file`, the positional URL is ignored
+- An error is returned if no input is provided
+
+**Example:**
+```bash
+# Positional URL (traditional usage)
+deepscanbot scan https://example.com
+
+# stdin input (batch processing)
+cat urls.txt | deepscanbot scan --stdin
+
+# File input (batch processing)
+deepscanbot scan --input-file=urls.txt
+```
+
+### Batch Processing Example
+
+```bash
+# Create a list of URLs
+cat > urls.txt << EOF
+https://example.com
+https://example.org
+https://example.net
+EOF
+
+# Process all URLs (currently scans the first one)
+deepscanbot scan --input-file=urls.txt --depth=2 --json --output=batch-results
+
+# Or pipe from another command
+curl -s https://sitemap.xml | grep -o 'https://[^"]*' | deepscanbot scan --stdin
+```
+
+### Automation Example
+
+```bash
+#!/bin/bash
+# batch_scan.sh - Scan multiple URLs from a file
+
+INPUT_FILE="urls.txt"
+OUTPUT_DIR="results"
+
+mkdir -p "$OUTPUT_DIR"
+
+while IFS= read -r url; do
+    echo "Scanning: $url"
+    deepscanbot scan "$url" --json --output="$OUTPUT_DIR/$(echo $url | md5sum | cut -d' ' -f1)" || {
+        echo "Failed to scan: $url"
+    }
+done < "$INPUT_FILE"
+```
+
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
 | `0` | Success |
 | `1` | Error (invalid arguments, crawl failure) |
+| `31` | Timeout (operation exceeded configured timeout) |
