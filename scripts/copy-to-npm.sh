@@ -1,6 +1,7 @@
 #!/bin/bash
 # copy-to-npm.sh
 # Copies GoReleaser-built binaries from dist/ to bin/ for npm packaging
+# Optimized to only copy the binary for the current platform to reduce package size
 
 set -euo pipefail
 
@@ -14,41 +15,86 @@ echo "=== Copying binaries to npm package ==="
 # Ensure bin directory exists
 mkdir -p "$BIN_DIR"
 
-# Find all platform-specific directories in dist/
-# GoReleaser creates directories like: deepscanbot_<version>_<os>_<arch>
+# Check if dist/ directory exists
 if [ ! -d "$DIST_DIR" ]; then
   echo "Error: dist/ directory not found. Run GoReleaser build first."
   exit 1
 fi
 
-# Copy all binaries from dist/ to bin/
-# GoReleaser creates archives, but for npm we need the raw binaries
-# The binaries are typically in archives, so we need to extract them
-# or they might already be extracted depending on the GoReleaser config
+# Detect current platform
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
 
-# Find all executable files in dist/ and copy them to bin/
-find "$DIST_DIR" -type f \( -name "deepscanbot" -o -name "deepscanbot.exe" \) | while read -r binary; do
-  echo "Found binary: $binary"
-  
-  # Determine the target filename
-  filename=$(basename "$binary")
-  
-  # Copy to bin directory
-  cp "$binary" "$BIN_DIR/$filename"
-  
-  # Make executable on Unix systems
-  if [[ "$filename" != *.exe ]]; then
-    chmod +x "$BIN_DIR/$filename"
-    echo "  → Copied to: $BIN_DIR/$filename (made executable)"
-  else
-    echo "  → Copied to: $BIN_DIR/$filename"
+# Map OS names
+case "$OS" in
+  linux*)   OS="linux" ;;
+  darwin*)  OS="darwin" ;;
+  mingw*|msys*|cygwin*) OS="windows" ;;
+  *)       
+    echo "Error: Unsupported operating system: $OS"
+    exit 1
+    ;;
+esac
+
+# Map architecture names
+case "$ARCH" in
+  x86_64|amd64) ARCH="amd64" ;;
+  arm64|aarch64) ARCH="arm64" ;;
+  *)       
+    echo "Error: Unsupported architecture: $ARCH"
+    exit 1
+    ;;
+esac
+
+echo "Detected platform: $OS/$ARCH"
+
+# Determine binary name
+BINARY_NAME="deepscanbot"
+if [ "$OS" = "windows" ]; then
+  BINARY_NAME="deepscanbot.exe"
+fi
+
+# Find the matching binary in dist/
+# GoReleaser creates directories like: deepscanbot_<version>_<os>_<arch>
+TARGET_BINARY=""
+for dir in "$DIST_DIR"/*; do
+  if [ -d "$dir" ]; then
+    dirname="$(basename "$dir")"
+    # Check if directory name contains OS and ARCH
+    if [[ "$dirname" == *"$OS"* ]] && [[ "$dirname" == *"$ARCH"* ]]; then
+      TARGET_BINARY="$dir/$BINARY_NAME"
+      if [ -f "$TARGET_BINARY" ]; then
+        break
+      fi
+    fi
   fi
 done
+
+if [ -z "$TARGET_BINARY" ] || [ ! -f "$TARGET_BINARY" ]; then
+  echo "Error: Binary for $OS/$ARCH not found in dist/"
+  echo "Available directories:"
+  ls -1 "$DIST_DIR"
+  exit 1
+fi
+
+echo "Found binary: $TARGET_BINARY"
+
+# Copy to bin directory
+cp "$TARGET_BINARY" "$BIN_DIR/$BINARY_NAME"
+
+# Make executable on Unix systems
+if [[ "$BINARY_NAME" != *.exe ]]; then
+  chmod +x "$BIN_DIR/$BINARY_NAME"
+  echo "  → Copied to: $BIN_DIR/$BINARY_NAME (made executable)"
+else
+  echo "  → Copied to: $BIN_DIR/$BINARY_NAME"
+fi
 
 # Verify the copy
 echo ""
 echo "=== Binaries in bin/ directory ==="
-ls -lah "$BIN_DIR" 2>/dev/null || echo "No binaries found in bin/"
+ls -lah "$BIN_DIR"
 
 echo ""
 echo "=== Copy complete ==="
+echo "Note: Only the binary for the current platform ($OS/$ARCH) was copied to minimize package size."

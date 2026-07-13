@@ -17,6 +17,8 @@ import (
 
 var log = logger.New("info")
 
+var version = "dev"
+
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
 	Depth            int
@@ -161,7 +163,8 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3 json=true
 
   # Show version
-  deepscanbot version`,
+  deepscanbot --version`,
+	Version: version,
 }
 
 var scanCmd = &cobra.Command{
@@ -249,7 +252,7 @@ var versionCmd = &cobra.Command{
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("DeepScanBot CLI v1.0.0")
+		fmt.Printf("DeepScanBot CLI %s\n", version)
 	},
 }
 
