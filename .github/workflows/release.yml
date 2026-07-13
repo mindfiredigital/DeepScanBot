@@ -13,7 +13,7 @@ permissions:
 
 env:
   GO_VERSION: "1.22.4"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   GORELEASER_VERSION: "~> v2"
   NPM_REGISTRY: ${{ secrets.NPM_REGISTRY || 'https://registry.npmjs.org/' }}
 
