@@ -45,7 +45,9 @@ function detectArch() {
  */
 function findBinaryDirectory(os, arch) {
   if (!fs.existsSync(DIST_DIR)) {
-    throw new Error(`Missing dist/ directory. Run GoReleaser build first.`);
+    console.log("[deepscanbot] dist directory not found.");
+    console.log("[deepscanbot] Skipping binary installation.");
+    process.exit(0);
   }
 
   const entries = fs.readdirSync(DIST_DIR, { withFileTypes: true });

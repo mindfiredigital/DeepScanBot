@@ -114,8 +114,17 @@ try {
   }
 
   // Bin validation
-  if (!pkg.bin || pkg.bin[BINARY_NAME] !== "./bin/deepscanbot") {
-    errors.push(`Invalid or missing "bin" entry. Expected: "bin": { "deepscanbot": "./bin/deepscanbot" }`);
+  const expectedBin = `bin/${BINARY_NAME}`;
+  const actualBin = (pkg.bin?.[BINARY_NAME] || "")
+    .replace(/\\/g, "/")      // Normalize Windows separators
+    .replace(/^\.\/+/, "");   // Remove optional leading "./"
+
+  if (actualBin !== expectedBin) {
+    errors.push(
+      `Invalid or missing "bin" entry.\n` +
+      `Expected: "${expectedBin}"\n` +
+      `Found: "${pkg.bin?.[BINARY_NAME] || "missing"}"`
+    );
   } else {
     console.log(`  ✓ Bin entry correctly mapped: ${pkg.bin[BINARY_NAME]}`);
   }
