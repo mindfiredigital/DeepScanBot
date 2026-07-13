@@ -1,0 +1,81 @@
+version: 2
+
+project_name: deepscanbot
+
+env:
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: deepscanbot
+    main: ./apps/cli
+    binary: deepscanbot
+
+    env:
+      - CGO_ENABLED=0
+
+    goos:
+      - linux
+      - darwin
+      - windows
+
+    goarch:
+      - amd64
+      - arm64
+
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
+
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: binaries
+    formats: [binary]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}_v{{ .Arm }}{{ end }}"
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^Merge"
+
+release:
+  github:
+    owner: mindfiredigital
+    name: DeepScanBot
+
+  draft: true
+  prerelease: auto
+
+  name_template: "v{{ .Version }}"
+
+  header: |
+    ## DeepScanBot CLI {{ .Version }}
+
+  footer: |
+    ### Install from npm
+
+    ```bash
+    npm install -g @mindfiredigital/deepscanbot
+    ```
+
+dist: dist

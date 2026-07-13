@@ -4,74 +4,88 @@ sidebar_position: 2
 
 # Installation
 
-Set up DeepScanBot in a few simple steps.
+Get DeepScanBot up and running in minutes.
 
-## Prerequisites
+---
 
-- **Go** (version 1.22 or higher)
-- **Git**
+## Quick Install (Recommended)
 
-## Install Package
-
-```bash
-# Clone the repository
-git clone https://github.com/mindfiredigital/DeepScanBot.git
-cd DeepScanBot
-
-# Download dependencies
-go mod download
-
-# Build the binary
-go build -o deepscanbot ./apps/cli
-```
-
-## Install Development Tools
+The easiest way to install DeepScanBot is via npm. This method automatically downloads the correct pre-built binary for your operating system and architecture.
 
 ```bash
-# Code formatting
-go install mvdan.cc/gofumpt@latest
-
-# Import management
-go install github.com/daixiang0/gci@latest
-
-# Linting
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-# Git hooks
-go install github.com/evilmartians/lefthook@latest
-
-# Install hooks
-lefthook install
+npm install -g @mindfiredigital/deepscanbot
 ```
+
+After installation, verify it works:
+
+```bash
+deepscanbot --help
+deepscanbot doctor
+```
+
+**Supported platforms:**
+
+- macOS (Intel x64, Apple Silicon arm64)
+- Linux (amd64, arm64)
+- Windows (amd64)
+
+**Requirements:**
+
+- Node.js 18+ (for npm installation)
+- No additional runtime dependencies required
+
+## How It Works
+
+DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the `postinstall` script:
+
+1. Detects your operating system and CPU architecture
+2. Locates the correct pre-built binary from the package
+3. Installs it to your npm global bin directory
+4. Sets executable permissions
+5. Verifies the binary works correctly
+
+This means you get the performance of a native binary with the convenience of npm package management.
 
 ## Verify Installation
 
 ```bash
-# Test the CLI (using go run - no build required)
-go run ./apps/cli -h
+# Show help and available commands
+deepscanbot --help
 
-# Run tests
-go test ./...
+# Run diagnostics
+deepscanbot doctor
 
-# Run linter
-golangci-lint run ./...
-```
-
-## Quick Start
-
-```bash
-# Crawl a website
-go run ./apps/cli -url https://example.com -depth 2
-
-# Output as JSON
-go run ./apps/cli -url https://example.com -depth 2 -json
-
-# With specific content types
-go run ./apps/cli -url https://example.com -depth 2 -content-types "text/html,application/pdf"
+# Quick smoke test
+deepscanbot scan https://example.com depth=0 json=true
 ```
 
 ## Next Steps
 
-- [Usage Guide](/docs/guide/usage) - Detailed usage instructions
-- [Features](/docs/guide/features) - Complete feature list
-- [How to Contribute](/docs/contribution-guide/how-to-contribute) - Help improve DeepScanBot
+<div className="row">
+  <div className="col col--6" style={{ marginBottom: '1rem' }}>
+    <div style={{
+      padding: '1rem',
+      borderRadius: '0.5rem',
+      border: '1px solid var(--ifm-color-emphasis-200)',
+      textAlign: 'center',
+      background: 'var(--ifm-card-background-color)',
+    }}>
+      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📖</div>
+      <a href="/docs/guide/usage"><strong>Usage Guide</strong></a>
+      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Learn how to use all CLI options</p>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: '1rem' }}>
+    <div style={{
+      padding: '1rem',
+      borderRadius: '0.5rem',
+      border: '1px solid var(--ifm-color-emphasis-200)',
+      textAlign: 'center',
+      background: 'var(--ifm-card-background-color)',
+    }}>
+      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>✨</div>
+      <a href="/docs/guide/features"><strong>Features</strong></a>
+      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Explore all features in depth</p>
+    </div>
+  </div>
+</div>

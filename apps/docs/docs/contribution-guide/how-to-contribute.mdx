@@ -4,128 +4,157 @@ sidebar_position: 1
 
 # How to Contribute
 
-Thank you for your interest in contributing to DeepScanBot! This guide provides instructions for contributing to the project.
+Thank you for your interest in contributing to DeepScanBot! We welcome contributions from the community.
+
+---
+
+## Code of Conduct
+
+This project adheres to our [Code of Conduct](/docs/contribution-guide/code-of-conduct). By participating, you are expected to uphold this code. Please report unacceptable behavior by opening an issue or emailing **deepscanbot@mindfiresolutions.com**.
 
 ## Getting Started
 
-1. Fork the repository on GitHub
-2. Clone your fork locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/DeepScanBot.git
-   cd DeepScanBot
-   ```
-3. Add the upstream remote:
-   ```bash
-   git remote add upstream https://github.com/mindfiredigital/DeepScanBot.git
-   ```
+### 1. Fork the Repository
 
-## Development Setup
+Start by forking the [DeepScanBot repository](https://github.com/mindfiredigital/DeepScanBot) on GitHub.
 
-### Prerequisites
-- **Go** (version 1.22 or higher)
-- **Git**
-
-### Installation
+### 2. Clone Your Fork
 
 ```bash
-# Download dependencies
-go mod download
-
-# Install development tools
-go install mvdan.cc/gofumpt@latest
-go install github.com/daixiang0/gci@latest
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-go install github.com/evilmartians/lefthook@latest
-
-# Install git hooks
-lefthook install
-
-# Build the project
-go build -o deepscanbot ./apps/cli
+git clone https://github.com/YOUR_USERNAME/DeepScanBot.git
+cd DeepScanBot
 ```
 
-## How to Contribute
+### 3. Set Up Development Tools
 
-### Reporting Bugs
-If you find a bug, please create an issue using the bug report template. Include:
-- Clear description of the bug
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details (OS, Go version, DeepScanBot version)
+```bash
+# Code formatting
+go install mvdan.cc/gofumpt@latest
 
-### Suggesting Features
-Feature requests are welcome! Please use the feature request template and include:
-- Clear description of the feature
-- Problem statement and proposed solution
-- Use cases
+# Import management
+go install github.com/daixiang0/gci@latest
 
-### Contributing Code
+# Linting
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
-1. Create a new branch from `development`:
-   ```bash
-   git checkout development
-   git pull upstream development
-   git checkout -b feat/your-feature-name
-   ```
+# Git hooks
+go install github.com/evilmartians/lefthook@latest && lefthook install
+```
 
-2. Make your changes following the coding standards
+### 4. Sync and Create a Branch
 
-3. Ensure all checks pass:
-   ```bash
-   gofumpt -w .
-   gci write -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" .
-   golangci-lint run
-   go test ./...
-   ```
+Make sure your fork is up to date with the base repository before creating a feature branch:
 
-4. Commit with a conventional commit message:
-   ```bash
-   git add .
-   git commit -m "feat: add feature X"
-   ```
+```bash
+# Add the upstream remote (one-time setup)
+git remote add upstream https://github.com/mindfiredigital/DeepScanBot.git
 
-5. Push to your fork and create a Pull Request
+# Sync with the latest development branch
+git checkout development
+git pull upstream development
+git push origin development
 
-## Code Style
+# Create your feature branch
+git checkout -b feat/your-feature-name
+```
 
-### Go Code Style
-- Follow [Effective Go](https://go.dev/doc/effective_go) guidelines
-- Use `gofumpt` for strict formatting
-- Use `gci` for import management
+## Development Workflow
 
-### Naming Conventions
-- **Packages**: lowercase, single-word names
-- **Functions**: `MixedCaps` or `mixedCaps`
-- **Variables**: descriptive `mixedCaps`
+### Code Formatting
+
+All Go code must be formatted with `gofumpt`:
+
+```bash
+gofumpt -l -w .
+```
+
+### Import Management
+
+Imports must be organized with `gci`:
+
+```bash
+gci write --skip-vendor -s standard -s default -s "prefix(github.com/mindfiredigital/DeepScanBot)" .
+```
+
+### Linting
+
+Run the linter before committing:
+
+```bash
+golangci-lint run ./...
+```
+
+### Testing
+
+Ensure all tests pass:
+
+```bash
+go test ./...
+```
+
+### Local npm Package Testing
+
+Test the npm package locally before committing:
+
+```bash
+# Build binaries for all platforms
+goreleaser build --snapshot --clean
+
+# Verify binaries
+node scripts/verify-binary.js
+
+# Create npm package
+npm pack
+
+# Install locally for testing
+npm install -g ./deep-scan-bot-*.tgz
+
+# Test the installed binary
+deepscanbot --version
+deepscanbot -h
+
+# Uninstall after testing
+npm uninstall -g @mindfiredigital/deep-scan-bot
+```
+
+### Pre-publish Checks
+
+Before publishing, run the prepublish check:
+
+```bash
+node scripts/prepublish-check.js
+```
 
 ### Commit Messages
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
-
-**Examples:**
-```
-feat(crawler): add support for custom headers
-fix(parser): handle malformed HTML gracefully
-docs(usage): add proxy configuration examples
+feat: add new feature
+fix: resolve issue with X
+docs: update documentation
+refactor: improve code structure
+test: add tests for X
+chore: update dependencies
 ```
 
 ## Pull Request Process
 
-1. Ensure your branch is up to date with `development`
-2. Run all checks before submitting:
-   - `gofumpt -w .`
-   - `gci write ...`
-   - `golangci-lint run`
-   - `go test ./...`
-3. Use the PR template with clear description of changes
-4. Link related issues (e.g., "Closes #123")
-5. At least one maintainer must approve before merge
+1. Ensure your code passes all linting and tests
+2. Update documentation if needed
+3. Submit a pull request with a clear description of changes
+4. Your PR will be reviewed by maintainers
+
+## Project Structure
+
+```
+apps/
+  cli/          # CLI entry point and tests
+  docs/         # Docusaurus documentation site
+packages/
+  crawler/      # Core crawling logic
+  fetcher/      # HTTP fetch layer
+  logger/       # Logging utilities
+  parser/       # HTML parsing
+  storage/      # Result storage and reports
+  types/        # Shared type definitions

@@ -4,29 +4,293 @@ sidebar_position: 1
 
 # Introduction
 
-DeepScanBot is a powerful, feature-rich web crawler built with Go, designed for efficient and configurable web scraping.
+A powerful, production-ready web crawler — designed for performance, reliability, and developer happiness.
+
+---
 
 ## What is DeepScanBot?
 
-A high-performance web crawler that combines robust crawling capabilities with flexible configuration options. Built with Go, it delivers exceptional performance and reliability for web scraping tasks of any scale.
+**DeepScanBot** is a **high-performance, concurrent web crawler** that recursively crawls websites, respects `robots.txt`, handles rate-limiting, and produces comprehensive JSON or text reports.
+
+### What Does DeepScanBot Do?
+
+DeepScanBot crawls websites starting from a given URL, follows links up to a configurable depth, and generates detailed reports about every discovered page. It handles the complexities of web crawling automatically:
+
+- **Discovers all pages** on a website by following internal links
+- **Respects crawl rules** defined in `robots.txt`
+- **Handles rate limits** with automatic retry and backoff
+- **Filters content** by MIME type for targeted crawling
+- **Exports results** in structured JSON or readable text formats
+
+### Who Is It For?
+
+| Role                     | How DeepScanBot Helps                                         |
+| ------------------------ | ------------------------------------------------------------- |
+| **Security Researchers** | Audit websites for exposed endpoints, analyze attack surface  |
+| **SEO Specialists**      | Discover all pages, find broken links, analyze site structure |
+| **QA Engineers**         | Verify page availability, test website coverage               |
+| **Data Analysts**        | Collect structured data from websites for analysis            |
+| **DevOps Engineers**     | Monitor website health, validate deployments                  |
+| **Content Managers**     | Audit content across large websites                           |
+
+### Key Use Cases
+
+- **Website Auditing**: Crawl your entire site to verify all pages are accessible
+- **SEO Analysis**: Discover all indexed pages and find crawl issues
+- **Security Assessment**: Map out website structure and identify exposed endpoints
+- **Data Collection**: Gather URLs and metadata for analysis
+- **Change Monitoring**: Track changes across thousands of pages
+- **Deployment Validation**: Verify all routes work after deployment
 
 ## Key Features
 
-- **Concurrent Crawling**: Multi-threaded architecture with configurable concurrency limits
-- **Robots.txt Compliance**: Respects robots.txt rules with option to ignore
-- **Configurable Depth**: Control crawl depth from single page to full site exploration
-- **Retry Logic**: Built-in retry mechanism with exponential backoff
-- **Content Filtering**: Filter by MIME types and page size
-- **Proxy Support**: HTTP/HTTPS proxy support
-- **Sitemap Discovery**: Automatic sitemap.xml parsing and crawling
-- **Resume Mode**: Ability to resume interrupted crawls
-- **Multiple Output Formats**: JSON and text output formats
-- **Cross-Domain Crawling**: Optional cross-domain link following
+<div className="row">
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>⚡ Concurrent Crawling</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Multi-threaded architecture with configurable worker pools, per-host
+        rate limiting, and CPU-aware auto-scaling.
+      </div>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>🛡️ Robots.txt Compliance</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Automatically respects robots.txt rules with an option to bypass when
+        needed.
+      </div>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>🔄 Retry & Rate-Limit Handling</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Automatic retry with exponential backoff, Smart Retry-After header
+        parsing, and configurable politeness delays.
+      </div>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>📊 Rich Output</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        JSON or text reports with detailed summaries, status code distribution,
+        skip reason breakdowns, and retry analytics.
+      </div>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>🗺️ Sitemap Discovery</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Auto-discover and crawl URLs from sitemap.xml, including nested sitemap
+        indexes.
+      </div>
+    </div>
+  </div>
+  <div className="col col--6" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1.25rem",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        height: "100%",
+      }}
+    >
+      <strong>📁 Content-Type Filtering</strong>
+      <div
+        style={{
+          margin: "0.5rem 0 0",
+          fontSize: "0.9375rem",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Filter downloads by MIME type, enforce page size limits, and focus on
+        specific content types.
+      </div>
+    </div>
+  </div>
+</div>
 
-## Why Choose DeepScanBot?
+## Why DeepScanBot?
 
-Modern web crawling requires more than just fetching pages. DeepScanBot provides the right balance of performance, configurability, and reliability to handle any web scraping task efficiently.
+| Feature           | DeepScanBot                       | Other Crawlers                     |
+| ----------------- | --------------------------------- | ---------------------------------- |
+| **Platform**      | Single binary, no runtime deps    | Often requires Python/Node runtime |
+| **Concurrency**   | Built-in, configurable            | Often limited or complex setup     |
+| **Rate Limiting** | Per-host + global semaphores      | Manual or absent                   |
+| **Robots.txt**    | Automatic + bypass option         | Varies                             |
+| **Retry Logic**   | Exponential backoff + Retry-After | Often basic or missing             |
+| **Output**        | JSON / Text with full analytics   | Usually basic                      |
+| **Resume Mode**   | Built-in                          | Rare                               |
+| **Sitemap**       | Auto-discovery + nested           | Rare                               |
 
-## Get Started
+## Quick Start
 
-Ready to begin? Check out the [Installation](/docs/installation) guide to get started.
+The fastest way to get started:
+
+```bash
+# Install via npm (one-time setup)
+npm install -g @mindfiredigital/deepscanbot
+
+# Crawl a website with default settings
+deepscanbot scan https://example.com
+
+# Crawl with custom options
+deepscanbot scan https://example.com depth=3 json=true concurrency=10
+
+# Show version
+deepscanbot version
+
+# Verify installation
+deepscanbot doctor
+```
+
+No additional runtime dependencies required. The npm package automatically installs the correct binary for your platform.
+
+## What's Next?
+
+<div className="row">
+  <div className="col col--4" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1rem",
+        borderRadius: "0.5rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        textAlign: "center",
+        background: "var(--ifm-card-background-color)",
+      }}
+    >
+      <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>📦</div>
+      <a href="/docs/installation">
+        <strong>Installation</strong>
+      </a>
+      <div
+        style={{
+          fontSize: "0.875rem",
+          margin: "0.25rem 0 0",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Set up DeepScanBot on your machine
+      </div>
+    </div>
+  </div>
+  <div className="col col--4" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1rem",
+        borderRadius: "0.5rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        textAlign: "center",
+        background: "var(--ifm-card-background-color)",
+      }}
+    >
+      <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>📖</div>
+      <a href="/docs/guide/usage">
+        <strong>Usage Guide</strong>
+      </a>
+      <div
+        style={{
+          fontSize: "0.875rem",
+          margin: "0.25rem 0 0",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Learn how to use all CLI flags
+      </div>
+    </div>
+  </div>
+  <div className="col col--4" style={{ marginBottom: "1rem" }}>
+    <div
+      style={{
+        padding: "1rem",
+        borderRadius: "0.5rem",
+        border: "1px solid var(--ifm-color-emphasis-200)",
+        textAlign: "center",
+        background: "var(--ifm-card-background-color)",
+      }}
+    >
+      <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>✨</div>
+      <a href="/docs/guide/features">
+        <strong>Features</strong>
+      </a>
+      <div
+        style={{
+          fontSize: "0.875rem",
+          margin: "0.25rem 0 0",
+          color: "var(--ifm-color-emphasis-600)",
+        }}
+      >
+        Explore all features in depth
+      </div>
+    </div>
+  </div>
+</div>

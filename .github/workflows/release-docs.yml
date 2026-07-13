@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: 'Build Docusaurus Documentation'
+    name: "Build Docusaurus Documentation"
     runs-on: ubuntu-latest
     permissions:
       contents: write
