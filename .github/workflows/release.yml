@@ -33,7 +33,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-          cache-dependency-path: '**/go.sum'
+          cache-dependency-path: "**/go.sum"
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -41,7 +41,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Lint code
         run: golangci-lint run ./...
@@ -81,7 +81,7 @@ jobs:
           install-only: true
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run GoReleaser (snapshot build)
         run: goreleaser release --snapshot --clean
