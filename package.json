@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mindfiredigital/DeepScanBot.git"
+    "url": "git+https://github.com/mindfiredigital/DeepScanBot.git"
   },
   "homepage": "https://github.com/mindfiredigital/DeepScanBot#readme",
   "bugs": {
@@ -40,7 +40,7 @@
     "LICENSE.md"
   ],
   "bin": {
-    "deepscanbot": "./bin/deepscanbot"
+    "deepscanbot": "bin/deepscanbot"
   },
   "scripts": {
     "postinstall": "node postinstall.js",
