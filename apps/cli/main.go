@@ -165,6 +165,7 @@ self-contained binary.`,
   # Show version
   deepscanbot --version`,
 	Version: version,
+	VersionTemplate: "DeepScanBot CLI {{.Version}}\n",
 }
 
 var scanCmd = &cobra.Command{

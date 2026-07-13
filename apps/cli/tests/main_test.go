@@ -76,6 +76,46 @@ func TestCLIHelpDocumentsHelpFlag(t *testing.T) {
 	}
 }
 
+func TestCLIVersionFlag(t *testing.T) {
+	binary := buildCLI(t)
+
+	// Test --version flag
+	output, err := runCLI(binary, t.TempDir(), "--version")
+	if err != nil {
+		t.Fatalf("run --version: %v\n%s", err, output)
+	}
+
+	outputStr := string(output)
+	if !strings.Contains(outputStr, "DeepScanBot CLI") {
+		t.Errorf("--version output = %q, want to contain 'DeepScanBot CLI'", outputStr)
+	}
+
+	// The version should be set via ldflags at build time, default is "dev"
+	if !strings.Contains(outputStr, "dev") {
+		t.Errorf("--version output = %q, want to contain version 'dev' (or set via ldflags)", outputStr)
+	}
+}
+
+func TestCLIVersionCommand(t *testing.T) {
+	binary := buildCLI(t)
+
+	// Test version subcommand
+	output, err := runCLI(binary, t.TempDir(), "version")
+	if err != nil {
+		t.Fatalf("run version: %v\n%s", err, output)
+	}
+
+	outputStr := string(output)
+	if !strings.Contains(outputStr, "DeepScanBot CLI") {
+		t.Errorf("version output = %q, want to contain 'DeepScanBot CLI'", outputStr)
+	}
+
+	// The version should match what's set in the version variable
+	if !strings.Contains(outputStr, "dev") {
+		t.Errorf("version output = %q, want to contain version 'dev' (or set via ldflags)", outputStr)
+	}
+}
+
 func buildCLI(t *testing.T) string {
 	t.Helper()
 
