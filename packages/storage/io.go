@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
@@ -24,8 +25,8 @@ func WriteJSONReportToFile(filename string, report CrawlReport) error {
 		return err
 	}
 
-	//nolint:gosec // Output report files are intended to be world-readable
-	return os.WriteFile(filename, jsonData, 0o644)
+	// Use atomic write to prevent corruption if interrupted
+	return WriteFileAtomic(filename, jsonData, 0o644)
 }
 
 // ReadEntriesFromFile reads URL entries from a JSON or text file.
@@ -89,13 +90,8 @@ func readTextEntries(data []byte) []URLEntry {
 
 // WriteTextToFile writes URL entries as a plain text file.
 func WriteTextToFile(filename string, entries []URLEntry, showSource bool) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
+	var buf bytes.Buffer
+	writer := bufio.NewWriter(&buf)
 
 	for _, entry := range entries {
 		line := entry.URL
@@ -128,7 +124,12 @@ func WriteTextToFile(filename string, entries []URLEntry, showSource bool) error
 		}
 	}
 
-	return writer.Flush()
+	if err := writer.Flush(); err != nil {
+		return err
+	}
+
+	// Use atomic write to prevent corruption if interrupted
+	return WriteFileAtomic(filename, buf.Bytes(), 0o644)
 }
 
 // zeroTime is a zero time.Time value for passing to NewCrawlReport when no timing is needed.
