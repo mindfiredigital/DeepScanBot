@@ -13,6 +13,7 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
@@ -21,6 +22,15 @@ import (
 const cliVersion = "1.0.0"
 
 var log = logger.New("info")
+
+// forceOverwrite is set by the --force flag; when true the scan command will
+// overwrite existing output files without prompting.
+var forceOverwrite bool
+
+// yesMode is set by the --yes flag; it is an explicit alias for
+// --force so that every interactive prompt has a command-line equivalent
+// (Requirement #7: all operations executable non-interactively).
+var yesMode bool
 
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
@@ -192,7 +202,10 @@ Examples:
   deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 output=results
 
   # Polite crawl with delays
-  deepscanbot scan https://example.com delay=500ms concurrency=5`,
+  deepscanbot scan https://example.com delay=500ms concurrency=5
+
+  # Non-interactive (CI/CD)
+  deepscanbot scan https://example.com --no-input --force`,
 	Run: func(cmd *cobra.Command, args []string) {
 		url, opts := parseKeyValue(args)
 
@@ -218,6 +231,26 @@ Examples:
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
 		if err != nil {
 			exitcode.HandleError(err)
+		}
+
+		// Guard against overwriting existing output in non-interactive mode.
+		// Users must explicitly pass --force (or --yes) to overwrite a file.
+		overwriteAllowed := forceOverwrite || yesMode
+		if !overwriteAllowed {
+			if _, statErr := os.Stat(outputFilename); statErr == nil {
+				// File exists.
+				if !noinput.IsInteractive() {
+					exitcode.HandleError(&exitcode.ExitCode{
+						Code:    exitcode.InvalidInput,
+						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite in non-interactive mode.", outputFilename),
+						Hint:    "Pass --force (or --yes) to overwrite the file or choose a different output name with output=<filename>.",
+					})
+				}
+				// Interactive mode — in a real implementation we would prompt
+				// the user here.  For now we simply log a warning and proceed
+				// (backward-compatible behaviour).
+				log.Warnf("Output file %q already exists. It will be overwritten.", outputFilename)
+			}
 		}
 
 		var resumeEntries []storage.URLEntry
@@ -370,8 +403,17 @@ var completionCmd = &cobra.Command{
 }
 
 func init() {
-	// Add --json flag to root command so all subcommands can use it
+	// Add persistent flags shared by all commands
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
+	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
+
+	// Add --force flag to scan command for overwriting existing output
+	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
+
+	// Add --yes flag as an explicit alias for --force.  Every interactive
+	// prompt in the CLI has a command-line flag equivalent so that all
+	// operations can be executed non-interactively (Requirement #7).
+	rootCmd.PersistentFlags().BoolVar(&yesMode, "yes", false, "Auto-confirm all prompts; equivalent to --force for overwrite operations")
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
@@ -379,6 +421,31 @@ func init() {
 	// error messages ourselves.
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = false // usage is still shown on validation errors
+
+	// Single global pre-run that enforces Requirement #8 (--no-input)
+	// and Requirement #7 (--yes alias).  This MUST run before any
+	// command's Run so that noinput.IsInteractive() and the overwrite
+	// flags have the correct values.
+	originalPersistentPreRun := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// --no-input: disable ALL interactive prompts globally and fail fast.
+		noInput, _ := cmd.Flags().GetBool("no-input")
+		if noInput {
+			noinput.SetNoInputFlag()
+		}
+
+		// --yes: explicit auto-confirm alias for --force (Requirement #7).
+		yesFlag, _ := cmd.Flags().GetBool("yes")
+		if yesFlag {
+			yesMode = true
+			forceOverwrite = true
+		}
+
+		if originalPersistentPreRun != nil {
+			return originalPersistentPreRun(cmd, args)
+		}
+		return nil
+	}
 
 	// Override help to support --json flag for machine-readable command tree output
 	// Store the original help function to avoid recursion
