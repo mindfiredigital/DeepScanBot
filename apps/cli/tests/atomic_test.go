@@ -1,10 +1,29 @@
-package storage
+package tests
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
+
+// Helper functions to wrap the storage package functions
+func WriteFileAtomic(filename string, data []byte, perm os.FileMode) error {
+	return storage.WriteFileAtomic(filename, data, perm)
+}
+
+func FileExists(filename string) bool {
+	return storage.FileExists(filename)
+}
+
+func FileContentEquals(filename string, content []byte) bool {
+	return storage.FileContentEquals(filename, content)
+}
+
+func EnsureDirectory(path string) error {
+	return storage.EnsureDirectory(path)
+}
 
 func TestWriteFileAtomic(t *testing.T) {
 	// Create a temporary directory
@@ -13,7 +32,7 @@ func TestWriteFileAtomic(t *testing.T) {
 
 	// Write initial content
 	data := []byte("Hello, World!")
-	if err := WriteFileAtomic(filename, data, 0644); err != nil {
+	if err := WriteFileAtomic(filename, data, 0o644); err != nil {
 		t.Fatalf("WriteFileAtomic() failed: %v", err)
 	}
 
@@ -35,7 +54,7 @@ func TestWriteFileAtomicCreatesDirectory(t *testing.T) {
 
 	// Write should create the directory
 	data := []byte("test data")
-	if err := WriteFileAtomic(filename, data, 0644); err != nil {
+	if err := WriteFileAtomic(filename, data, 0o644); err != nil {
 		t.Fatalf("WriteFileAtomic() failed: %v", err)
 	}
 
@@ -52,13 +71,13 @@ func TestWriteFileAtomicOverwrites(t *testing.T) {
 
 	// Write initial content
 	initialData := []byte("initial content")
-	if err := WriteFileAtomic(filename, initialData, 0644); err != nil {
+	if err := WriteFileAtomic(filename, initialData, 0o644); err != nil {
 		t.Fatalf("WriteFileAtomic() failed: %v", err)
 	}
 
 	// Overwrite with new content
 	newData := []byte("new content")
-	if err := WriteFileAtomic(filename, newData, 0644); err != nil {
+	if err := WriteFileAtomic(filename, newData, 0o644); err != nil {
 		t.Fatalf("WriteFileAtomic() failed on overwrite: %v", err)
 	}
 
@@ -77,8 +96,8 @@ func TestFileExists(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	filename := filepath.Join(tmpDir, "exists.txt")
-	
-	if err := os.WriteFile(filename, []byte("test"), 0644); err != nil {
+
+	if err := os.WriteFile(filename, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create file: %v", err)
 	}
 
@@ -98,9 +117,9 @@ func TestFileContentEquals(t *testing.T) {
 	// Create a temporary file
 	tmpDir := t.TempDir()
 	filename := filepath.Join(tmpDir, "test.txt")
-	
+
 	content := []byte("test content")
-	if err := os.WriteFile(filename, content, 0644); err != nil {
+	if err := os.WriteFile(filename, content, 0o644); err != nil {
 		t.Fatalf("Failed to create file: %v", err)
 	}
 
@@ -123,7 +142,7 @@ func TestFileContentEquals(t *testing.T) {
 func TestEnsureDirectory(t *testing.T) {
 	// Create a temporary directory
 	tmpDir := t.TempDir()
-	
+
 	// Test creating a new directory
 	newDir := filepath.Join(tmpDir, "new", "nested", "dir")
 	if err := EnsureDirectory(newDir); err != nil {
@@ -155,7 +174,7 @@ func TestWriteFileAtomicIdempotency(t *testing.T) {
 
 	// Write the same content multiple times
 	for i := 0; i < 5; i++ {
-		if err := WriteFileAtomic(filename, data, 0644); err != nil {
+		if err := WriteFileAtomic(filename, data, 0o644); err != nil {
 			t.Fatalf("WriteFileAtomic() failed on iteration %d: %v", i, err)
 		}
 

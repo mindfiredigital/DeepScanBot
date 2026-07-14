@@ -1,4 +1,4 @@
-package exitcode_test
+package tests
 
 import (
 	"testing"

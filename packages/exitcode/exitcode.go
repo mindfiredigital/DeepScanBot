@@ -51,9 +51,9 @@ const (
 // message and, optionally, a resolution hint that tells the user how to fix
 // the problem.
 type ExitCode struct {
-	Code     int
-	Message  string
-	Hint     string // optional; may be empty
+	Code    int
+	Message string
+	Hint    string // optional; may be empty
 }
 
 // Error implements the error interface so that ExitCode can be used as a
@@ -97,6 +97,13 @@ var (
 		Code:    ValidationError,
 		Message: "Output filename must not be empty.",
 		Hint:    "Use output=<filename> with a non-empty value.",
+	}
+
+	// ErrFileRead is returned when a file cannot be read.
+	ErrFileRead = &ExitCode{
+		Code:    InternalError,
+		Message: "Failed to read file.",
+		Hint:    "Check that the file exists and is readable.",
 	}
 
 	// ErrResumeLoadFailed is returned when the --resume file cannot be read.
