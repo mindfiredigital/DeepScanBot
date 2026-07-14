@@ -13,6 +13,7 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
@@ -21,6 +22,10 @@ import (
 const cliVersion = "1.0.0"
 
 var log = logger.New("info")
+
+// forceOverwrite is set by the --force flag; when true the scan command will
+// overwrite existing output files without prompting.
+var forceOverwrite bool
 
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
@@ -192,7 +197,10 @@ Examples:
   deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 output=results
 
   # Polite crawl with delays
-  deepscanbot scan https://example.com delay=500ms concurrency=5`,
+  deepscanbot scan https://example.com delay=500ms concurrency=5
+
+  # Non-interactive (CI/CD)
+  deepscanbot scan https://example.com --no-input --force`,
 	Run: func(cmd *cobra.Command, args []string) {
 		url, opts := parseKeyValue(args)
 
@@ -218,6 +226,25 @@ Examples:
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
 		if err != nil {
 			exitcode.HandleError(err)
+		}
+
+		// Guard against overwriting existing output in non-interactive mode.
+		// Users must explicitly pass --force to overwrite a file.
+		if !forceOverwrite {
+			if _, statErr := os.Stat(outputFilename); statErr == nil {
+				// File exists.
+				if !noinput.IsInteractive() {
+					exitcode.HandleError(&exitcode.ExitCode{
+						Code:    exitcode.InvalidInput,
+						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite in non-interactive mode.", outputFilename),
+						Hint:    "Pass --force to overwrite the file or choose a different output name with output=<filename>.",
+					})
+				}
+				// Interactive mode — in a real implementation we would prompt
+				// the user here.  For now we simply log a warning and proceed
+				// (backward-compatible behaviour).
+				log.Warnf("Output file %q already exists. It will be overwritten.", outputFilename)
+			}
 		}
 
 		var resumeEntries []storage.URLEntry
@@ -370,8 +397,12 @@ var completionCmd = &cobra.Command{
 }
 
 func init() {
-	// Add --json flag to root command so all subcommands can use it
+	// Add persistent flags shared by all commands
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
+	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
+
+	// Add --force flag to scan command for overwriting existing output
+	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
@@ -379,6 +410,22 @@ func init() {
 	// error messages ourselves.
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = false // usage is still shown on validation errors
+
+	// Configure noinput package based on the --no-input flag.
+	// This must happen before commands execute so IsInteractive() returns
+	// the correct value during Run.
+	originalPersistentPreRun := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		noInput, _ := cmd.Flags().GetBool("no-input")
+		_ = args
+		if noInput {
+			noinput.SetNoInputFlag()
+		}
+		if originalPersistentPreRun != nil {
+			return originalPersistentPreRun(cmd, args)
+		}
+		return nil
+	}
 
 	// Override help to support --json flag for machine-readable command tree output
 	// Store the original help function to avoid recursion
