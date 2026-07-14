@@ -90,7 +90,56 @@ deepscanbot completion bash
 
 DeepScanBot supports a consistent `--json` flag across all commands that return structured data. When enabled, all output is written as valid JSON to `stdout`, while progress messages and diagnostics are sent to `stderr`.
 
-### Usage
+## Exit Codes
+
+DeepScanBot uses standardized exit codes to make CLI failures predictable for scripts, CI/CD pipelines, and AI agents. Every command returns a consistent exit code that tells you exactly what happened.
+
+| Code | Constant          | Description                                      | Example Scenarios                              |
+| ---- | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
+| `0`  | `Success`         | Command completed successfully                   | Scan finished, version shown                   |
+| `1`  | `InvalidInput`    | Invalid argument or option value                 | Malformed URL, unknown flag, missing argument  |
+| `2`  | `ValidationError` | Semantic validation failure                      | Empty output filename, invalid option value    |
+| `3`  | `AuthFailure`     | Authentication failure with a remote service     | Invalid API token, missing credentials         |
+| `10` | `AuthzFailure`    | Authenticated but lacking permission             | Insufficient rights to access resource         |
+| `20` | `NotFound`        | Requested resource could not be located          | URL/file not found                             |
+| `30` | `NetworkFailure`  | Network request failed (non-timeout)             | DNS resolution failure, connection refused     |
+| `31` | `Timeout`         | Operation exceeded its configured deadline       | Request timed out, scan exceeded max duration  |
+| `70` | `InternalError`   | Unexpected internal error (likely a bug)         | Failed to write output file, serialization bug |
+
+### Checking Exit Codes
+
+```bash
+# Check exit code in a script
+deepscanbot scan https://example.com
+exit_code=$?
+echo "Exit code: $exit_code"
+
+# Conditional execution based on exit code
+if deepscanbot scan https://example.com depth=0; then
+  echo "Scan succeeded"
+else
+  echo "Scan failed with exit code $?"
+fi
+```
+
+### Error Messages
+
+All errors include:
+- **What went wrong** — a clear description of the problem
+- **Why it happened** — the root cause when possible
+- **How to fix it** — an actionable hint with an example
+
+```bash
+$ deepscanbot scan ftp://example.com
+Error: Invalid URL: "ftp://example.com" must be an absolute http:// or https:// URL.
+Hint: Example: https://example.com
+
+$ deepscanbot scan http://example.com output=
+Error: Output filename must not be empty.
+Hint: Use output=<filename> with a non-empty value.
+```
+
+## Usage
 
 ```bash
 # Scan with JSON output
@@ -446,8 +495,10 @@ project/
 │
 ├── packages/
 │   ├── crawler/          # Web crawling logic
+│   ├── exitcode/         # Standardized exit codes and error handling
 │   ├── fetcher/          # HTTP fetching
 │   ├── logger/           # Logging utilities
+│   ├── output/           # Output formatting (JSON, human-readable, command tree)
 │   ├── parser/           # HTML parsing
 │   ├── storage/          # Output storage
 │   └── types/            # Shared types

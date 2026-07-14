@@ -11,14 +11,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
-var log = logger.New("info")
+// cliVersion is the current version of the CLI
+const cliVersion = "1.0.0"
 
-var version = "dev"
+var log = logger.New("info")
 
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
@@ -148,11 +150,11 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 var rootCmd = &cobra.Command{
 	Use:   "deepscanbot",
 	Short: "A high-performance web crawler and scanner",
-	Long: `DeepScanBot is a feature-rich, concurrent web crawler that recursively 
-crawls websites, respects robots.txt, handles rate-limiting, and produces 
+	Long: `DeepScanBot is a feature-rich, concurrent web crawler that recursively
+crawls websites, respects robots.txt, handles rate-limiting, and produces
 comprehensive JSON or text reports.
 
-Built entirely in Go, it delivers exceptional performance as a single, 
+Built entirely in Go, it delivers exceptional performance as a single,
 self-contained binary.`,
 	Example: `  # Scan a website
   deepscanbot scan https://example.com
@@ -164,9 +166,7 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3 json=true
 
   # Show version
-  deepscanbot --version`,
-	Version: version,
-	VersionTemplate: "DeepScanBot CLI {{.Version}}\n",
+  deepscanbot version`,
 }
 
 var scanCmd = &cobra.Command{
@@ -197,12 +197,14 @@ Examples:
 		url, opts := parseKeyValue(args)
 
 		if url == "" {
-			log.Fatalf("you must specify a starting URL")
+			exitcode.HandleError(exitcode.ErrEmptyURL)
 		}
 
 		parsedURL, err := validateStartURL(url)
 		if err != nil {
-			log.Fatalf(err.Error())
+			// validateStartURL returns an *exitcode.ExitCode when the URL is
+			// invalid; for other error types it returns a generic error.
+			exitcode.HandleError(err)
 		}
 
 		// Check for --json flag (persistent flag from root command)
@@ -215,14 +217,15 @@ Examples:
 
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
 		if err != nil {
-			log.Fatalf(err.Error())
+			exitcode.HandleError(err)
 		}
 
 		var resumeEntries []storage.URLEntry
 		if opts.Resume {
 			resumeEntries, err = storage.ReadEntriesFromFile(outputFilename)
 			if err != nil {
-				log.Fatalf("load resume file: %v", err)
+				log.Errorf("load resume file: %v", err)
+				exitcode.HandleError(exitcode.ErrResumeLoadFailed)
 			}
 			log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 		}
@@ -238,7 +241,7 @@ Examples:
 
 		report, err := c.StartReport()
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			exitcode.HandleErrorWithMessage("scan failed", err)
 		}
 
 		// Create output formatter
@@ -252,7 +255,7 @@ Examples:
 		}
 
 		if err != nil {
-			log.Fatalf("write results: %v", err)
+			exitcode.HandleErrorWithMessage("write output file", exitcode.ErrWriteOutput)
 		}
 
 		// If JSON mode, write report to stdout
@@ -260,7 +263,7 @@ Examples:
 			meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
 			err = formatter.WriteSuccess(os.Stdout, report, meta)
 			if err != nil {
-				log.Fatalf("write JSON output: %v", err)
+				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		}
 
@@ -273,22 +276,32 @@ var versionCmd = &cobra.Command{
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag
+		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
-		
-		if jsonFlag {
+
+		// Also check if json=true was passed as a key=value option
+		jsonOption := false
+		for _, arg := range args {
+			if strings.HasPrefix(strings.ToLower(arg), "json=") {
+				parts := strings.SplitN(arg, "=", 2)
+				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
+				break
+			}
+		}
+
+		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
 			data := map[string]string{
-				"version": version,
+				"version": "1.0.0",
 				"name":    "DeepScanBot CLI",
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
-				log.Fatalf("write JSON output: %v", err)
+				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
-			fmt.Printf("DeepScanBot CLI %s\n", version)
+			fmt.Println("DeepScanBot CLI v1.0.0")
 		}
 	},
 }
@@ -298,10 +311,20 @@ var doctorCmd = &cobra.Command{
 	Short: "Verify installation and environment",
 	Long:  `Check that DeepScanBot is properly installed and the environment is configured correctly.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag
+		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
-		
-		if jsonFlag {
+
+		// Also check if json=true was passed as a key=value option
+		jsonOption := false
+		for _, arg := range args {
+			if strings.HasPrefix(strings.ToLower(arg), "json=") {
+				parts := strings.SplitN(arg, "=", 2)
+				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
+				break
+			}
+		}
+
+		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
 			data := map[string]interface{}{
@@ -313,7 +336,7 @@ var doctorCmd = &cobra.Command{
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
-				log.Fatalf("write JSON output: %v", err)
+				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
 			fmt.Println("Running diagnostics...")
@@ -338,61 +361,85 @@ var completionCmd = &cobra.Command{
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag
-		jsonFlag, _ := cmd.Flags().GetBool("json")
-		
-		if jsonFlag {
-			formatter := output.NewFormatter(true)
-			meta := output.NewResponseMetadata("completion", 0)
-			shell := "bash"
-			if len(args) > 0 {
-				shell = args[0]
-			}
-			data := map[string]interface{}{
-				"shell":         shell,
-				"script":        "Completion script generation not yet implemented",
-				"note":          "Use the shell-specific completion commands instead",
-				"valid_shells":  []string{"bash", "zsh", "fish", "powershell"},
-			}
-			err := formatter.WriteSuccess(os.Stdout, data, meta)
-			if err != nil {
-				log.Fatalf("write JSON output: %v", err)
-			}
-		} else {
-			shell := "bash"
-			if len(args) > 0 {
-				shell = args[0]
-			}
-			fmt.Printf("Generating %s completion script...\n", shell)
-			fmt.Println("Note: Shell completion script generation is not yet implemented.")
-			fmt.Println("Please use the standard Cobra completion commands.")
+		shell := "bash"
+		if len(args) > 0 {
+			shell = args[0]
 		}
+		_ = shell
 	},
 }
 
 func init() {
 	// Add --json flag to root command so all subcommands can use it
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
-	
+
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
+
+	// Silence cobra's own error printing so we can emit consistent
+	// error messages ourselves.
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = false // usage is still shown on validation errors
+
+	// Override help to support --json flag for machine-readable command tree output
+	// Store the original help function to avoid recursion
+	originalHelpFunc := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		if jsonFlag {
+			tree := output.BuildCommandTree(rootCmd)
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("help", 0)
+			err := formatter.WriteSuccess(os.Stdout, tree, meta)
+			if err != nil {
+				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+			}
+			return
+		}
+		// Fall back to default help using the original function
+		originalHelpFunc(cmd, args)
+	})
 }
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		// Cobra errors (e.g. missing required args, unknown flags) are not
+		// *ExitCode; map them to InvalidInput so they return exit code 1.
+		handleCobraError(err)
+	}
+}
+
+// handleCobraError maps cobra's error to a standardised exit code and exits.
+func handleCobraError(err error) {
+	errStr := err.Error()
+	switch {
+	case strings.Contains(errStr, "requires at least"),
+		strings.Contains(errStr, "requires exactly"),
+		strings.Contains(errStr, "unknown flag"),
+		strings.Contains(errStr, "not a valid"),
+		strings.Contains(errStr, "usage"):
+		exitcode.HandleError(&exitcode.ExitCode{
+			Code:    exitcode.InvalidInput,
+			Message: errStr,
+			Hint:    "Run 'deepscanbot --help' for usage information.",
+		})
+	default:
+		exitcode.HandleError(err)
 	}
 }
 
 func validateStartURL(rawURL string) (string, error) {
 	startURL := strings.TrimSpace(rawURL)
 	if startURL == "" {
-		return "", fmt.Errorf("you must specify a starting URL")
+		return "", exitcode.ErrEmptyURL
 	}
 
 	parsedURL, err := url.ParseRequestURI(startURL)
 	if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-		return "", fmt.Errorf("invalid URL %q: must be an absolute http:// or https:// URL", rawURL)
+		return "", &exitcode.ExitCode{
+			Code:    exitcode.InvalidInput,
+			Message: fmt.Sprintf("Invalid URL: %q must be an absolute http:// or https:// URL.", rawURL),
+			Hint:    "Example: https://example.com",
+		}
 	}
 
 	return parsedURL.String(), nil
@@ -401,7 +448,7 @@ func validateStartURL(rawURL string) (string, error) {
 func buildOutputFilename(baseName string, jsonOutput bool) (string, error) {
 	baseName = strings.TrimSpace(baseName)
 	if baseName == "" {
-		return "", fmt.Errorf("output filename must not be empty")
+		return "", exitcode.ErrEmptyOutputFilename
 	}
 
 	if jsonOutput {
