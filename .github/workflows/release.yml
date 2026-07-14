@@ -19,14 +19,14 @@ env:
 
 jobs:
   build:
-    name: "@mindfiredigital/deep-scan-bot"
+    name: "@mindfiredigital/deepscanbot"
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -43,8 +43,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Lint code
-        run: golangci-lint run ./...
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9
+        with:
+          version: latest
+          args: ./...
 
       - name: Run tests
         run: go test ./...
@@ -67,7 +70,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
