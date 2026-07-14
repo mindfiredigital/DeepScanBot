@@ -19,7 +19,6 @@ const (
 	LevelDebug   LogLevel = "debug"
 )
 
-// Logger wraps slog.Logger to provide a consistent logging interface.
 type Logger struct {
 	*slog.Logger
 	level LogLevel

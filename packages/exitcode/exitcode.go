@@ -2,44 +2,32 @@ package exitcode
 
 import "fmt"
 
-// Standard exit codes for the DeepScanBot CLI.
-//
-// Codes use the POSIX convention where 0 means success and values in the
-// range 1–78 are reserved for general errors. Codes higher than 78 avoid
-// conflicts with /usr/include/sysexits.h on Unix systems.
 const (
-	// Success indicates the command completed without errors.
+	// Success - command completed without errors
 	Success int = 0
 
-	// InvalidInput is returned when the user supplies an invalid argument
-	// or option value (e.g. a malformed URL, unknown flag).
+	// InvalidInput - invalid argument or option value
 	InvalidInput int = 1
 
-	// ValidationError is returned when the provided data fails semantic
-	// validation (e.g. depth < 0, empty output filename).
+	// ValidationError - data fails semantic validation
 	ValidationError int = 2
 
-	// AuthFailure is returned when authentication with a remote service
-	// fails (e.g. invalid API token, missing credentials).
+	// AuthFailure - authentication failed
 	AuthFailure int = 3
 
-	// AuthzFailure is returned when the user is authenticated but lacks
-	// permission to access the requested resource.
+	// AuthzFailure - authenticated but lacks permission
 	AuthzFailure int = 10
 
-	// NotFound is returned when a requested resource (URL, file, etc.)
-	// cannot be located.
+	// NotFound - requested resource cannot be located
 	NotFound int = 20
 
-	// NetworkFailure is returned when a network request fails for reasons
-	// other than timeouts (e.g. DNS resolution failure, connection refused).
+	// NetworkFailure - network request failed (non-timeout)
 	NetworkFailure int = 30
 
-	// Timeout is returned when an operation exceeds its configured deadline.
+	// Timeout - operation exceeded configured deadline
 	Timeout int = 31
 
-	// InternalError is returned for unexpected errors that do not fit into
-	// any other category. These usually indicate a bug.
+	// InternalError - unexpected error (likely a bug)
 	InternalError int = 70
 )
 
