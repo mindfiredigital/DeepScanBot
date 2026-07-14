@@ -17,10 +17,24 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/version"
 )
 
-// cliVersion is the current version of the CLI
-const cliVersion = "1.0.0"
+// Version variables - these can be set at build time using ldflags
+var (
+	cliVersion = "dev" // -X main.version
+	gitCommit  = ""    // -X main.commit
+	buildDate  = ""    // -X main.date
+)
+
+// versionInfo returns the current version information
+func versionInfo() *version.Info {
+	info := version.Default()
+	info.Version = cliVersion
+	info.GitCommit = gitCommit
+	info.BuildDate = buildDate
+	return info
+}
 
 var log = logger.NewWithLevel(logger.LevelInfo)
 
@@ -299,7 +313,7 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 		if strings.HasPrefix(arg, "-") {
 			continue
 		}
-		
+
 		if strings.Contains(arg, "=") {
 			parts := strings.SplitN(arg, "=", 2)
 			key := strings.ToLower(strings.TrimSpace(parts[0]))
@@ -332,7 +346,11 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3 json=true
 
   # Show version
-  deepscanbot version`,
+  deepscanbot version
+
+	# Show version (short flag)
+  deepscanbot --version`,
+	Version: cliVersion,
 }
 
 var scanCmd = &cobra.Command{
@@ -420,7 +438,7 @@ Examples:
 				})
 			}
 			urlsToScan = inputURLs
-			log.Infof("Loaded %d URLs from %s", len(urlsToScan), 
+			log.Infof("Loaded %d URLs from %s", len(urlsToScan),
 				map[bool]string{true: "stdin", false: "file " + opts.InputFile}[opts.UseStdin])
 		} else {
 			// Use the positional URL argument
@@ -531,19 +549,17 @@ var versionCmd = &cobra.Command{
 			}
 		}
 
+		info := versionInfo()
+
 		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
-			data := map[string]string{
-				"version": "1.0.0",
-				"name":    "DeepScanBot CLI",
-			}
-			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			err := formatter.WriteSuccess(os.Stdout, info.JSON(), meta)
 			if err != nil {
 				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
-			fmt.Println("DeepScanBot CLI v1.0.0")
+			fmt.Println(info.String())
 		}
 	},
 }
@@ -575,11 +591,11 @@ var doctorCmd = &cobra.Command{
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
 			data := map[string]interface{}{
-				"installed":      true,
-				"executable":     true,
-				"configured":     true,
-				"checks_passed":  3,
-				"message":        "All checks passed!",
+				"installed":     true,
+				"executable":    true,
+				"configured":    true,
+				"checks_passed": 3,
+				"message":       "All checks passed!",
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
@@ -604,9 +620,9 @@ var configCmd = &cobra.Command{
 }
 
 var completionCmd = &cobra.Command{
-	Use:       "completion [bash|zsh|fish|powershell]",
-	Short:     "Generate shell completion script",
-	Long:      `Generate shell completion script for DeepScanBot commands.`,
+	Use:   "completion [bash|zsh|fish|powershell]",
+	Short: "Generate shell completion script",
+	Long:  `Generate shell completion script for DeepScanBot commands.`,
 	Example: `  # Generate bash completion
   deepscanbot completion bash
 
@@ -634,7 +650,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
 	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Preview actions that would be performed without making changes")
-	
+
 	// Add logging level flags
 	rootCmd.PersistentFlags().BoolVar(&quietFlag, "quiet", false, "Suppress non-essential output (only show warnings and errors)")
 	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "Display additional informational messages")
@@ -685,10 +701,10 @@ func init() {
 		if noInput {
 			noinput.SetNoInputFlag()
 		}
-		
+
 		// Configure logging level based on flags
 		configureLogLevel(cmd)
-		
+
 		if originalPersistentPreRun != nil {
 			return originalPersistentPreRun(cmd, args)
 		}
@@ -720,7 +736,7 @@ func configureLogLevel(cmd *cobra.Command) {
 	quiet, _ := cmd.Flags().GetBool("quiet")
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	debug, _ := cmd.Flags().GetBool("debug")
-	
+
 	switch {
 	case debug:
 		log.SetLevel(logger.LevelDebug)
