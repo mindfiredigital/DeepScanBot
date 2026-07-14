@@ -273,20 +273,10 @@ var versionCmd = &cobra.Command{
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
+		// Check for --json flag
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
-		}
-		
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
 			data := map[string]string{
@@ -308,20 +298,10 @@ var doctorCmd = &cobra.Command{
 	Short: "Verify installation and environment",
 	Long:  `Check that DeepScanBot is properly installed and the environment is configured correctly.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
+		// Check for --json flag
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
-		}
-		
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
 			data := map[string]interface{}{
@@ -369,10 +349,10 @@ var completionCmd = &cobra.Command{
 				shell = args[0]
 			}
 			data := map[string]interface{}{
-				"shell":    shell,
-				"script":   "Completion script generation not yet implemented",
-				"note":     "Use the shell-specific completion commands instead",
-				"valid_shells": []string{"bash", "zsh", "fish", "powershell"},
+				"shell":         shell,
+				"script":        "Completion script generation not yet implemented",
+				"note":          "Use the shell-specific completion commands instead",
+				"valid_shells":  []string{"bash", "zsh", "fish", "powershell"},
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
