@@ -358,11 +358,35 @@ var completionCmd = &cobra.Command{
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Run: func(cmd *cobra.Command, args []string) {
-		shell := "bash"
-		if len(args) > 0 {
-			shell = args[0]
+		// Check for --json flag
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		if jsonFlag {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("completion", 0)
+			shell := "bash"
+			if len(args) > 0 {
+				shell = args[0]
+			}
+			data := map[string]interface{}{
+				"shell":    shell,
+				"script":   "Completion script generation not yet implemented",
+				"note":     "Use the shell-specific completion commands instead",
+				"valid_shells": []string{"bash", "zsh", "fish", "powershell"},
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			shell := "bash"
+			if len(args) > 0 {
+				shell = args[0]
+			}
+			fmt.Printf("Generating %s completion script...\n", shell)
+			fmt.Println("Note: Shell completion script generation is not yet implemented.")
+			fmt.Println("Please use the standard Cobra completion commands.")
 		}
-		_ = shell
 	},
 }
 
