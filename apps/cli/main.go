@@ -18,6 +18,8 @@ import (
 
 var log = logger.New("info")
 
+var version = "dev"
+
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
 	Depth            int
@@ -162,7 +164,9 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3 json=true
 
   # Show version
-  deepscanbot version`,
+  deepscanbot --version`,
+	Version: version,
+	VersionTemplate: "DeepScanBot CLI {{.Version}}\n",
 }
 
 var scanCmd = &cobra.Command{
@@ -286,7 +290,7 @@ var versionCmd = &cobra.Command{
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
 			data := map[string]string{
-				"version": "1.0.0",
+				"version": version,
 				"name":    "DeepScanBot CLI",
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
@@ -294,7 +298,7 @@ var versionCmd = &cobra.Command{
 				log.Fatalf("write JSON output: %v", err)
 			}
 		} else {
-			fmt.Println("DeepScanBot CLI v1.0.0")
+			fmt.Printf("DeepScanBot CLI %s\n", version)
 		}
 	},
 }

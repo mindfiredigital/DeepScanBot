@@ -13,47 +13,41 @@ permissions:
 
 env:
   GO_VERSION: "1.22.4"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   GORELEASER_VERSION: "~> v2"
   NPM_REGISTRY: ${{ secrets.NPM_REGISTRY || 'https://registry.npmjs.org/' }}
 
 jobs:
   build:
-    name: "@mindfiredigital/deep-scan-bot"
+    name: "@mindfiredigital/deepscanbot"
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+          cache-dependency-path: "**/go.sum"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
-      - name: Lint code
-        run: golangci-lint run ./...
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9
+        with:
+          version: latest
+          args: ./...
 
       - name: Run tests
         run: go test ./...
@@ -76,10 +70,10 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -90,7 +84,7 @@ jobs:
           install-only: true
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run GoReleaser (snapshot build)
         run: goreleaser release --snapshot --clean

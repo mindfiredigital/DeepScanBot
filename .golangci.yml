@@ -7,8 +7,6 @@ output:
     - format: colored-line-number
 
 linters:
-  default: none
-
   enable:
     - bodyclose
     - dogsled
