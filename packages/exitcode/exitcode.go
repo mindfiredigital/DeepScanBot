@@ -120,6 +120,13 @@ var (
 		Hint:    "Retry with reduced concurrency or check the target URL.",
 	}
 
+	// ErrTimeout is returned when the crawl exceeds the configured timeout.
+	ErrTimeout = &ExitCode{
+		Code:    Timeout,
+		Message: "Crawl timed out.",
+		Hint:    "Increase the timeout with --timeout=<seconds> or reduce the crawl scope.",
+	}
+
 	// ErrWriteOutput is returned when writing the output file fails.
 	ErrWriteOutput = &ExitCode{
 		Code:    InternalError,
