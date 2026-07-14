@@ -415,21 +415,6 @@ func init() {
 	// operations can be executed non-interactively (Requirement #7).
 	rootCmd.PersistentFlags().BoolVar(&yesMode, "yes", false, "Auto-confirm all prompts; equivalent to --force for overwrite operations")
 
-	// Wire --yes to also set the no-input guard so it behaves as a
-	// full non-interactive auto-confirm flag.
-	originalPersistentPreRun := rootCmd.PersistentPreRunE
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		yesFlag, _ := cmd.Flags().GetBool("yes")
-		if yesFlag {
-			yesMode = true
-			forceOverwrite = true
-		}
-		if originalPersistentPreRun != nil {
-			return originalPersistentPreRun(cmd, args)
-		}
-		return nil
-	}
-
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
 	// Silence cobra's own error printing so we can emit consistent
@@ -437,16 +422,25 @@ func init() {
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = false // usage is still shown on validation errors
 
-	// Configure noinput package based on the --no-input flag.
-	// This must happen before commands execute so IsInteractive() returns
-	// the correct value during Run.
+	// Single global pre-run that enforces Requirement #8 (--no-input)
+	// and Requirement #7 (--yes alias).  This MUST run before any
+	// command's Run so that noinput.IsInteractive() and the overwrite
+	// flags have the correct values.
 	originalPersistentPreRun := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// --no-input: disable ALL interactive prompts globally and fail fast.
 		noInput, _ := cmd.Flags().GetBool("no-input")
-		_ = args
 		if noInput {
 			noinput.SetNoInputFlag()
 		}
+
+		// --yes: explicit auto-confirm alias for --force (Requirement #7).
+		yesFlag, _ := cmd.Flags().GetBool("yes")
+		if yesFlag {
+			yesMode = true
+			forceOverwrite = true
+		}
+
 		if originalPersistentPreRun != nil {
 			return originalPersistentPreRun(cmd, args)
 		}
