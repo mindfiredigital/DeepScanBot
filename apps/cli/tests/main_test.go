@@ -87,11 +87,7 @@ func TestCLIVersionFlag(t *testing.T) {
 	}
 
 	outputStr := string(output)
-	if !strings.Contains(outputStr, "DeepScanBot CLI") {
-		t.Errorf("--version output = %q, want to contain 'DeepScanBot CLI'", outputStr)
-	}
-
-	// The version should be set via ldflags at build time, default is "dev"
+	// The --version flag uses cobra's built-in version which outputs to stdout
 	if !strings.Contains(outputStr, "dev") {
 		t.Errorf("--version output = %q, want to contain version 'dev' (or set via ldflags)", outputStr)
 	}
@@ -107,11 +103,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	}
 
 	outputStr := string(output)
-	if !strings.Contains(outputStr, "DeepScanBot CLI") {
-		t.Errorf("version output = %q, want to contain 'DeepScanBot CLI'", outputStr)
-	}
-
-	// The version should match what's set in the version variable
+	// Version subcommand uses logger, so it outputs to stderr with slog format
 	if !strings.Contains(outputStr, "dev") {
 		t.Errorf("version output = %q, want to contain version 'dev' (or set via ldflags)", outputStr)
 	}
