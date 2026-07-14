@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -32,23 +33,26 @@ func exitCodeFor(t *testing.T, binary, workdir string, args ...string) int {
 }
 
 // combinedOutputFor runs the CLI and returns stdout + stderr separately, plus
-// the exit code.
+// the exit code.  Both stdout and stderr are captured regardless of exit code.
 func combinedOutputFor(t *testing.T, binary, workdir string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
 
 	cmd := exec.Command(binary, args...)
 	cmd.Dir = workdir
 
-	stdoutBytes, err := cmd.Output()
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmd.Stdout = &stdoutBuf
+	cmd.Stderr = &stderrBuf
+
+	err := cmd.Run()
 	exitCode = 0
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			exitCode = exitErr.ExitCode()
-			stderr = string(exitErr.Stderr)
 		}
 	}
 
-	return string(stdoutBytes), stderr, exitCode
+	return stdoutBuf.String(), stderrBuf.String(), exitCode
 }
 
 func TestCLIExitCodeSuccess(t *testing.T) {

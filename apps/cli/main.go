@@ -814,24 +814,24 @@ func printDryRunPlan(targetURL, outputFilename string, opts ScanOptions, urlCoun
 			exitcode.HandleErrorWithMessage("write dry-run output", exitcode.ErrJSONOutput)
 		}
 	} else {
-		fmt.Println("─── Dry Run ───")
-		fmt.Printf("Action:     scan\n")
-		fmt.Printf("Target URL: %s\n", targetURL)
-		fmt.Printf("Output:     %s\n", outputFilename)
+		log.Infof("─── Dry Run ───")
+		log.Infof("Action:     scan")
+		log.Infof("Target URL: %s", targetURL)
+		log.Infof("Output:     %s", outputFilename)
 		if v, ok := plan["existing_file_will_be_overwritten"]; ok && v.(bool) {
-			fmt.Println("⚠  Warning: output file already exists and will be overwritten")
+			log.Warnf("⚠  Warning: output file already exists and will be overwritten")
 		}
-		fmt.Printf("Depth:      %d\n", opts.Depth)
-		fmt.Printf("Timeout:    %ds\n", opts.Timeout)
-		fmt.Printf("Concurrency: %d\n", opts.Concurrency)
-		fmt.Printf("Content:    %s\n", strings.Join(parseContentTypes(opts.ContentTypes), ", "))
-		fmt.Printf("JSON:       %v\n", opts.JSON)
-		fmt.Printf("Resume:     %v\n", opts.Resume)
-		fmt.Printf("Proxy:      %s\n", opts.Proxy)
-		fmt.Printf("Sitemap:    %v\n", opts.Sitemap)
-		fmt.Printf("Retries:    %d\n", opts.Retries)
-		fmt.Println("────────────────")
-		fmt.Println("No changes were made. Pass --dry-run to preview, or omit it to execute.")
+		log.Infof("Depth:      %d", opts.Depth)
+		log.Infof("Timeout:    %ds", opts.Timeout)
+		log.Infof("Concurrency: %d", opts.Concurrency)
+		log.Infof("Content:    %s", strings.Join(parseContentTypes(opts.ContentTypes), ", "))
+		log.Infof("JSON:       %v", opts.JSON)
+		log.Infof("Resume:     %v", opts.Resume)
+		log.Infof("Proxy:      %s", opts.Proxy)
+		log.Infof("Sitemap:    %v", opts.Sitemap)
+		log.Infof("Retries:    %d", opts.Retries)
+		log.Infof("────────────────")
+		log.Infof("No changes were made. Pass --dry-run to preview, or omit it to execute.")
 	}
 }
 
