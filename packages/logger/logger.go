@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
 // Logger wraps slog.Logger to provide a consistent logging interface.
@@ -63,7 +65,23 @@ func (l *Logger) Debugf(format string, args ...interface{}) {
 }
 
 // Fatalf logs a formatted error message and calls os.Exit(1).
+//
+// Deprecated: Use FatalfExit with an *exitcode.ExitCode to provide a
+// meaningful exit code and actionable error message.
 func (l *Logger) Fatalf(format string, args ...interface{}) {
 	l.Log(context.Background(), slog.LevelError, fmt.Sprintf(format, args...))
 	os.Exit(1)
+}
+
+// FatalfExit logs a formatted error message and exits with the code
+// carried by the given *exitcode.ExitCode.  The exit code is printed
+// together with a hint when present.
+//
+// Usage:
+//
+//	log.FatalfExit("write results", exitcode.ErrWriteOutput)
+func (l *Logger) FatalfExit(msg string, ec *exitcode.ExitCode) {
+	fullMsg := fmt.Sprintf("%s: %s", msg, ec.Message)
+	l.Log(context.Background(), slog.LevelError, fullMsg)
+	exitcode.HandleError(ec)
 }
