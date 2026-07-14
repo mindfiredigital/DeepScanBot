@@ -27,6 +27,11 @@ var log = logger.New("info")
 // overwrite existing output files without prompting.
 var forceOverwrite bool
 
+// yesMode is set by the --yes flag; it is an explicit alias for
+// --force so that every interactive prompt has a command-line equivalent
+// (Requirement #7: all operations executable non-interactively).
+var yesMode bool
+
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
 	Depth            int
@@ -229,15 +234,16 @@ Examples:
 		}
 
 		// Guard against overwriting existing output in non-interactive mode.
-		// Users must explicitly pass --force to overwrite a file.
-		if !forceOverwrite {
+		// Users must explicitly pass --force (or --yes) to overwrite a file.
+		overwriteAllowed := forceOverwrite || yesMode
+		if !overwriteAllowed {
 			if _, statErr := os.Stat(outputFilename); statErr == nil {
 				// File exists.
 				if !noinput.IsInteractive() {
 					exitcode.HandleError(&exitcode.ExitCode{
 						Code:    exitcode.InvalidInput,
 						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite in non-interactive mode.", outputFilename),
-						Hint:    "Pass --force to overwrite the file or choose a different output name with output=<filename>.",
+						Hint:    "Pass --force (or --yes) to overwrite the file or choose a different output name with output=<filename>.",
 					})
 				}
 				// Interactive mode — in a real implementation we would prompt
@@ -403,6 +409,26 @@ func init() {
 
 	// Add --force flag to scan command for overwriting existing output
 	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
+
+	// Add --yes flag as an explicit alias for --force.  Every interactive
+	// prompt in the CLI has a command-line flag equivalent so that all
+	// operations can be executed non-interactively (Requirement #7).
+	rootCmd.PersistentFlags().BoolVar(&yesMode, "yes", false, "Auto-confirm all prompts; equivalent to --force for overwrite operations")
+
+	// Wire --yes to also set the no-input guard so it behaves as a
+	// full non-interactive auto-confirm flag.
+	originalPersistentPreRun := rootCmd.PersistentPreRunE
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		yesFlag, _ := cmd.Flags().GetBool("yes")
+		if yesFlag {
+			yesMode = true
+			forceOverwrite = true
+		}
+		if originalPersistentPreRun != nil {
+			return originalPersistentPreRun(cmd, args)
+		}
+		return nil
+	}
 
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 
