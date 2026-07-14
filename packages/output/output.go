@@ -16,12 +16,16 @@ const (
 	StatusError   ResponseStatus = "error"
 )
 
+// CurrentSchemaVersion is the current JSON schema version
+const CurrentSchemaVersion = "1.0.0"
+
 // Response is a standardized JSON response format for all CLI commands
 type Response struct {
-	Status  ResponseStatus    `json:"status"`
-	Data    interface{}       `json:"data,omitempty"`
-	Error   *ErrorDetail      `json:"error,omitempty"`
-	Meta    *ResponseMetadata `json:"meta,omitempty"`
+	SchemaVersion string           `json:"schemaVersion"`
+	Status        ResponseStatus   `json:"status"`
+	Data          interface{}      `json:"data,omitempty"`
+	Error         *ErrorDetail     `json:"error,omitempty"`
+	Meta          *ResponseMetadata `json:"meta,omitempty"`
 }
 
 // ErrorDetail contains error information for error responses
@@ -53,9 +57,10 @@ func NewFormatter(jsonMode bool) *Formatter {
 func (f *Formatter) WriteSuccess(w io.Writer, data interface{}, meta *ResponseMetadata) error {
 	if f.jsonMode {
 		resp := Response{
-			Status: StatusSuccess,
-			Data:   data,
-			Meta:   meta,
+			SchemaVersion: CurrentSchemaVersion,
+			Status:        StatusSuccess,
+			Data:          data,
+			Meta:          meta,
 		}
 		return writeJSON(w, resp)
 	}
@@ -68,7 +73,8 @@ func (f *Formatter) WriteSuccess(w io.Writer, data interface{}, meta *ResponseMe
 func (f *Formatter) WriteError(w io.Writer, message string, code string, meta *ResponseMetadata) error {
 	if f.jsonMode {
 		resp := Response{
-			Status: StatusError,
+			SchemaVersion: CurrentSchemaVersion,
+			Status:        StatusError,
 			Error: &ErrorDetail{
 				Message: message,
 				Code:    code,

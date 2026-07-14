@@ -53,6 +53,14 @@ func TestCLIVersionJSONOutput(t *testing.T) {
 					t.Fatalf("Output is not valid JSON: %v\nOutput: %s", err, outputStr)
 				}
 
+				// Verify schemaVersion exists and is correct
+				schemaVersion, ok := result["schemaVersion"].(string)
+				if !ok {
+					t.Error("Expected schemaVersion field to be present and a string")
+				} else if schemaVersion != "1.0.0" {
+					t.Errorf("Expected schemaVersion '1.0.0', got '%s'", schemaVersion)
+				}
+
 				// Verify structure
 				if result["status"] != "success" {
 					t.Errorf("Expected status 'success', got '%v'", result["status"])
@@ -118,6 +126,14 @@ func TestCLIDoctorJSONOutput(t *testing.T) {
 				var result map[string]interface{}
 				if err := json.Unmarshal(output, &result); err != nil {
 					t.Fatalf("Output is not valid JSON: %v\nOutput: %s", err, outputStr)
+				}
+
+				// Verify schemaVersion exists and is correct
+				schemaVersion, ok := result["schemaVersion"].(string)
+				if !ok {
+					t.Error("Expected schemaVersion field to be present and a string")
+				} else if schemaVersion != "1.0.0" {
+					t.Errorf("Expected schemaVersion '1.0.0', got '%s'", schemaVersion)
 				}
 
 				// Verify structure
@@ -205,6 +221,14 @@ func TestCLIScanJSONOutput(t *testing.T) {
 				var result map[string]interface{}
 				if err := json.Unmarshal(output, &result); err != nil {
 					t.Fatalf("Output is not valid JSON: %v\nOutput: %s", err, outputStr)
+				}
+
+				// Verify schemaVersion exists and is correct
+				schemaVersion, ok := result["schemaVersion"].(string)
+				if !ok {
+					t.Error("Expected schemaVersion field to be present and a string")
+				} else if schemaVersion != "1.0.0" {
+					t.Errorf("Expected schemaVersion '1.0.0', got '%s'", schemaVersion)
 				}
 
 				// Verify structure
