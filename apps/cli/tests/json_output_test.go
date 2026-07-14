@@ -327,17 +327,271 @@ func TestCLIErrorJSONOutput(t *testing.T) {
 func TestCLIHelpJSONOutput(t *testing.T) {
 	binary := buildCLI(t)
 
-	// Test help with --json flag
-	output, err := runCLI(binary, t.TempDir(), "--help", "--json")
-
-	// Help might not support JSON, but let's check what happens
-	if err != nil {
-		t.Logf("Help command error: %v", err)
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{
+			name:    "help with --json flag",
+			args:    []string{"--help", "--json"},
+			wantErr: false,
+		},
+		{
+			name:    "help -h with --json flag",
+			args:    []string{"-h", "--json"},
+			wantErr: false,
+		},
+		{
+			name:    "subcommand help with --json",
+			args:    []string{"scan", "--help", "--json"},
+			wantErr: false,
+		},
 	}
 
-	// Help output might not be JSON, which is fine
-	// We're just testing that it doesn't crash
-	_ = output
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := runCLI(binary, t.TempDir(), tt.args...)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("Expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Command failed: %v\nOutput: %s", err, output)
+			}
+
+			// Verify it's valid JSON
+			var result map[string]interface{}
+			if parseErr := json.Unmarshal(output, &result); parseErr != nil {
+				t.Fatalf("Output is not valid JSON: %v\nOutput: %s", parseErr, string(output))
+			}
+
+			// Verify response structure
+			if result["status"] != "success" {
+				t.Errorf("Expected status 'success', got '%v'", result["status"])
+			}
+
+			if result["meta"] == nil {
+				t.Error("Expected meta field to be present")
+			}
+
+			// Verify command tree data structure
+			data, ok := result["data"].(map[string]interface{})
+			if !ok {
+				t.Fatal("Expected data to be an object")
+			}
+
+			// Verify top-level tree fields
+			if data["cli_name"] == nil {
+				t.Error("Expected cli_name in command tree")
+			}
+
+			rootCmd, ok := data["root_command"].(map[string]interface{})
+			if !ok {
+				t.Fatal("Expected root_command in command tree")
+			}
+
+			if rootCmd["use"] == nil {
+				t.Error("Expected use field in root command")
+			}
+
+			if rootCmd["short"] == nil {
+				t.Error("Expected short field in root command")
+			}
+
+			// Verify subcommands exist
+			subs, ok := rootCmd["subcommands"].([]interface{})
+			if !ok || len(subs) == 0 {
+				t.Error("Expected subcommands in root command")
+			}
+
+			// Verify flags exist
+			flags, ok := rootCmd["flags"].([]interface{})
+			if !ok || len(flags) == 0 {
+				t.Error("Expected flags in root command")
+			}
+
+			// Check for known commands and flags
+			cmdNames := make(map[string]bool)
+			for _, sub := range subs {
+				if subMap, ok := sub.(map[string]interface{}); ok {
+					if use, ok := subMap["use"].(string); ok {
+						cmdNames[use] = true
+					}
+				}
+			}
+
+			expectedCmds := []string{"scan", "version", "doctor", "config", "completion"}
+			for _, expected := range expectedCmds {
+				found := false
+				for name := range cmdNames {
+					if strings.HasPrefix(name, expected) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected subcommand %q in command tree, found: %v", expected, cmdNames)
+				}
+			}
+
+			// Verify flag structure
+			flagNames := make(map[string]bool)
+			for _, flag := range flags {
+				if flagMap, ok := flag.(map[string]interface{}); ok {
+					if name, ok := flagMap["name"].(string); ok {
+						flagNames[name] = true
+					}
+					if flagMap["description"] == nil {
+						t.Error("Expected description in flag")
+					}
+					if flagMap["type"] == nil {
+						t.Error("Expected type in flag")
+					}
+				}
+			}
+
+			if !flagNames["json"] {
+				t.Errorf("Expected --json flag in command tree, found: %v", flagNames)
+			}
+		})
+	}
+}
+
+func TestCLIHelpJSONCommandTreeStructure(t *testing.T) {
+	binary := buildCLI(t)
+
+	// Get help JSON output
+	output, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	if err != nil {
+		t.Fatalf("Command failed: %v\nOutput: %s", err, output)
+	}
+
+	// Unmarshal into structured types for deep validation
+	var result struct {
+		Status string                 `json:"status"`
+		Data   map[string]interface{} `json:"data"`
+		Meta   map[string]interface{} `json:"meta"`
+	}
+	if parseErr := json.Unmarshal(output, &result); parseErr != nil {
+		t.Fatalf("Failed to parse JSON: %v", parseErr)
+	}
+
+	// Validate command tree structure
+	data := result.Data
+	if data["cli_name"] != "deepscanbot" {
+		t.Errorf("Expected cli_name 'deepscanbot', got '%v'", data["cli_name"])
+	}
+
+	root := data["root_command"].(map[string]interface{})
+
+	// Validate root command fields
+	expectedRootFields := []string{"use", "short", "subcommands", "flags"}
+	for _, field := range expectedRootFields {
+		if root[field] == nil {
+			t.Errorf("Root command missing field: %s", field)
+		}
+	}
+
+	// Verify each subcommand has required fields
+	subs := root["subcommands"].([]interface{})
+	for _, sub := range subs {
+		subMap := sub.(map[string]interface{})
+		requiredFields := []string{"use", "short"}
+		for _, field := range requiredFields {
+			if subMap[field] == nil {
+				t.Errorf("Subcommand %v missing required field: %s", subMap["use"], field)
+			}
+		}
+
+		// Subcommand should have use and short descriptions
+		if short, ok := subMap["short"].(string); !ok || short == "" {
+			t.Errorf("Subcommand %v has empty short description", subMap["use"])
+		}
+
+		// Subcommands should have their own flags
+		if flags, ok := subMap["flags"].([]interface{}); ok {
+			for _, flag := range flags {
+				flagMap := flag.(map[string]interface{})
+				if flagMap["name"] == nil || flagMap["description"] == nil || flagMap["type"] == nil {
+					t.Errorf("Flag in subcommand %v has missing required fields: %v", subMap["use"], flagMap)
+				}
+			}
+		}
+	}
+
+	// Verify scan subcommand has depth and timeout in flags
+	var scanCmd map[string]interface{}
+	for _, sub := range subs {
+		subMap := sub.(map[string]interface{})
+		if use, ok := subMap["use"].(string); ok && strings.HasPrefix(use, "scan") {
+			scanCmd = subMap
+			break
+		}
+	}
+	if scanCmd != nil {
+		if flags, ok := scanCmd["flags"].([]interface{}); ok {
+			hasDepth := false
+			hasTimeout := false
+			for _, flag := range flags {
+				flagMap := flag.(map[string]interface{})
+				if flagMap["name"] == "depth" {
+					hasDepth = true
+				}
+				if flagMap["name"] == "timeout" {
+					hasTimeout = true
+				}
+			}
+			if !hasDepth {
+				t.Error("Scan command missing 'depth' flag")
+			}
+			if !hasTimeout {
+				t.Error("Scan command missing 'timeout' flag")
+			}
+		}
+	}
+}
+
+func TestCLIHelpJSONHasConsistentOrder(t *testing.T) {
+	binary := buildCLI(t)
+
+	output1, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	if err != nil {
+		t.Fatalf("First call failed: %v", err)
+	}
+
+	output2, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	if err != nil {
+		t.Fatalf("Second call failed: %v", err)
+	}
+
+	// Parse both outputs and compare only the data portion to avoid timestamp differences
+	var resp1, resp2 struct {
+		Data map[string]interface{} `json:"data"`
+	}
+	if err := json.Unmarshal(output1, &resp1); err != nil {
+		t.Fatalf("Failed to parse first output: %v", err)
+	}
+	if err := json.Unmarshal(output2, &resp2); err != nil {
+		t.Fatalf("Failed to parse second output: %v", err)
+	}
+
+	// Marshal data back to JSON for comparison
+	data1, err := json.Marshal(resp1.Data)
+	if err != nil {
+		t.Fatalf("Failed to marshal first data: %v", err)
+	}
+	data2, err := json.Marshal(resp2.Data)
+	if err != nil {
+		t.Fatalf("Failed to marshal second data: %v", err)
+	}
+
+	// Command tree data should be identical (consistent ordering)
+	if string(data1) != string(data2) {
+		t.Error("Command tree JSON output is not consistent between calls")
+	}
 }
 
 func TestCLIJSONOutputBackwardCompatibility(t *testing.T) {

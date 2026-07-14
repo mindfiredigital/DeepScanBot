@@ -11,9 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
-	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
-	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
@@ -22,15 +20,6 @@ import (
 const cliVersion = "1.0.0"
 
 var log = logger.New("info")
-
-// forceOverwrite is set by the --force flag; when true the scan command will
-// overwrite existing output files without prompting.
-var forceOverwrite bool
-
-// yesMode is set by the --yes flag; it is an explicit alias for
-// --force so that every interactive prompt has a command-line equivalent
-// (Requirement #7: all operations executable non-interactively).
-var yesMode bool
 
 // ScanOptions holds all scan configuration
 type ScanOptions struct {
@@ -160,11 +149,11 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 var rootCmd = &cobra.Command{
 	Use:   "deepscanbot",
 	Short: "A high-performance web crawler and scanner",
-	Long: `DeepScanBot is a feature-rich, concurrent web crawler that recursively
-crawls websites, respects robots.txt, handles rate-limiting, and produces
+	Long: `DeepScanBot is a feature-rich, concurrent web crawler that recursively 
+crawls websites, respects robots.txt, handles rate-limiting, and produces 
 comprehensive JSON or text reports.
 
-Built entirely in Go, it delivers exceptional performance as a single,
+Built entirely in Go, it delivers exceptional performance as a single, 
 self-contained binary.`,
 	Example: `  # Scan a website
   deepscanbot scan https://example.com
@@ -202,22 +191,17 @@ Examples:
   deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 output=results
 
   # Polite crawl with delays
-  deepscanbot scan https://example.com delay=500ms concurrency=5
-
-  # Non-interactive (CI/CD)
-  deepscanbot scan https://example.com --no-input --force`,
+  deepscanbot scan https://example.com delay=500ms concurrency=5`,
 	Run: func(cmd *cobra.Command, args []string) {
 		url, opts := parseKeyValue(args)
 
 		if url == "" {
-			exitcode.HandleError(exitcode.ErrEmptyURL)
+			log.Fatalf("you must specify a starting URL")
 		}
 
 		parsedURL, err := validateStartURL(url)
 		if err != nil {
-			// validateStartURL returns an *exitcode.ExitCode when the URL is
-			// invalid; for other error types it returns a generic error.
-			exitcode.HandleError(err)
+			log.Fatalf(err.Error())
 		}
 
 		// Check for --json flag (persistent flag from root command)
@@ -230,35 +214,14 @@ Examples:
 
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
 		if err != nil {
-			exitcode.HandleError(err)
-		}
-
-		// Guard against overwriting existing output in non-interactive mode.
-		// Users must explicitly pass --force (or --yes) to overwrite a file.
-		overwriteAllowed := forceOverwrite || yesMode
-		if !overwriteAllowed {
-			if _, statErr := os.Stat(outputFilename); statErr == nil {
-				// File exists.
-				if !noinput.IsInteractive() {
-					exitcode.HandleError(&exitcode.ExitCode{
-						Code:    exitcode.InvalidInput,
-						Message: fmt.Sprintf("Output file %q already exists. Refusing to overwrite in non-interactive mode.", outputFilename),
-						Hint:    "Pass --force (or --yes) to overwrite the file or choose a different output name with output=<filename>.",
-					})
-				}
-				// Interactive mode — in a real implementation we would prompt
-				// the user here.  For now we simply log a warning and proceed
-				// (backward-compatible behaviour).
-				log.Warnf("Output file %q already exists. It will be overwritten.", outputFilename)
-			}
+			log.Fatalf(err.Error())
 		}
 
 		var resumeEntries []storage.URLEntry
 		if opts.Resume {
 			resumeEntries, err = storage.ReadEntriesFromFile(outputFilename)
 			if err != nil {
-				log.Errorf("load resume file: %v", err)
-				exitcode.HandleError(exitcode.ErrResumeLoadFailed)
+				log.Fatalf("load resume file: %v", err)
 			}
 			log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 		}
@@ -274,7 +237,7 @@ Examples:
 
 		report, err := c.StartReport()
 		if err != nil {
-			exitcode.HandleErrorWithMessage("scan failed", err)
+			log.Fatalf("error: %v", err)
 		}
 
 		// Create output formatter
@@ -288,7 +251,7 @@ Examples:
 		}
 
 		if err != nil {
-			exitcode.HandleErrorWithMessage("write output file", exitcode.ErrWriteOutput)
+			log.Fatalf("write results: %v", err)
 		}
 
 		// If JSON mode, write report to stdout
@@ -296,7 +259,7 @@ Examples:
 			meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
 			err = formatter.WriteSuccess(os.Stdout, report, meta)
 			if err != nil {
-				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				log.Fatalf("write JSON output: %v", err)
 			}
 		}
 
@@ -311,7 +274,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
-
+		
 		// Also check if json=true was passed as a key=value option
 		jsonOption := false
 		for _, arg := range args {
@@ -321,7 +284,7 @@ var versionCmd = &cobra.Command{
 				break
 			}
 		}
-
+		
 		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
@@ -331,7 +294,7 @@ var versionCmd = &cobra.Command{
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
-				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				log.Fatalf("write JSON output: %v", err)
 			}
 		} else {
 			fmt.Println("DeepScanBot CLI v1.0.0")
@@ -346,7 +309,7 @@ var doctorCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check for --json flag or json=true option
 		jsonFlag, _ := cmd.Flags().GetBool("json")
-
+		
 		// Also check if json=true was passed as a key=value option
 		jsonOption := false
 		for _, arg := range args {
@@ -356,7 +319,7 @@ var doctorCmd = &cobra.Command{
 				break
 			}
 		}
-
+		
 		if jsonFlag || jsonOption {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
@@ -369,7 +332,7 @@ var doctorCmd = &cobra.Command{
 			}
 			err := formatter.WriteSuccess(os.Stdout, data, meta)
 			if err != nil {
-				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				log.Fatalf("write JSON output: %v", err)
 			}
 		} else {
 			fmt.Println("Running diagnostics...")
@@ -403,49 +366,10 @@ var completionCmd = &cobra.Command{
 }
 
 func init() {
-	// Add persistent flags shared by all commands
+	// Add --json flag to root command so all subcommands can use it
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
-	rootCmd.PersistentFlags().Bool("no-input", false, "Disable all interactive prompts; fail if required input is missing")
-
-	// Add --force flag to scan command for overwriting existing output
-	scanCmd.Flags().BoolVar(&forceOverwrite, "force", false, "Overwrite existing output file without prompting")
-
-	// Add --yes flag as an explicit alias for --force.  Every interactive
-	// prompt in the CLI has a command-line flag equivalent so that all
-	// operations can be executed non-interactively (Requirement #7).
-	rootCmd.PersistentFlags().BoolVar(&yesMode, "yes", false, "Auto-confirm all prompts; equivalent to --force for overwrite operations")
-
+	
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
-
-	// Silence cobra's own error printing so we can emit consistent
-	// error messages ourselves.
-	rootCmd.SilenceErrors = true
-	rootCmd.SilenceUsage = false // usage is still shown on validation errors
-
-	// Single global pre-run that enforces Requirement #8 (--no-input)
-	// and Requirement #7 (--yes alias).  This MUST run before any
-	// command's Run so that noinput.IsInteractive() and the overwrite
-	// flags have the correct values.
-	originalPersistentPreRun := rootCmd.PersistentPreRunE
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// --no-input: disable ALL interactive prompts globally and fail fast.
-		noInput, _ := cmd.Flags().GetBool("no-input")
-		if noInput {
-			noinput.SetNoInputFlag()
-		}
-
-		// --yes: explicit auto-confirm alias for --force (Requirement #7).
-		yesFlag, _ := cmd.Flags().GetBool("yes")
-		if yesFlag {
-			yesMode = true
-			forceOverwrite = true
-		}
-
-		if originalPersistentPreRun != nil {
-			return originalPersistentPreRun(cmd, args)
-		}
-		return nil
-	}
 
 	// Override help to support --json flag for machine-readable command tree output
 	// Store the original help function to avoid recursion
@@ -458,7 +382,8 @@ func init() {
 			meta := output.NewResponseMetadata("help", 0)
 			err := formatter.WriteSuccess(os.Stdout, tree, meta)
 			if err != nil {
-				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
 			}
 			return
 		}
@@ -469,44 +394,20 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		// Cobra errors (e.g. missing required args, unknown flags) are not
-		// *ExitCode; map them to InvalidInput so they return exit code 1.
-		handleCobraError(err)
-	}
-}
-
-// handleCobraError maps cobra's error to a standardised exit code and exits.
-func handleCobraError(err error) {
-	errStr := err.Error()
-	switch {
-	case strings.Contains(errStr, "requires at least"),
-		strings.Contains(errStr, "requires exactly"),
-		strings.Contains(errStr, "unknown flag"),
-		strings.Contains(errStr, "not a valid"),
-		strings.Contains(errStr, "usage"):
-		exitcode.HandleError(&exitcode.ExitCode{
-			Code:    exitcode.InvalidInput,
-			Message: errStr,
-			Hint:    "Run 'deepscanbot --help' for usage information.",
-		})
-	default:
-		exitcode.HandleError(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
 func validateStartURL(rawURL string) (string, error) {
 	startURL := strings.TrimSpace(rawURL)
 	if startURL == "" {
-		return "", exitcode.ErrEmptyURL
+		return "", fmt.Errorf("you must specify a starting URL")
 	}
 
 	parsedURL, err := url.ParseRequestURI(startURL)
 	if err != nil || parsedURL.Host == "" || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-		return "", &exitcode.ExitCode{
-			Code:    exitcode.InvalidInput,
-			Message: fmt.Sprintf("Invalid URL: %q must be an absolute http:// or https:// URL.", rawURL),
-			Hint:    "Example: https://example.com",
-		}
+		return "", fmt.Errorf("invalid URL %q: must be an absolute http:// or https:// URL", rawURL)
 	}
 
 	return parsedURL.String(), nil
@@ -515,7 +416,7 @@ func validateStartURL(rawURL string) (string, error) {
 func buildOutputFilename(baseName string, jsonOutput bool) (string, error) {
 	baseName = strings.TrimSpace(baseName)
 	if baseName == "" {
-		return "", exitcode.ErrEmptyOutputFilename
+		return "", fmt.Errorf("output filename must not be empty")
 	}
 
 	if jsonOutput {
