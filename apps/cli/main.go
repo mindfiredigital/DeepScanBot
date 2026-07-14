@@ -373,6 +373,7 @@ var completionCmd = &cobra.Command{
 func init() {
 	// Add --json flag to root command so all subcommands can use it
 	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
+	
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 }
 
