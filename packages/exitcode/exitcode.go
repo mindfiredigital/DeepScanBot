@@ -1,7 +1,3 @@
-// Package exitcode defines standardized exit codes and provides a standard
-// error type that carries an exit code, a user-facing message, and an optional
-// resolution hint. Every command in the CLI should use these codes so that
-// scripts, CI/CD pipelines, and AI agents can rely on consistent exit behaviour.
 package exitcode
 
 import "fmt"
