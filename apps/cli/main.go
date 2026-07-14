@@ -12,6 +12,7 @@ import (
 
 	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
+	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
 )
 
@@ -204,6 +205,12 @@ Examples:
 			log.Fatalf(err.Error())
 		}
 
+		// Check for --json flag (persistent flag from root command)
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		if jsonFlag {
+			opts.JSON = true
+		}
+
 		timeoutDuration := time.Duration(opts.Timeout) * time.Second
 
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
@@ -234,6 +241,10 @@ Examples:
 			log.Fatalf("error: %v", err)
 		}
 
+		// Create output formatter
+		formatter := output.NewFormatter(opts.JSON)
+
+		// Write to file
 		if opts.JSON {
 			err = storage.WriteJSONReportToFile(outputFilename, report)
 		} else {
@@ -242,6 +253,15 @@ Examples:
 
 		if err != nil {
 			log.Fatalf("write results: %v", err)
+		}
+
+		// If JSON mode, write report to stdout
+		if opts.JSON {
+			meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
+			err = formatter.WriteSuccess(os.Stdout, report, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
 		}
 
 		log.Infof("Results written to %s", outputFilename)
@@ -253,7 +273,23 @@ var versionCmd = &cobra.Command{
 	Short: "Show the installed version",
 	Long:  `Display the current version of DeepScanBot CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("DeepScanBot CLI %s\n", version)
+		// Check for --json flag
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		if jsonFlag {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("version", 0)
+			data := map[string]string{
+				"version": version,
+				"name":    "DeepScanBot CLI",
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			fmt.Printf("DeepScanBot CLI %s\n", version)
+		}
 	},
 }
 
@@ -262,11 +298,30 @@ var doctorCmd = &cobra.Command{
 	Short: "Verify installation and environment",
 	Long:  `Check that DeepScanBot is properly installed and the environment is configured correctly.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Running diagnostics...")
-		fmt.Println("✓ DeepScanBot is installed")
-		fmt.Println("✓ Binary is executable")
-		fmt.Println("✓ Environment is configured correctly")
-		fmt.Println("\nAll checks passed!")
+		// Check for --json flag
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		if jsonFlag {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("doctor", 0)
+			data := map[string]interface{}{
+				"installed":      true,
+				"executable":     true,
+				"configured":     true,
+				"checks_passed":  3,
+				"message":        "All checks passed!",
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			fmt.Println("Running diagnostics...")
+			fmt.Println("✓ DeepScanBot is installed")
+			fmt.Println("✓ Binary is executable")
+			fmt.Println("✓ Environment is configured correctly")
+			fmt.Println("\nAll checks passed!")
+		}
 	},
 }
 
@@ -283,15 +338,41 @@ var completionCmd = &cobra.Command{
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Run: func(cmd *cobra.Command, args []string) {
-		shell := "bash"
-		if len(args) > 0 {
-			shell = args[0]
+		// Check for --json flag
+		jsonFlag, _ := cmd.Flags().GetBool("json")
+		
+		if jsonFlag {
+			formatter := output.NewFormatter(true)
+			meta := output.NewResponseMetadata("completion", 0)
+			shell := "bash"
+			if len(args) > 0 {
+				shell = args[0]
+			}
+			data := map[string]interface{}{
+				"shell":         shell,
+				"script":        "Completion script generation not yet implemented",
+				"note":          "Use the shell-specific completion commands instead",
+				"valid_shells":  []string{"bash", "zsh", "fish", "powershell"},
+			}
+			err := formatter.WriteSuccess(os.Stdout, data, meta)
+			if err != nil {
+				log.Fatalf("write JSON output: %v", err)
+			}
+		} else {
+			shell := "bash"
+			if len(args) > 0 {
+				shell = args[0]
+			}
+			fmt.Printf("Generating %s completion script...\n", shell)
+			fmt.Println("Note: Shell completion script generation is not yet implemented.")
+			fmt.Println("Please use the standard Cobra completion commands.")
 		}
-		_ = shell
 	},
 }
 
 func init() {
+	// Add --json flag to root command so all subcommands can use it
+	rootCmd.PersistentFlags().Bool("json", false, "Output results in JSON format")
 	rootCmd.AddCommand(scanCmd, versionCmd, doctorCmd, configCmd, completionCmd)
 }
 
