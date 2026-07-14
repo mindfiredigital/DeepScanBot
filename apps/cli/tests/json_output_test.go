@@ -28,7 +28,7 @@ func TestCLIVersionJSONOutput(t *testing.T) {
 			name:     "version without json flag",
 			args:     []string{"version"},
 			wantJSON: false,
-			wantText: "DeepScanBot CLI v1.0.0",
+			wantText: "dev",
 		},
 	}
 

@@ -61,11 +61,35 @@ func NewWithLevel(level LogLevel) *Logger {
 	return &Logger{slog.New(handler), level}
 }
 
-// SetLevel sets the logging level
+// SetLevel changes the logging level dynamically by recreating the handler
 func (l *Logger) SetLevel(level LogLevel) {
 	l.level = level
-	// Note: slog.HandlerOptions doesn't allow changing level after creation
-	// For simplicity, we just update the level field
+
+	var lvl slog.Level
+	switch level {
+	case LevelDebug:
+		lvl = slog.LevelDebug
+	case LevelVerbose:
+		lvl = slog.LevelInfo
+	case LevelInfo:
+		lvl = slog.LevelInfo
+	case LevelQuiet:
+		lvl = slog.LevelWarn
+	default:
+		lvl = slog.LevelInfo
+	}
+
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: lvl,
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	})
+
+	l.Logger = slog.New(handler)
 }
 
 // Infof logs a formatted info message.
@@ -95,6 +119,26 @@ func (l *Logger) Debugf(format string, args ...interface{}) {
 func (l *Logger) Fatalf(format string, args ...interface{}) {
 	l.Log(context.Background(), slog.LevelError, fmt.Sprintf(format, args...))
 	os.Exit(1)
+}
+
+// Level returns the current log level
+func (l *Logger) Level() LogLevel {
+	return l.level
+}
+
+// IsQuiet returns true if the logger is in quiet mode
+func (l *Logger) IsQuiet() bool {
+	return l.level == LevelQuiet
+}
+
+// IsVerbose returns true if the logger is in verbose mode
+func (l *Logger) IsVerbose() bool {
+	return l.level == LevelVerbose || l.level == LevelDebug
+}
+
+// IsDebug returns true if the logger is in debug mode
+func (l *Logger) IsDebug() bool {
+	return l.level == LevelDebug
 }
 
 // FatalfExit logs a formatted error message and exits with the code

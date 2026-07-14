@@ -559,7 +559,7 @@ var versionCmd = &cobra.Command{
 				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
-			fmt.Println(info.String())
+			log.Infof(info.String())
 		}
 	},
 }
@@ -602,11 +602,12 @@ var doctorCmd = &cobra.Command{
 				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
 			}
 		} else {
-			fmt.Println("Running diagnostics...")
-			fmt.Println("✓ DeepScanBot is installed")
-			fmt.Println("✓ Binary is executable")
-			fmt.Println("✓ Environment is configured correctly")
-			fmt.Println("\nAll checks passed!")
+			log.Infof("Running diagnostics...")
+			log.Infof("✓ DeepScanBot is installed")
+			log.Infof("✓ Binary is executable")
+			log.Infof("✓ Environment is configured correctly")
+			log.Infof("")
+			log.Infof("All checks passed!")
 		}
 	},
 }
