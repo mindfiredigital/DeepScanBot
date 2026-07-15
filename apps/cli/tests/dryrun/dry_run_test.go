@@ -1,17 +1,19 @@
-package tests
+package dryrun
 
 import (
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
 )
 
 func TestCLIDryRunPreview(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	tests := []struct {
@@ -41,7 +43,7 @@ func TestCLIDryRunPreview(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stdout, stderr, code := combinedOutputFor(t, binary, workdir, tt.args...)
+			stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, tt.args...)
 
 			if code != tt.wantCode {
 				t.Errorf("exit code = %d, want %d; stderr: %s", code, tt.wantCode, stderr)
@@ -58,16 +60,16 @@ func TestCLIDryRunPreview(t *testing.T) {
 }
 
 func TestCLIDryRunDoesNotCreateFiles(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	outputFile := filepath.Join(workdir, "crawler_results.txt")
 
 	// Run with --dry-run
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "output="+filepath.Base(outputFile)[:len(filepath.Base(outputFile))-4], "--dry-run")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "output="+filepath.Base(outputFile)[:len(filepath.Base(outputFile))-4], "--dry-run")
 
 	if code != 0 {
 		t.Errorf("dry-run should succeed, got exit code %d; stderr: %s", code, stderr)
@@ -80,13 +82,13 @@ func TestCLIDryRunDoesNotCreateFiles(t *testing.T) {
 }
 
 func TestCLIDryRunJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--json")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--json")
 
 	if code != 0 {
 		t.Errorf("dry-run --json should succeed, got exit code %d; stderr: %s", code, stderr)
@@ -106,10 +108,10 @@ func TestCLIDryRunJSONOutput(t *testing.T) {
 }
 
 func TestCLIDryRunShowsExistingFileWarning(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	// Create an existing output file
@@ -119,7 +121,7 @@ func TestCLIDryRunShowsExistingFileWarning(t *testing.T) {
 	}
 
 	// Run with --dry-run
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run")
 
 	if code != 0 {
 		t.Errorf("dry-run should succeed even with existing file, got exit code %d; stderr: %s", code, stderr)
@@ -141,10 +143,10 @@ func TestCLIDryRunShowsExistingFileWarning(t *testing.T) {
 }
 
 func TestCLIYesFlagAutoConfirms(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	// Create an existing output file
@@ -154,8 +156,7 @@ func TestCLIYesFlagAutoConfirms(t *testing.T) {
 	}
 
 	// Run with --yes flag (should auto-confirm overwrite)
-	// Note: --yes is a local flag on scan, so it must come before positional args
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "scan", "--yes", server.URL, "depth=0")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "--yes", server.URL, "depth=0")
 
 	if code != 0 {
 		t.Errorf("--yes should auto-confirm and succeed, got exit code %d; stderr: %s", code, stderr)
@@ -172,14 +173,14 @@ func TestCLIYesFlagAutoConfirms(t *testing.T) {
 }
 
 func TestCLIDryRunWithYesFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	// --dry-run takes precedence, so --yes should be irrelevant
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--yes")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--yes")
 
 	if code != 0 {
 		t.Errorf("dry-run with --yes should succeed, got exit code %d; stderr: %s", code, stderr)
@@ -193,14 +194,14 @@ func TestCLIDryRunWithYesFlag(t *testing.T) {
 }
 
 func TestCLIDryRunWithForceFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	server := newTestServer()
+	server := testutil.NewTestServer()
 	defer server.Close()
 
 	// --dry-run takes precedence, so --force should be irrelevant
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--force")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--dry-run", "--force")
 
 	if code != 0 {
 		t.Errorf("dry-run with --force should succeed, got exit code %d; stderr: %s", code, stderr)

@@ -1,65 +1,27 @@
-package tests
+package exitcode
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
-// exitCodeFor runs the CLI with the given arguments and returns the exit code.
-// This helper does not use buildCLI – it builds once and reuses the binary
-// across sub-tests to keep things fast.
+// Helper function leveraging testutil to fetch just the exit code
 func exitCodeFor(t *testing.T, binary, workdir string, args ...string) int {
 	t.Helper()
-
-	cmd := exec.Command(binary, args...)
-	cmd.Dir = workdir
-	cmd.Stdout = nil // discard stdout – we only care about the exit code
-	cmd.Stderr = nil // discard stderr
-
-	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return exitErr.ExitCode()
-		}
-		t.Fatalf("unexpected error running CLI: %v", err)
-	}
-	return 0
-}
-
-// combinedOutputFor runs the CLI and returns stdout + stderr separately, plus
-// the exit code.  Both stdout and stderr are captured regardless of exit code.
-func combinedOutputFor(t *testing.T, binary, workdir string, args ...string) (stdout, stderr string, exitCode int) {
-	t.Helper()
-
-	cmd := exec.Command(binary, args...)
-	cmd.Dir = workdir
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
-
-	err := cmd.Run()
-	exitCode = 0
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			exitCode = exitErr.ExitCode()
-		}
-	}
-
-	return stdoutBuf.String(), stderrBuf.String(), exitCode
+	_, _, code := testutil.CombinedOutputFor(t, binary, workdir, args...)
+	return code
 }
 
 func TestCLIExitCodeSuccess(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "version")
@@ -69,14 +31,14 @@ func TestCLIExitCodeSuccess(t *testing.T) {
 }
 
 func TestCLIExitCodeInvalidURL(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	tests := []struct {
 		name      string
 		args      []string
 		wantCode  int
-		wantErrIn string // substring expected in stderr
+		wantErrIn string
 	}{
 		{
 			name:      "empty URL",
@@ -127,7 +89,7 @@ func TestCLIExitCodeInvalidURL(t *testing.T) {
 }
 
 func TestCLIExitCodeErrorOutputContainsHint(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	tests := []struct {
@@ -152,7 +114,7 @@ func TestCLIExitCodeErrorOutputContainsHint(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, stderr, _ := combinedOutputFor(t, binary, workdir, tt.args...)
+			_, stderr, _ := testutil.CombinedOutputFor(t, binary, workdir, tt.args...)
 			if tt.wantErrIn != "" && !strings.Contains(stderr, tt.wantErrIn) {
 				t.Errorf("stderr = %q, want it to contain %q", stderr, tt.wantErrIn)
 			}
@@ -164,18 +126,15 @@ func TestCLIExitCodeErrorOutputContainsHint(t *testing.T) {
 }
 
 func TestCLIExitCodeScanFailure(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	// A server that will cause the scan to fail
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Don't handle robots.txt so we get a real response
 		w.Header().Set("Content-Type", "text/html")
 		_, _ = w.Write([]byte("<html></html>"))
 	}))
 	defer server.Close()
 
-	// The scan should succeed (exit 0) because the server responds
 	code := exitCodeFor(t, binary, workdir, "scan", server.URL, "depth=0")
 	if code != 0 {
 		t.Errorf("scan of valid server exit code = %d, want 0", code)
@@ -183,29 +142,21 @@ func TestCLIExitCodeScanFailure(t *testing.T) {
 }
 
 func TestCLIExitCodeNetworkFailure(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	// The crawler may or may not return a non-zero exit code for network
-	// failures depending on the OS/network stack.  We verify that:
-	//   1. The command completes (doesn't hang).
-	//   2. If it fails, it returns a non-zero exit code.
-	//   3. The error output contains actionable information.
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "scan", "http://192.0.2.1:1", "timeout=1")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://192.0.2.1:1", "timeout=1")
 	t.Logf("network failure: exit code=%d, stderr=%s", code, stderr)
 
 	if code != 0 {
-		// Verified: non-zero exit code on network failure.
 		if !strings.Contains(stderr, "Error") && !strings.Contains(stderr, "error") && !strings.Contains(stderr, "failed") && !strings.Contains(stderr, "timeout") {
 			t.Errorf("stderr should contain an actionable error message, got: %s", stderr)
 		}
 	}
-	// If code == 0, the crawler handled the failure gracefully
-	// and produced an empty report – that's acceptable.
 }
 
 func TestCLIExitCodeVersion(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "version")
@@ -215,7 +166,7 @@ func TestCLIExitCodeVersion(t *testing.T) {
 }
 
 func TestCLIExitCodeVersionJSON(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "version", "--json")
@@ -225,7 +176,7 @@ func TestCLIExitCodeVersionJSON(t *testing.T) {
 }
 
 func TestCLIExitCodeDoctor(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "doctor")
@@ -235,7 +186,7 @@ func TestCLIExitCodeDoctor(t *testing.T) {
 }
 
 func TestCLIExitCodeHelp(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "--help")
@@ -245,7 +196,7 @@ func TestCLIExitCodeHelp(t *testing.T) {
 }
 
 func TestCLIExitCodeHelpJSON(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	code := exitCodeFor(t, binary, workdir, "--help", "--json")
@@ -255,7 +206,7 @@ func TestCLIExitCodeHelpJSON(t *testing.T) {
 }
 
 func TestCLIExitCodeScanWithJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -270,14 +221,12 @@ func TestCLIExitCodeScanWithJSONOutput(t *testing.T) {
 
 	workdir := t.TempDir()
 
-	// Test with JSON output
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--json", "output=exit-json-test")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", server.URL, "depth=0", "--json", "output=exit-json-test")
 
 	if code != 0 {
 		t.Errorf("scan --json exit code = %d, want 0; stderr: %s", code, stderr)
 	}
 
-	// Verify JSON output on stdout
 	var result map[string]interface{}
 	if err := json.Unmarshal([]byte(stdout), &result); err != nil {
 		t.Fatalf("stdout is not valid JSON: %v\nstdout: %s", err, stdout)
@@ -287,7 +236,6 @@ func TestCLIExitCodeScanWithJSONOutput(t *testing.T) {
 		t.Errorf("status = %v, want 'success'", result["status"])
 	}
 
-	// Verify output file was created
 	outputFile := filepath.Join(workdir, "exit-json-test.json")
 	if _, err := os.Stat(outputFile); err != nil {
 		t.Errorf("output file not created: %v", err)
@@ -295,7 +243,7 @@ func TestCLIExitCodeScanWithJSONOutput(t *testing.T) {
 }
 
 func TestCLIExitCodeScanTextOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -315,7 +263,6 @@ func TestCLIExitCodeScanTextOutput(t *testing.T) {
 		t.Errorf("scan text output exit code = %d, want 0", code)
 	}
 
-	// Verify text output file was created
 	outputFile := filepath.Join(workdir, "exit-text-test.txt")
 	if _, err := os.Stat(outputFile); err != nil {
 		t.Errorf("text output file not created: %v", err)
@@ -323,14 +270,11 @@ func TestCLIExitCodeScanTextOutput(t *testing.T) {
 }
 
 func TestCLIExitCodeErrorForEmptyOutputFilename(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	// output= with empty value should cause validation error
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "scan", "http://example.com", "output=")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://example.com", "output=")
 
-	// It should fail (cobra will reject this because opts.Output becomes "" but
-	// it would still reach buildOutputFilename which returns ErrEmptyOutputFilename)
 	t.Logf("stderr: %s", stderr)
 	if code == 0 {
 		t.Error("scan with empty output= should fail with non-zero exit code")
@@ -338,12 +282,175 @@ func TestCLIExitCodeErrorForEmptyOutputFilename(t *testing.T) {
 }
 
 func TestCLIExitCodeInvalidFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	// Cobra will reject unknown flags with exit code 1
 	code := exitCodeFor(t, binary, workdir, "scan", "http://example.com", "--nonexistent-flag")
 	if code == 0 {
 		t.Error("scan with unknown flag should fail with non-zero exit code")
+	}
+}
+
+func TestSuccessCode(t *testing.T) {
+	if exitcode.Success != 0 {
+		t.Errorf("Success = %d, want 0", exitcode.Success)
+	}
+}
+
+func TestInvalidInputCode(t *testing.T) {
+	if exitcode.InvalidInput != 1 {
+		t.Errorf("InvalidInput = %d, want 1", exitcode.InvalidInput)
+	}
+}
+
+func TestValidationErrorCode(t *testing.T) {
+	if exitcode.ValidationError != 2 {
+		t.Errorf("ValidationError = %d, want 2", exitcode.ValidationError)
+	}
+}
+
+func TestAuthFailureCode(t *testing.T) {
+	if exitcode.AuthFailure != 3 {
+		t.Errorf("AuthFailure = %d, want 3", exitcode.AuthFailure)
+	}
+}
+
+func TestAuthzFailureCode(t *testing.T) {
+	if exitcode.AuthzFailure != 10 {
+		t.Errorf("AuthzFailure = %d, want 10", exitcode.AuthzFailure)
+	}
+}
+
+func TestNotFoundCode(t *testing.T) {
+	if exitcode.NotFound != 20 {
+		t.Errorf("NotFound = %d, want 20", exitcode.NotFound)
+	}
+}
+
+func TestNetworkFailureCode(t *testing.T) {
+	if exitcode.NetworkFailure != 30 {
+		t.Errorf("NetworkFailure = %d, want 30", exitcode.NetworkFailure)
+	}
+}
+
+func TestTimeoutCode(t *testing.T) {
+	if exitcode.Timeout != 31 {
+		t.Errorf("Timeout = %d, want 31", exitcode.Timeout)
+	}
+}
+
+func TestInternalErrorCode(t *testing.T) {
+	if exitcode.InternalError != 70 {
+		t.Errorf("InternalError = %d, want 70", exitcode.InternalError)
+	}
+}
+
+func TestExitCodeError(t *testing.T) {
+	ec := &exitcode.ExitCode{
+		Code:    exitcode.InvalidInput,
+		Message: "Something went wrong",
+		Hint:    "Try again",
+	}
+
+	errStr := ec.Error()
+	if errStr != "Something went wrong\nHint: Try again" {
+		t.Errorf("Error() = %q, want %q", errStr, "Something went wrong\nHint: Try again")
+	}
+}
+
+func TestExitCodeErrorNoHint(t *testing.T) {
+	ec := &exitcode.ExitCode{
+		Code:    exitcode.InvalidInput,
+		Message: "Something went wrong",
+	}
+
+	errStr := ec.Error()
+	if errStr != "Something went wrong" {
+		t.Errorf("Error() = %q, want %q", errStr, "Something went wrong")
+	}
+}
+
+func TestExitCodeString(t *testing.T) {
+	ec := &exitcode.ExitCode{
+		Code:    exitcode.InvalidInput,
+		Message: "Invalid input",
+	}
+
+	str := ec.String()
+	if str != "exit code 1: Invalid input" {
+		t.Errorf("String() = %q, want %q", str, "exit code 1: Invalid input")
+	}
+}
+
+func TestExitCodeUnwrap(t *testing.T) {
+	ec := &exitcode.ExitCode{Code: exitcode.InternalError, Message: "test"}
+	if unwrapped := ec.Unwrap(); unwrapped != nil {
+		t.Errorf("Unwrap() = %v, want nil", unwrapped)
+	}
+}
+
+func TestErrInvalidURL(t *testing.T) {
+	if exitcode.ErrInvalidURL.Code != exitcode.InvalidInput {
+		t.Errorf("ErrInvalidURL.Code = %d, want %d", exitcode.ErrInvalidURL.Code, exitcode.InvalidInput)
+	}
+	if exitcode.ErrInvalidURL.Message == "" {
+		t.Error("ErrInvalidURL.Message should not be empty")
+	}
+	if exitcode.ErrInvalidURL.Hint == "" {
+		t.Error("ErrInvalidURL.Hint should not be empty")
+	}
+}
+
+func TestErrEmptyURL(t *testing.T) {
+	if exitcode.ErrEmptyURL.Code != exitcode.InvalidInput {
+		t.Errorf("ErrEmptyURL.Code = %d, want %d", exitcode.ErrEmptyURL.Code, exitcode.InvalidInput)
+	}
+	if exitcode.ErrEmptyURL.Message == "" {
+		t.Error("ErrEmptyURL.Message should not be empty")
+	}
+	if exitcode.ErrEmptyURL.Hint == "" {
+		t.Error("ErrEmptyURL.Hint should not be empty")
+	}
+}
+
+func TestErrEmptyOutputFilename(t *testing.T) {
+	if exitcode.ErrEmptyOutputFilename.Code != exitcode.ValidationError {
+		t.Errorf("ErrEmptyOutputFilename.Code = %d, want %d", exitcode.ErrEmptyOutputFilename.Code, exitcode.ValidationError)
+	}
+	if exitcode.ErrEmptyOutputFilename.Message == "" {
+		t.Error("ErrEmptyOutputFilename.Message should not be empty")
+	}
+	if exitcode.ErrEmptyOutputFilename.Hint == "" {
+		t.Error("ErrEmptyOutputFilename.Hint should not be empty")
+	}
+}
+
+func TestErrResumeLoadFailed(t *testing.T) {
+	if exitcode.ErrResumeLoadFailed.Code != exitcode.InternalError {
+		t.Errorf("ErrResumeLoadFailed.Code = %d, want %d", exitcode.ErrResumeLoadFailed.Code, exitcode.InternalError)
+	}
+}
+
+func TestErrScanFailed(t *testing.T) {
+	if exitcode.ErrScanFailed.Code != exitcode.InternalError {
+		t.Errorf("ErrScanFailed.Code = %d, want %d", exitcode.ErrScanFailed.Code, exitcode.InternalError)
+	}
+}
+
+func TestErrWriteOutput(t *testing.T) {
+	if exitcode.ErrWriteOutput.Code != exitcode.InternalError {
+		t.Errorf("ErrWriteOutput.Code = %d, want %d", exitcode.ErrWriteOutput.Code, exitcode.InternalError)
+	}
+}
+
+func TestErrJSONOutput(t *testing.T) {
+	if exitcode.ErrJSONOutput.Code != exitcode.InternalError {
+		t.Errorf("ErrJSONOutput.Code = %d, want %d", exitcode.ErrJSONOutput.Code, exitcode.InternalError)
+	}
+}
+
+func TestErrBuildFailed(t *testing.T) {
+	if exitcode.ErrBuildFailed.Code != exitcode.InternalError {
+		t.Errorf("ErrBuildFailed.Code = %d, want %d", exitcode.ErrBuildFailed.Code, exitcode.InternalError)
 	}
 }

@@ -1,4 +1,4 @@
-package tests
+package input_test
 
 import (
 	"os"
@@ -7,15 +7,6 @@ import (
 
 	"github.com/mindfiredigital/DeepScanBot/packages/input"
 )
-
-// Helper functions to wrap the input package functions
-func ReadInput(path string, useStdin bool) ([]string, error) {
-	return input.ReadInput(path, useStdin)
-}
-
-func HasStdinData() bool {
-	return input.HasStdinData()
-}
 
 func TestReadFromFile(t *testing.T) {
 	// Create a temporary file with URLs
@@ -28,7 +19,7 @@ func TestReadFromFile(t *testing.T) {
 	}
 
 	// Read URLs from file
-	urls, err := ReadInput(tmpFile, false)
+	urls, err := input.ReadInput(tmpFile, false)
 	if err != nil {
 		t.Fatalf("ReadInput() failed: %v", err)
 	}
@@ -60,7 +51,7 @@ func TestReadFromFileWithEmptyLines(t *testing.T) {
 	}
 
 	// Read URLs from file
-	urls, err := ReadInput(tmpFile, false)
+	urls, err := input.ReadInput(tmpFile, false)
 	if err != nil {
 		t.Fatalf("ReadInput() failed: %v", err)
 	}
@@ -73,7 +64,7 @@ func TestReadFromFileWithEmptyLines(t *testing.T) {
 
 func TestReadFromFileNotFound(t *testing.T) {
 	// Try to read from a non-existent file
-	_, err := ReadInput("/nonexistent/file.txt", false)
+	_, err := input.ReadInput("/nonexistent/file.txt", false)
 	if err == nil {
 		t.Error("Expected error when reading non-existent file, got nil")
 	}
@@ -90,8 +81,7 @@ func TestReadInputPrecedence(t *testing.T) {
 	}
 
 	// When both file and stdin are provided, file should take precedence
-	// This test verifies the precedence logic (file path is checked first)
-	urls, err := ReadInput(tmpFile, true) // true = use stdin, but file should take precedence
+	urls, err := input.ReadInput(tmpFile, true) // true = use stdin, but file should take precedence
 	if err != nil {
 		t.Fatalf("ReadInput() failed: %v", err)
 	}
@@ -104,7 +94,7 @@ func TestReadInputPrecedence(t *testing.T) {
 
 func TestReadInputNoInput(t *testing.T) {
 	// When neither file nor stdin is requested, should return nil
-	urls, err := ReadInput("", false)
+	urls, err := input.ReadInput("", false)
 	if err != nil {
 		t.Fatalf("ReadInput() failed: %v", err)
 	}
@@ -115,11 +105,7 @@ func TestReadInputNoInput(t *testing.T) {
 }
 
 func TestHasStdinData(t *testing.T) {
-	// This is a basic test - in real scenarios, stdin would be piped
-	// When running tests, stdin is typically not a TTY
-	hasData := HasStdinData()
-
-	// We can't assert a specific value since it depends on how tests are run
-	// Just verify the function doesn't panic
+	// Verify the function doesn't panic
+	hasData := input.HasStdinData()
 	_ = hasData
 }

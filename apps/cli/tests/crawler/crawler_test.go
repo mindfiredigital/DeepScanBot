@@ -1,4 +1,4 @@
-package tests
+package crawler_test
 
 import (
 	"net/http"
@@ -251,7 +251,6 @@ func TestCrawlerRetriesTransientFailures(t *testing.T) {
 
 func TestCrawlerPerHostConcurrencyLimit(t *testing.T) {
 	var active atomic.Int32
-
 	var maxActive atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

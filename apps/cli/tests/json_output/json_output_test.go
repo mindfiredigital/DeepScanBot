@@ -1,17 +1,42 @@
-package tests
+package cli_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
 )
 
+// Helper to run the CLI and return combined stdout and stderr
+func runCLI(t *testing.T, binary, workdir string, args ...string) ([]byte, error) {
+	t.Helper()
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, args...)
+	var err error
+	if code != 0 {
+		err = fmt.Errorf("cli exited with code %d", code)
+	}
+	return []byte(stdout + stderr), err
+}
+
+// Helper to run the CLI and return separated stdout and stderr streams
+func runCLIWithSeparateOutput(t *testing.T, binary, workdir string, args ...string) ([]byte, []byte, error) {
+	t.Helper()
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, args...)
+	var err error
+	if code != 0 {
+		err = fmt.Errorf("cli exited with code %d", code)
+	}
+	return []byte(stdout), []byte(stderr), err
+}
+
 func TestCLIVersionJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	tests := []struct {
 		name     string
@@ -38,10 +63,10 @@ func TestCLIVersionJSONOutput(t *testing.T) {
 
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
-				stdout, _, _ := runCLIWithSeparateOutput(binary, t.TempDir(), tt.args...)
+				stdout, _, _ := runCLIWithSeparateOutput(t, binary, t.TempDir(), tt.args...)
 				output = stdout
 			} else {
-				output, _ = runCLI(binary, t.TempDir(), tt.args...)
+				output, _ = runCLI(t, binary, t.TempDir(), tt.args...)
 			}
 
 			outputStr := string(output)
@@ -88,7 +113,7 @@ func TestCLIVersionJSONOutput(t *testing.T) {
 }
 
 func TestCLIDoctorJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	tests := []struct {
 		name     string
@@ -113,10 +138,10 @@ func TestCLIDoctorJSONOutput(t *testing.T) {
 
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
-				stdout, _, _ := runCLIWithSeparateOutput(binary, t.TempDir(), tt.args...)
+				stdout, _, _ := runCLIWithSeparateOutput(t, binary, t.TempDir(), tt.args...)
 				output = stdout
 			} else {
-				output, _ = runCLI(binary, t.TempDir(), tt.args...)
+				output, _ = runCLI(t, binary, t.TempDir(), tt.args...)
 			}
 
 			outputStr := string(output)
@@ -158,7 +183,7 @@ func TestCLIDoctorJSONOutput(t *testing.T) {
 }
 
 func TestCLIScanJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -200,11 +225,11 @@ func TestCLIScanJSONOutput(t *testing.T) {
 
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
-				stdout, stderrOut, _ := runCLIWithSeparateOutput(binary, workdir, tt.args...)
+				stdout, stderrOut, _ := runCLIWithSeparateOutput(t, binary, workdir, tt.args...)
 				output = stdout
 				stderr = stderrOut
 			} else {
-				output, _ = runCLI(binary, workdir, tt.args...)
+				output, _ = runCLI(t, binary, workdir, tt.args...)
 			}
 
 			outputStr := string(output)
@@ -277,7 +302,7 @@ func TestCLIScanJSONOutput(t *testing.T) {
 }
 
 func TestCLIJSONOutputOnlyOnStdout(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -293,7 +318,7 @@ func TestCLIJSONOutputOnlyOnStdout(t *testing.T) {
 	workdir := t.TempDir()
 
 	// Run scan with JSON output and capture stdout separately
-	stdout, stderr, _ := runCLIWithSeparateOutput(binary, workdir, "scan", server.URL, "depth=0", "--json", "output=json-test")
+	stdout, stderr, _ := runCLIWithSeparateOutput(t, binary, workdir, "scan", server.URL, "depth=0", "--json", "output=json-test")
 
 	// Log stderr for debugging
 	if len(stderr) > 0 {
@@ -314,7 +339,6 @@ func TestCLIJSONOutputOnlyOnStdout(t *testing.T) {
 	// Verify stderr contains log messages (not JSON)
 	stderrStr := string(stderr)
 	if len(stderrStr) > 0 {
-		// stderr should contain log messages, not JSON
 		if strings.Contains(stderrStr, `"status"`) && strings.Contains(stderrStr, `"success"`) {
 			t.Error("stderr should not contain JSON output")
 		}
@@ -322,10 +346,10 @@ func TestCLIJSONOutputOnlyOnStdout(t *testing.T) {
 }
 
 func TestCLIErrorJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	// Test with invalid URL
-	output, err := runCLI(binary, t.TempDir(), "scan", "not-a-url", "--json")
+	output, err := runCLI(t, binary, t.TempDir(), "scan", "not-a-url", "--json")
 
 	// Should fail
 	if err == nil {
@@ -335,7 +359,6 @@ func TestCLIErrorJSONOutput(t *testing.T) {
 	// Try to parse as JSON
 	var result map[string]interface{}
 	if parseErr := json.Unmarshal(output, &result); parseErr != nil {
-		// If it's not JSON, that's also acceptable - the error might be logged to stderr
 		t.Logf("Error output is not JSON (this is acceptable): %v", parseErr)
 		return
 	}
@@ -347,7 +370,7 @@ func TestCLIErrorJSONOutput(t *testing.T) {
 }
 
 func TestCLIHelpJSONOutput(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	tests := []struct {
 		name    string
@@ -373,7 +396,7 @@ func TestCLIHelpJSONOutput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output, err := runCLI(binary, t.TempDir(), tt.args...)
+			output, err := runCLI(t, binary, t.TempDir(), tt.args...)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatal("Expected error but got none")
@@ -483,10 +506,10 @@ func TestCLIHelpJSONOutput(t *testing.T) {
 }
 
 func TestCLIHelpJSONCommandTreeStructure(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	// Get help JSON output
-	output, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	output, err := runCLI(t, binary, t.TempDir(), "--help", "--json")
 	if err != nil {
 		t.Fatalf("Command failed: %v\nOutput: %s", err, output)
 	}
@@ -528,12 +551,10 @@ func TestCLIHelpJSONCommandTreeStructure(t *testing.T) {
 			}
 		}
 
-		// Subcommand should have use and short descriptions
 		if short, ok := subMap["short"].(string); !ok || short == "" {
 			t.Errorf("Subcommand %v has empty short description", subMap["use"])
 		}
 
-		// Subcommands should have their own flags
 		if flags, ok := subMap["flags"].([]interface{}); ok {
 			for _, flag := range flags {
 				flagMap := flag.(map[string]interface{})
@@ -577,19 +598,18 @@ func TestCLIHelpJSONCommandTreeStructure(t *testing.T) {
 }
 
 func TestCLIHelpJSONHasConsistentOrder(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
-	output1, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	output1, err := runCLI(t, binary, t.TempDir(), "--help", "--json")
 	if err != nil {
 		t.Fatalf("First call failed: %v", err)
 	}
 
-	output2, err := runCLI(binary, t.TempDir(), "--help", "--json")
+	output2, err := runCLI(t, binary, t.TempDir(), "--help", "--json")
 	if err != nil {
 		t.Fatalf("Second call failed: %v", err)
 	}
 
-	// Parse both outputs and compare only the data portion to avoid timestamp differences
 	var resp1, resp2 struct {
 		Data map[string]interface{} `json:"data"`
 	}
@@ -600,7 +620,6 @@ func TestCLIHelpJSONHasConsistentOrder(t *testing.T) {
 		t.Fatalf("Failed to parse second output: %v", err)
 	}
 
-	// Marshal data back to JSON for comparison
 	data1, err := json.Marshal(resp1.Data)
 	if err != nil {
 		t.Fatalf("Failed to marshal first data: %v", err)
@@ -610,14 +629,13 @@ func TestCLIHelpJSONHasConsistentOrder(t *testing.T) {
 		t.Fatalf("Failed to marshal second data: %v", err)
 	}
 
-	// Command tree data should be identical (consistent ordering)
 	if string(data1) != string(data2) {
 		t.Error("Command tree JSON output is not consistent between calls")
 	}
 }
 
 func TestCLIJSONOutputBackwardCompatibility(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -632,19 +650,16 @@ func TestCLIJSONOutputBackwardCompatibility(t *testing.T) {
 
 	workdir := t.TempDir()
 
-	// Test that existing behavior without --json flag still works
-	output, err := runCLI(binary, workdir, "scan", server.URL, "depth=0", "output=compat-test")
+	output, err := runCLI(t, binary, workdir, "scan", server.URL, "depth=0", "output=compat-test")
 	if err != nil {
 		t.Fatalf("Command failed: %v\nOutput: %s", err, output)
 	}
 
-	// Should create text file
 	outputFile := filepath.Join(workdir, "compat-test.txt")
 	if _, err := os.Stat(outputFile); err != nil {
 		t.Fatalf("Text output file was not created: %v", err)
 	}
 
-	// Output should be human-readable (not JSON)
 	outputStr := string(output)
 	if strings.Contains(outputStr, `"status"`) && strings.Contains(outputStr, `"success"`) {
 		t.Error("Output should be human-readable when --json is not specified")

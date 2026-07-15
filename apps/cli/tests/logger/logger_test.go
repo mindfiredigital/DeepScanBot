@@ -1,4 +1,4 @@
-package tests
+package logger_test
 
 import (
 	"bytes"
@@ -94,7 +94,7 @@ func TestLoggingLevels(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if !strings.Contains(output, "debug message") {
@@ -127,7 +127,7 @@ func TestQuietLevelFiltersMessages(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if strings.Contains(output, "debug should not appear") {
@@ -160,7 +160,7 @@ func TestVerboseLevelFiltersMessages(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if strings.Contains(output, "debug should not appear") {
@@ -193,7 +193,7 @@ func TestDebugLevelShowsAllMessages(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if !strings.Contains(output, "debug should appear") {

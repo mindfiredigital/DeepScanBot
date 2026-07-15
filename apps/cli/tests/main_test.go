@@ -1,23 +1,22 @@
-package tests
+package cli_test
 
 import (
-	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
 )
 
 func TestCLIRejectsInvalidStartURL(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	for _, targetURL := range []string{"", "ftp://example.com", "file:///etc/passwd", "not-a-url", "http://", "http:/missing-slash.com"} {
 		t.Run(targetURL, func(t *testing.T) {
-			output, err := runCLI(binary, t.TempDir(), "scan", targetURL)
+			output, err := testutil.RunCLI(binary, t.TempDir(), "scan", targetURL)
 			if err == nil {
 				t.Fatalf("CLI accepted invalid URL %q", targetURL)
 			}
@@ -30,7 +29,7 @@ func TestCLIRejectsInvalidStartURL(t *testing.T) {
 }
 
 func TestCLIConfiguresOutputFilename(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/robots.txt" {
@@ -44,7 +43,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 	defer server.Close()
 
 	workdir := t.TempDir()
-	if output, err := runCLI(binary, workdir, "scan", server.URL, "depth=0", "output=scan-results"); err != nil {
+	if output, err := testutil.RunCLI(binary, workdir, "scan", server.URL, "depth=0", "output=scan-results"); err != nil {
 		t.Fatalf("run text output: %v\n%s", err, output)
 	}
 
@@ -56,7 +55,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 		t.Errorf("default text output should not be created: %v", err)
 	}
 
-	if output, err := runCLI(binary, workdir, "scan", server.URL, "depth=0", "json=true", "output=scan-json"); err != nil {
+	if output, err := testutil.RunCLI(binary, workdir, "scan", server.URL, "depth=0", "json=true", "output=scan-json"); err != nil {
 		t.Fatalf("run JSON output: %v\n%s", err, output)
 	}
 
@@ -66,9 +65,9 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 }
 
 func TestCLIHelpDocumentsHelpFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
-	output, err := runCLI(binary, t.TempDir(), "--help")
+	output, err := testutil.RunCLI(binary, t.TempDir(), "--help")
 	if err != nil {
 		t.Fatalf("run help: %v\n%s", err, output)
 	}
@@ -79,10 +78,10 @@ func TestCLIHelpDocumentsHelpFlag(t *testing.T) {
 }
 
 func TestCLIVersionFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	// Test --version flag
-	output, err := runCLI(binary, t.TempDir(), "--version")
+	output, err := testutil.RunCLI(binary, t.TempDir(), "--version")
 	if err != nil {
 		t.Fatalf("run --version: %v\n%s", err, output)
 	}
@@ -95,10 +94,10 @@ func TestCLIVersionFlag(t *testing.T) {
 }
 
 func TestCLIVersionCommand(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 
 	// Test version subcommand
-	output, err := runCLI(binary, t.TempDir(), "version")
+	output, err := testutil.RunCLI(binary, t.TempDir(), "version")
 	if err != nil {
 		t.Fatalf("run version: %v\n%s", err, output)
 	}
@@ -108,75 +107,4 @@ func TestCLIVersionCommand(t *testing.T) {
 	if !strings.Contains(outputStr, "dev") {
 		t.Errorf("version output = %q, want to contain version 'dev' (or set via ldflags)", outputStr)
 	}
-}
-
-func buildCLI(t *testing.T) string {
-	t.Helper()
-
-	repoRoot, err := filepath.Abs("..")
-	if err != nil {
-		t.Fatalf("resolve repository root: %v", err)
-	}
-
-	binary := filepath.Join(t.TempDir(), "deepscanbot")
-	cmd := exec.Command("go", "build", "-o", binary, ".")
-	cmd.Dir = repoRoot
-
-	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("build CLI: %v\n%s", err, output)
-	}
-
-	return binary
-}
-
-func runCLI(binary, workdir string, args ...string) ([]byte, error) {
-	cmd := exec.Command(binary, args...)
-	cmd.Dir = workdir
-
-	return cmd.CombinedOutput()
-}
-
-func runCLIWithSeparateOutput(binary, workdir string, args ...string) (stdout, stderr []byte, err error) {
-	cmd := exec.Command(binary, args...)
-	cmd.Dir = workdir
-
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	stderrPipe, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return nil, nil, err
-	}
-
-	stdout, err = readAll(stdoutPipe)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	stderr, err = readAll(stderrPipe)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		// Check if it's an exit error
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return stdout, stderr, exitErr
-		}
-		return stdout, stderr, err
-	}
-
-	return stdout, stderr, nil
-}
-
-func readAll(pipe io.ReadCloser) ([]byte, error) {
-	defer pipe.Close()
-	return io.ReadAll(pipe)
 }

@@ -1,4 +1,4 @@
-package tests
+package parser_test
 
 import (
 	"reflect"
@@ -49,7 +49,7 @@ func TestParse(t *testing.T) {
 						<a href="tel:+123456789">Tel</a>
 						<a href="#section-1">Anchor</a>
 						<a href="">Empty</a>
-						<a href="   ">Spaces</a>
+						<a href="    ">Spaces</a>
 					</body>
 				</html>
 			`),

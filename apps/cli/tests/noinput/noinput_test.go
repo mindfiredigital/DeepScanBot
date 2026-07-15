@@ -1,18 +1,18 @@
-package tests
+package cli_test
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
 )
 
 func TestCLINoInputFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	// Create an existing output file to test the overwrite guard
@@ -52,17 +52,7 @@ func TestCLINoInputFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := exec.Command(binary, tt.args...)
-			cmd.Dir = workdir
-
-			err := cmd.Run()
-			code := 0
-			if err != nil {
-				var exitErr *exec.ExitError
-				if errors.As(err, &exitErr) {
-					code = exitErr.ExitCode()
-				}
-			}
+			_, _, code := testutil.CombinedOutputFor(t, binary, workdir, tt.args...)
 
 			if code != tt.wantCode {
 				t.Errorf("exit code = %d, want %d", code, tt.wantCode)
@@ -72,7 +62,7 @@ func TestCLINoInputFlag(t *testing.T) {
 }
 
 func TestCLINoInputPreventsOverwrite(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	// Create a server that returns valid HTML for the scan
@@ -87,7 +77,7 @@ func TestCLINoInputPreventsOverwrite(t *testing.T) {
 
 	// Run scan with --no-input but without --force: should fail because
 	// the output file already exists.
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0")
 
 	if code == 0 {
 		t.Error("Expected non-zero exit code when output file exists in --no-input mode without --force")
@@ -108,7 +98,7 @@ func TestCLINoInputPreventsOverwrite(t *testing.T) {
 }
 
 func TestCLINoInputWithForceOverwrites(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	// Create a server that returns valid HTML for the scan
@@ -122,7 +112,7 @@ func TestCLINoInputWithForceOverwrites(t *testing.T) {
 	}
 
 	// Run scan with --no-input AND --force: should succeed and overwrite
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0", "--force")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0", "--force")
 
 	if code != 0 {
 		t.Errorf("expected exit code 0 with --force, got %d; stderr: %s", code, stderr)
@@ -142,7 +132,7 @@ func TestCLINoInputWithForceOverwrites(t *testing.T) {
 }
 
 func TestCLINoInputScanWithOutputFlag(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
 	server := newTestServer()
@@ -150,7 +140,7 @@ func TestCLINoInputScanWithOutputFlag(t *testing.T) {
 
 	// Run scan with --no-input, using a custom output name that doesn't exist yet
 	outputName := filepath.Join(workdir, "custom-output.txt")
-	_, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0", "output="+outputName[:len(outputName)-4])
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server.URL, "depth=0", "output="+outputName[:len(outputName)-4])
 
 	if code != 0 {
 		t.Errorf("expected exit code 0, got %d; stderr: %s", code, stderr)
@@ -163,10 +153,10 @@ func TestCLINoInputScanWithOutputFlag(t *testing.T) {
 }
 
 func TestCLINoInputVersionJSON(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "version", "--json")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "version", "--json")
 
 	if code != 0 {
 		t.Errorf("expected exit code 0, got %d; stderr: %s", code, stderr)
@@ -178,10 +168,10 @@ func TestCLINoInputVersionJSON(t *testing.T) {
 }
 
 func TestCLINoInputDoctorJSON(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "doctor", "--json")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "doctor", "--json")
 
 	if code != 0 {
 		t.Errorf("expected exit code 0, got %d; stderr: %s", code, stderr)
@@ -193,10 +183,10 @@ func TestCLINoInputDoctorJSON(t *testing.T) {
 }
 
 func TestCLINoInputHelpJSON(t *testing.T) {
-	binary := buildCLI(t)
+	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	stdout, stderr, code := combinedOutputFor(t, binary, workdir, "--no-input", "--help", "--json")
+	stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "--help", "--json")
 
 	if code != 0 {
 		t.Errorf("expected exit code 0, got %d; stderr: %s", code, stderr)

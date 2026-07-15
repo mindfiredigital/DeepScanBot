@@ -1,4 +1,4 @@
-package tests
+package output_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	output "github.com/mindfiredigital/DeepScanBot/packages/output"
+	"github.com/mindfiredigital/DeepScanBot/packages/output"
 )
 
 func TestNewFormatter(t *testing.T) {

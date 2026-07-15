@@ -1,4 +1,4 @@
-package tests
+package crawler_test
 
 import (
 	"errors"
