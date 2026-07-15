@@ -4,28 +4,28 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"testing"
 	"time"
 )
 
 // RunCLI is a wrapper around CombinedOutputFor to facilitate simple CLI assertions.
-// This matches the signature expected in your main_test.go.
 func RunCLI(t *testing.T, binary string, dir string, args ...string) (string, error) {
 	t.Helper()
-	stdout, stderr, exitCode := CombinedOutputFor(t, binary, dir, args...)
+	stdout, stderr, code := CombinedOutputFor(t, binary, dir, args...)
 
-	if exitCode != 0 {
-		// Combine stdout and stderr so tests can assert against errors printed to either stream
-		return stdout + stderr, fmt.Errorf("exit code %d", exitCode)
+	// Combine stdout and stderr into one string so tests can assert against the full output
+	fullOutput := stdout + stderr
+
+	if code != 0 {
+		return fullOutput, errors.New("CLI failed with exit code " + strconv.Itoa(code) + ": " + stderr)
 	}
-
-	return stdout, nil
+	return fullOutput, nil
 }
 
 // NewTestServer sets up a local mock HTTP server for crawler testing
