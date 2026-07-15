@@ -1,8 +1,3 @@
-// Package noinput provides utilities for detecting and enforcing
-// non-interactive CLI execution.  When --no-input is set or stdin is
-// not a terminal, the CLI must never wait for user input and must
-// fail immediately with a clear error message if required input is
-// missing.
 package noinput
 
 import (
