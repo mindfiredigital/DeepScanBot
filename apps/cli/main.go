@@ -428,7 +428,7 @@ self-contained binary.`,
 }
 
 func init() {
-    rootCmd.SetVersionTemplate("{{.Version}}\n") 
+	rootCmd.SetVersionTemplate("{{.Version}}\n")
 }
 
 var scanCmd = &cobra.Command{
