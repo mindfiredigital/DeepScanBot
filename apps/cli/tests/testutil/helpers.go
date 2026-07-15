@@ -19,12 +19,12 @@ import (
 func RunCLI(t *testing.T, binary string, dir string, args ...string) (string, error) {
 	t.Helper()
 	stdout, stderr, exitCode := CombinedOutputFor(t, binary, dir, args...)
-	
+
 	if exitCode != 0 {
 		// Combine stdout and stderr so tests can assert against errors printed to either stream
 		return stdout + stderr, fmt.Errorf("exit code %d", exitCode)
 	}
-	
+
 	return stdout, nil
 }
 
