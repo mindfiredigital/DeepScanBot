@@ -1,20 +1,22 @@
-package logger
+package tests
 
 import (
 	"os"
 	"testing"
+
+	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 )
 
 func TestIsTTY(t *testing.T) {
-	_ = IsTTY()
+	_ = logger.IsTTY()
 }
 
 func TestIsTerminal(t *testing.T) {
-	_ = IsTerminal()
+	_ = logger.IsTerminal()
 }
 
 func TestIsInputTTY(t *testing.T) {
-	_ = IsInputTTY()
+	_ = logger.IsInputTTY()
 }
 
 func TestIsTTYWithRedirectedOutput(t *testing.T) {
@@ -22,8 +24,8 @@ func TestIsTTYWithRedirectedOutput(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	if IsTTY() {
-		t.Error("IsTTY() should return false when stdout is piped/redirected")
+	if logger.IsTTY() {
+		t.Error("logger.IsTTY() should return false when stdout is piped/redirected")
 	}
 
 	w.Close()
@@ -36,8 +38,8 @@ func TestIsTerminalWithRedirectedOutput(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	if IsTerminal() {
-		t.Error("IsTerminal() should return false when stderr is piped/redirected")
+	if logger.IsTerminal() {
+		t.Error("logger.IsTerminal() should return false when stderr is piped/redirected")
 	}
 
 	w.Close()
@@ -50,8 +52,8 @@ func TestIsInputTTYWithRedirectedInput(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdin = r
 
-	if IsInputTTY() {
-		t.Error("IsInputTTY() should return false when stdin is piped/redirected")
+	if logger.IsInputTTY() {
+		t.Error("logger.IsInputTTY() should return false when stdin is piped/redirected")
 	}
 
 	w.Close()

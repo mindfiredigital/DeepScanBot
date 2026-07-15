@@ -1,4 +1,4 @@
-package crawler
+package tests
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mindfiredigital/DeepScanBot/packages/crawler"
 	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
@@ -18,7 +19,7 @@ func TestCrawlerTimeout(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewCrawler(server.URL, 1, 500*time.Millisecond, "", 0, false, false, false, 1, nil, false, false)
+	c := crawler.NewCrawler(server.URL, 1, 500*time.Millisecond, "", 0, false, false, false, 1, nil, false, false)
 
 	_, err := c.StartReport()
 	if err == nil {
@@ -37,7 +38,7 @@ func TestCrawlerNoTimeout(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewCrawler(server.URL, 1, 0, "", 0, false, false, false, 1, nil, false, false)
+	c := crawler.NewCrawler(server.URL, 1, 0, "", 0, false, false, false, 1, nil, false, false)
 
 	report, err := c.StartReport()
 	if err != nil {
@@ -56,7 +57,7 @@ func TestCrawlerTimeoutLongerThanCrawl(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewCrawler(server.URL, 1, 10*time.Second, "", 0, false, false, false, 1, nil, false, false)
+	c := crawler.NewCrawler(server.URL, 1, 10*time.Second, "", 0, false, false, false, 1, nil, false, false)
 
 	report, err := c.StartReport()
 	if err != nil {
@@ -76,7 +77,7 @@ func TestCrawlerProgressLogging(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewCrawler(server.URL, 1, 5*time.Second, "", 0, false, false, false, 1, nil, false, false)
+	c := crawler.NewCrawler(server.URL, 1, 5*time.Second, "", 0, false, false, false, 1, nil, false, false)
 
 	report, err := c.StartReport()
 	if err != nil {
