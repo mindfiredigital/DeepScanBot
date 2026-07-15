@@ -4,15 +4,33 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
+
+var (
+	buildOnce sync.Once
+	cachedBin string
+	buildErr  error
+	buildDir  string
+)
+
+func init() {
+	// Create a stable temporary directory for the cached binary.
+	// This directory lives for the duration of the test process.
+	buildDir, buildErr = os.MkdirTemp("", "deepscanbot-build-*")
+	if buildErr != nil {
+		return
+	}
+}
 
 // RunCLI is a wrapper around CombinedOutputFor to facilitate simple CLI assertions.
 func RunCLI(t *testing.T, binary string, dir string, args ...string) (string, error) {
@@ -23,7 +41,7 @@ func RunCLI(t *testing.T, binary string, dir string, args ...string) (string, er
 	fullOutput := stdout + stderr
 
 	if code != 0 {
-		return fullOutput, errors.New("CLI failed with exit code " + strconv.Itoa(code) + ": " + stderr)
+		return fullOutput, fmt.Errorf("CLI failed with exit code %d: %s", code, stderr)
 	}
 	return fullOutput, nil
 }
@@ -37,32 +55,44 @@ func NewTestServer() *httptest.Server {
 	}))
 }
 
-// BuildCLI compiles the CLI binary safely with a 2-minute context deadline
+// BuildCLI compiles the CLI binary exactly once using sync.Once, storing the
+// binary in a stable temp directory shared across all callers.  Subsequent
+// calls return the cached path.  If the one-time build fails, all callers see
+// the same fatal error immediately.
 func BuildCLI(t *testing.T) string {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+	buildOnce.Do(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
 
-	_, currentFile, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("could not determine current file path")
-	}
-
-	cliDir := filepath.Join(filepath.Dir(currentFile), "..", "..")
-	binary := filepath.Join(t.TempDir(), "deepscanbot")
-
-	cmd := exec.CommandContext(ctx, "go", "build", "-o", binary, ".")
-	cmd.Dir = cliDir
-
-	if err := cmd.Run(); err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			t.Fatalf("go build timed out after 2 minutes: %v", err)
+		_, currentFile, _, ok := runtime.Caller(0)
+		if !ok {
+			buildErr = errors.New("could not determine current file path")
+			return
 		}
-		t.Fatalf("go build failed: %v", err)
+
+		cliDir := filepath.Join(filepath.Dir(currentFile), "..", "..")
+		cachedBin = filepath.Join(buildDir, "deepscanbot")
+
+		cmd := exec.CommandContext(ctx, "go", "build", "-o", cachedBin, ".")
+		cmd.Dir = cliDir
+
+		if err := cmd.Run(); err != nil {
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				buildErr = errors.New("go build timed out after 2 minutes")
+				return
+			}
+			buildErr = err
+			return
+		}
+	})
+
+	if buildErr != nil {
+		t.Fatalf("BuildCLI: %v", buildErr)
 	}
 
-	return binary
+	return cachedBin
 }
 
 // CombinedOutputFor executes the binary with a 30-second bounded deadline context
