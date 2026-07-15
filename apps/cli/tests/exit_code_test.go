@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,7 +25,8 @@ func exitCodeFor(t *testing.T, binary, workdir string, args ...string) int {
 	cmd.Stderr = nil // discard stderr
 
 	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return exitErr.ExitCode()
 		}
 		t.Fatalf("unexpected error running CLI: %v", err)
@@ -47,7 +49,8 @@ func combinedOutputFor(t *testing.T, binary, workdir string, args ...string) (st
 	err := cmd.Run()
 	exitCode = 0
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			exitCode = exitErr.ExitCode()
 		}
 	}
@@ -128,10 +131,10 @@ func TestCLIExitCodeErrorOutputContainsHint(t *testing.T) {
 	workdir := t.TempDir()
 
 	tests := []struct {
-		name        string
-		args        []string
-		wantHintIn  string
-		wantErrIn   string
+		name       string
+		args       []string
+		wantHintIn string
+		wantErrIn  string
 	}{
 		{
 			name:       "invalid scheme gives actionable hint",

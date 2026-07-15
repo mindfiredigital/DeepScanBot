@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,36 +17,36 @@ func TestCLINoInputFlag(t *testing.T) {
 
 	// Create an existing output file to test the overwrite guard
 	existingFile := filepath.Join(workdir, "crawler_results.txt")
-	if err := os.WriteFile(existingFile, []byte("existing"), 0644); err != nil {
+	if err := os.WriteFile(existingFile, []byte("existing"), 0o644); err != nil {
 		t.Fatalf("create existing file: %v", err)
 	}
 
 	tests := []struct {
-		name       string
-		args       []string
-		wantCode   int
-		wantErrIn  string
+		name      string
+		args      []string
+		wantCode  int
+		wantErrIn string
 	}{
 		{
 			name:      "no-input flag with missing URL fails with invalid input",
-			args:      []string{ "--no-input", "scan", "http://192.0.2.1:1" },
+			args:      []string{"--no-input", "scan", "http://192.0.2.1:1"},
 			wantCode:  1,
 			wantErrIn: "Error",
 		},
 		{
-			name:      "no-input flag with version succeeds",
-			args:      []string{ "--no-input", "version" },
-			wantCode:  0,
+			name:     "no-input flag with version succeeds",
+			args:     []string{"--no-input", "version"},
+			wantCode: 0,
 		},
 		{
-			name:      "no-input flag with doctor succeeds",
-			args:      []string{ "--no-input", "doctor" },
-			wantCode:  0,
+			name:     "no-input flag with doctor succeeds",
+			args:     []string{"--no-input", "doctor"},
+			wantCode: 0,
 		},
 		{
-			name:      "no-input flag with --help succeeds",
-			args:      []string{ "--no-input", "--help" },
-			wantCode:  0,
+			name:     "no-input flag with --help succeeds",
+			args:     []string{"--no-input", "--help"},
+			wantCode: 0,
 		},
 	}
 
@@ -57,7 +58,8 @@ func TestCLINoInputFlag(t *testing.T) {
 			err := cmd.Run()
 			code := 0
 			if err != nil {
-				if exitErr, ok := err.(*exec.ExitError); ok {
+				var exitErr *exec.ExitError
+				if errors.As(err, &exitErr) {
 					code = exitErr.ExitCode()
 				}
 			}
@@ -79,7 +81,7 @@ func TestCLINoInputPreventsOverwrite(t *testing.T) {
 
 	// Create an existing output file
 	existingFile := filepath.Join(workdir, "crawler_results.txt")
-	if err := os.WriteFile(existingFile, []byte("existing data"), 0644); err != nil {
+	if err := os.WriteFile(existingFile, []byte("existing data"), 0o644); err != nil {
 		t.Fatalf("create existing file: %v", err)
 	}
 
@@ -115,7 +117,7 @@ func TestCLINoInputWithForceOverwrites(t *testing.T) {
 
 	// Create an existing output file
 	existingFile := filepath.Join(workdir, "crawler_results.txt")
-	if err := os.WriteFile(existingFile, []byte("old data"), 0644); err != nil {
+	if err := os.WriteFile(existingFile, []byte("old data"), 0o644); err != nil {
 		t.Fatalf("create existing file: %v", err)
 	}
 

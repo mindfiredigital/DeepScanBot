@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,7 +25,7 @@ func TestCrawlerTimeout(t *testing.T) {
 		t.Fatal("Expected timeout error, got nil")
 	}
 
-	if err != exitcode.ErrTimeout {
+	if !errors.Is(err, exitcode.ErrTimeout) {
 		t.Errorf("Expected ErrTimeout, got: %v", err)
 	}
 }

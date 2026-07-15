@@ -174,10 +174,7 @@ func TestNewResponseMetadata(t *testing.T) {
 
 	meta := output.NewResponseMetadata("scan", duration)
 
-	if meta == nil {
-		t.Fatal("NewResponseMetadata returned nil")
-	}
-
+	// NewResponseMetadata always returns a non-nil pointer, no need to check
 	if meta.Command != "scan" {
 		t.Errorf("Expected command 'scan', got '%s'", meta.Command)
 	}

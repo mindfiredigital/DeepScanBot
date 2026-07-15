@@ -12,12 +12,12 @@ import (
 
 // CommandFlag represents a single flag/option for a command.
 type CommandFlag struct {
-	Name          string   `json:"name"`
-	Shorthand     string   `json:"shorthand,omitempty"`
-	Description   string   `json:"description"`
-	DefaultValue  string   `json:"default_value,omitempty"`
-	Required      bool     `json:"required"`
-	Type          string   `json:"type"`
+	Name           string   `json:"name"`
+	Shorthand      string   `json:"shorthand,omitempty"`
+	Description    string   `json:"description"`
+	DefaultValue   string   `json:"default_value,omitempty"`
+	Required       bool     `json:"required"`
+	Type           string   `json:"type"`
 	AcceptedValues []string `json:"accepted_values,omitempty"`
 }
 

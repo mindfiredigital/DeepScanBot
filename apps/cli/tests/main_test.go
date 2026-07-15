@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -165,7 +166,8 @@ func runCLIWithSeparateOutput(binary, workdir string, args ...string) (stdout, s
 
 	if err := cmd.Wait(); err != nil {
 		// Check if it's an exit error
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return stdout, stderr, exitErr
 		}
 		return stdout, stderr, err

@@ -35,7 +35,7 @@ func TestCLIVersionJSONOutput(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var output []byte
-			
+
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
 				stdout, _, _ := runCLIWithSeparateOutput(binary, t.TempDir(), tt.args...)
@@ -110,7 +110,7 @@ func TestCLIDoctorJSONOutput(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var output []byte
-			
+
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
 				stdout, _, _ := runCLIWithSeparateOutput(binary, t.TempDir(), tt.args...)
@@ -149,11 +149,9 @@ func TestCLIDoctorJSONOutput(t *testing.T) {
 				if strings.Contains(outputStr, "Running diagnostics") {
 					t.Error("JSON output should not contain progress messages")
 				}
-			} else {
+			} else if !strings.Contains(outputStr, "Running diagnostics") {
 				// Human-readable output should contain diagnostic messages
-				if !strings.Contains(outputStr, "Running diagnostics") {
-					t.Error("Expected human-readable output to contain diagnostic messages")
-				}
+				t.Error("Expected human-readable output to contain diagnostic messages")
 			}
 		})
 	}
@@ -176,10 +174,10 @@ func TestCLIScanJSONOutput(t *testing.T) {
 	workdir := t.TempDir()
 
 	tests := []struct {
-		name        string
-		args        []string
-		wantJSON    bool
-		wantFile    bool
+		name     string
+		args     []string
+		wantJSON bool
+		wantFile bool
 	}{
 		{
 			name:     "scan with --json flag",
@@ -199,7 +197,7 @@ func TestCLIScanJSONOutput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var output []byte
 			var stderr []byte
-			
+
 			if tt.wantJSON {
 				// For JSON output, capture stdout separately to avoid mixing with stderr logs
 				stdout, stderrOut, _ := runCLIWithSeparateOutput(binary, workdir, tt.args...)

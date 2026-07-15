@@ -15,10 +15,10 @@ func TestCLIDryRunPreview(t *testing.T) {
 	defer server.Close()
 
 	tests := []struct {
-		name       string
-		args       []string
-		wantCode   int
-		wantIn     string
+		name     string
+		args     []string
+		wantCode int
+		wantIn   string
 	}{
 		{
 			name:     "dry-run with scan previews without executing",
@@ -114,7 +114,7 @@ func TestCLIDryRunShowsExistingFileWarning(t *testing.T) {
 
 	// Create an existing output file
 	existingFile := filepath.Join(workdir, "crawler_results.txt")
-	if err := os.WriteFile(existingFile, []byte("existing"), 0644); err != nil {
+	if err := os.WriteFile(existingFile, []byte("existing"), 0o644); err != nil {
 		t.Fatalf("create existing file: %v", err)
 	}
 
@@ -149,11 +149,11 @@ func TestCLIYesFlagAutoConfirms(t *testing.T) {
 
 	// Create an existing output file
 	existingFile := filepath.Join(workdir, "crawler_results.txt")
-	if err := os.WriteFile(existingFile, []byte("old data"), 0644); err != nil {
+	if err := os.WriteFile(existingFile, []byte("old data"), 0o644); err != nil {
 		t.Fatalf("create existing file: %v", err)
 	}
 
-		// Run with --yes flag (should auto-confirm overwrite)
+	// Run with --yes flag (should auto-confirm overwrite)
 	// Note: --yes is a local flag on scan, so it must come before positional args
 	_, stderr, code := combinedOutputFor(t, binary, workdir, "scan", "--yes", server.URL, "depth=0")
 

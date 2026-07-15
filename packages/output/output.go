@@ -21,10 +21,10 @@ const CurrentSchemaVersion = "1.0.0"
 
 // Response is a standardized JSON response format for all CLI commands
 type Response struct {
-	SchemaVersion string           `json:"schemaVersion"`
-	Status        ResponseStatus   `json:"status"`
-	Data          interface{}      `json:"data,omitempty"`
-	Error         *ErrorDetail     `json:"error,omitempty"`
+	SchemaVersion string            `json:"schemaVersion"`
+	Status        ResponseStatus    `json:"status"`
+	Data          interface{}       `json:"data,omitempty"`
+	Error         *ErrorDetail      `json:"error,omitempty"`
 	Meta          *ResponseMetadata `json:"meta,omitempty"`
 }
 
@@ -66,7 +66,7 @@ func (f *Formatter) WriteSuccess(w io.Writer, data interface{}, meta *ResponseMe
 	}
 
 	// Human-readable format
-	return writeHumanReadable(w, data, meta)
+	return writeHumanReadable(w, data)
 }
 
 // WriteError writes an error response
@@ -102,7 +102,7 @@ func writeJSON(w io.Writer, v interface{}) error {
 }
 
 // writeHumanReadable writes human-readable output
-func writeHumanReadable(w io.Writer, data interface{}, meta *ResponseMetadata) error {
+func writeHumanReadable(w io.Writer, data interface{}) error {
 	// Default human-readable formatting
 	// Specific commands can override this with custom formatting
 	switch d := data.(type) {

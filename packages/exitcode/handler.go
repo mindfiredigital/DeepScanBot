@@ -1,6 +1,7 @@
 package exitcode
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -70,14 +71,9 @@ func ExitSuccess() {
 	os.Exit(Success)
 }
 
-// asExitCode is a type-assertion helper that avoids importing reflect.
+// asExitCode is a type-assertion helper that uses errors.As for wrapped errors.
 func asExitCode(err error, target **ExitCode) bool {
-	ec, ok := err.(*ExitCode)
-	if !ok {
-		return false
-	}
-	*target = ec
-	return true
+	return errors.As(err, target)
 }
 
 // printError writes the error message and hint to stderr.

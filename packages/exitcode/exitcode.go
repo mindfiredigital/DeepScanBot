@@ -118,7 +118,7 @@ var (
 		Hint:    "Ensure the output path is writable and there is free disk space.",
 	}
 
-	// ErrJSONOutput is returned when serialising the JSON response fails.
+	// ErrJSONOutput is returned when serializing the JSON response fails.
 	ErrJSONOutput = &ExitCode{
 		Code:    InternalError,
 		Message: "Failed to write JSON output.",
