@@ -145,13 +145,18 @@ func TestCLIExitCodeNetworkFailure(t *testing.T) {
 	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://192.0.2.1:1", "timeout=1")
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://127.0.0.1:0", "--timeout=1s")
 	t.Logf("network failure: exit code=%d, stderr=%s", code, stderr)
 
-	if code != 0 {
-		if !strings.Contains(stderr, "Error") && !strings.Contains(stderr, "error") && !strings.Contains(stderr, "failed") && !strings.Contains(stderr, "timeout") {
-			t.Errorf("stderr should contain an actionable error message, got: %s", stderr)
-		}
+	// Unconditionally require failure. An exit code of 0 means the CLI failed to catch a broken connection.
+	if code == 0 {
+		t.Fatalf("Expected non-zero exit code for network failure, got 0")
+	}
+
+	// Validate that stderr contains a clear, actionable error message
+	lowerStderr := strings.ToLower(stderr)
+	if !strings.Contains(lowerStderr, "error") && !strings.Contains(lowerStderr, "failed") && !strings.Contains(lowerStderr, "timeout") && !strings.Contains(lowerStderr, "refused") {
+		t.Errorf("stderr should contain an actionable error message, got: %s", stderr)
 	}
 }
 

@@ -1,4 +1,4 @@
-package atomic
+package atomic_test
 
 import (
 	"os"

@@ -120,7 +120,7 @@ func TestCrawlReportRetryDistribution(t *testing.T) {
 
 func TestEnhancedJSONRoundtrip(t *testing.T) {
 	dir := t.TempDir()
-	filename := dir + "/test_report.json"
+	filename := filepath.Join(dir, "test_report.json")
 
 	entries := []storage.URLEntry{
 		{URL: "https://example.com", Source: "href", Depth: 0, StatusCode: 200, Result: "passed", Attempts: 1},
@@ -176,15 +176,8 @@ func TestEnhancedJSONRoundtrip(t *testing.T) {
 }
 
 func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
-	const filename = "crawler_results.txt"
-
-	origDir, _ := os.Getwd()
-	tmpDir := t.TempDir()
-
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("chdir to temp dir: %v", err)
-	}
-	t.Cleanup(func() { _ = os.Chdir(origDir) })
+	// Resolved CodeRabbit: Define an absolute path inside the test context directory
+	filename := filepath.Join(t.TempDir(), "crawler_results.txt")
 
 	if err := os.WriteFile(filename, []byte("result from a previous crawl\n"), 0o644); err != nil {
 		t.Fatalf("seed previous output: %v", err)
@@ -208,15 +201,8 @@ func TestTextOutputIsTruncatedForEachStorageInstance(t *testing.T) {
 }
 
 func TestTextOutputIsFlushedOnClose(t *testing.T) {
-	const filename = "crawler_results.txt"
-
-	origDir, _ := os.Getwd()
-	tmpDir := t.TempDir()
-
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("chdir to temp dir: %v", err)
-	}
-	t.Cleanup(func() { _ = os.Chdir(origDir) })
+	// Resolved CodeRabbit: Replaced global os.Chdir with dynamic absolute scope path
+	filename := filepath.Join(t.TempDir(), "crawler_results.txt")
 
 	pageStorage := storage.NewPageStorage()
 	pageStorage.StoreContent("https://example.com/one")
