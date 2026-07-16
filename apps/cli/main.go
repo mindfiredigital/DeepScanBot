@@ -94,66 +94,84 @@ func parseDurationValue(val string) (time.Duration, bool) {
 
 func applyScanOption(opts *ScanOptions, key, val string) {
 	switch key {
+	case "depth", "timeout", "size", "concurrency", "host-concurrency", "retries":
+		if i, ok := parseIntValue(val); ok {
+			applyIntOption(opts, key, i)
+		}
+	case "retry-backoff", "delay":
+		if d, ok := parseDurationValue(val); ok {
+			applyDurationOption(opts, key, d)
+		}
+	case "proxy", "content-types", "output", "input-file":
+		applyStringOption(opts, key, val)
+	case "json", "disable-redirects", "show-source", "insecure", "unique",
+		"ignore-robots", "cross-domain", "sitemap", "resume", "stdin":
+		applyBoolOption(opts, key, val)
+	}
+}
+
+func applyIntOption(opts *ScanOptions, key string, value int) {
+	switch key {
 	case "depth":
-		if d, ok := parseIntValue(val); ok {
-			opts.Depth = d
-		}
+		opts.Depth = value
 	case "timeout":
-		if t, ok := parseIntValue(val); ok {
-			opts.Timeout = t
-		}
-	case "proxy":
-		opts.Proxy = val
-	case "json":
-		opts.JSON = val == "true"
+		opts.Timeout = value
 	case "size":
-		if s, ok := parseIntValue(val); ok {
-			opts.MaxSize = s
-		}
-	case "disable-redirects":
-		opts.DisableRedirects = val == "true"
-	case "show-source":
-		opts.ShowSource = val == "true"
-	case "insecure":
-		opts.Insecure = val == "true"
-	case "unique":
-		opts.Unique = val == "true"
+		opts.MaxSize = value
 	case "concurrency":
-		if c, ok := parseIntValue(val); ok {
-			opts.Concurrency = c
-		}
+		opts.Concurrency = value
 	case "host-concurrency":
-		if h, ok := parseIntValue(val); ok {
-			opts.HostConcurrency = h
-		}
-	case "content-types":
-		opts.ContentTypes = val
-	case "output":
-		opts.Output = val
-	case "ignore-robots":
-		opts.IgnoreRobots = val == "true"
-	case "cross-domain":
-		opts.CrossDomain = val == "true"
+		opts.HostConcurrency = value
 	case "retries":
-		if r, ok := parseIntValue(val); ok {
-			opts.Retries = r
-		}
+		opts.Retries = value
+	}
+}
+
+func applyDurationOption(opts *ScanOptions, key string, value time.Duration) {
+	switch key {
 	case "retry-backoff":
-		if d, ok := parseDurationValue(val); ok {
-			opts.RetryBackoff = d
-		}
+		opts.RetryBackoff = value
 	case "delay":
-		if d, ok := parseDurationValue(val); ok {
-			opts.Delay = d
-		}
-	case "sitemap":
-		opts.Sitemap = val == "true"
-	case "resume":
-		opts.Resume = val == "true"
+		opts.Delay = value
+	}
+}
+
+func applyStringOption(opts *ScanOptions, key, value string) {
+	switch key {
+	case "proxy":
+		opts.Proxy = value
+	case "content-types":
+		opts.ContentTypes = value
+	case "output":
+		opts.Output = value
 	case "input-file":
-		opts.InputFile = val
+		opts.InputFile = value
+	}
+}
+
+func applyBoolOption(opts *ScanOptions, key, value string) {
+	boolVal := value == "true"
+	switch key {
+	case "json":
+		opts.JSON = boolVal
+	case "disable-redirects":
+		opts.DisableRedirects = boolVal
+	case "show-source":
+		opts.ShowSource = boolVal
+	case "insecure":
+		opts.Insecure = boolVal
+	case "unique":
+		opts.Unique = boolVal
+	case "ignore-robots":
+		opts.IgnoreRobots = boolVal
+	case "cross-domain":
+		opts.CrossDomain = boolVal
+	case "sitemap":
+		opts.Sitemap = boolVal
+	case "resume":
+		opts.Resume = boolVal
 	case "stdin":
-		opts.UseStdin = val == "true"
+		opts.UseStdin = boolVal
 	}
 }
 
@@ -161,7 +179,6 @@ func applyScanOption(opts *ScanOptions, key, val string) {
 // Flag-based options take precedence over key=value options.
 func mergeOptions(cmd *cobra.Command, kvOpts ScanOptions) ScanOptions {
 	opts := ScanOptions{
-		// Start with flag defaults
 		Depth:           2,
 		Timeout:         2,
 		MaxSize:         -1,
@@ -172,61 +189,120 @@ func mergeOptions(cmd *cobra.Command, kvOpts ScanOptions) ScanOptions {
 		HostConcurrency: 2,
 	}
 
-	// Helper to get flag value if set
-	getFlagInt := func(name string, defaultVal int) int {
-		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
-			if val, ok := parseIntValue(f.Value.String()); ok {
-				return val
-			}
-		}
-		return defaultVal
-	}
-
-	getFlagDuration := func(name string, defaultVal time.Duration) time.Duration {
-		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
-			if val, ok := parseDurationValue(f.Value.String()); ok {
-				return val
-			}
-		}
-		return defaultVal
-	}
-
-	getFlagString := func(name string, defaultVal string) string {
-		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
-			return f.Value.String()
-		}
-		return defaultVal
-	}
-
-	getFlagBool := func(name string, defaultVal bool) bool {
-		if f := cmd.Flags().Lookup(name); f != nil && f.Changed {
-			return f.Value.String() == "true"
-		}
-		return defaultVal
-	}
-
-	// Start with flag defaults
-	opts.Depth = getFlagInt("depth", opts.Depth)
-	opts.Timeout = getFlagInt("timeout", opts.Timeout)
-	opts.Proxy = getFlagString("proxy", opts.Proxy)
-	opts.MaxSize = getFlagInt("size", opts.MaxSize)
-	opts.DisableRedirects = getFlagBool("disable-redirects", opts.DisableRedirects)
-	opts.ShowSource = getFlagBool("show-source", opts.ShowSource)
-	opts.Insecure = getFlagBool("insecure", opts.Insecure)
-	opts.Unique = getFlagBool("unique", opts.Unique)
-	opts.Concurrency = getFlagInt("concurrency", opts.Concurrency)
-	opts.HostConcurrency = getFlagInt("host-concurrency", opts.HostConcurrency)
-	opts.ContentTypes = getFlagString("content-types", opts.ContentTypes)
-	opts.Output = getFlagString("output", opts.Output)
-	opts.IgnoreRobots = getFlagBool("ignore-robots", opts.IgnoreRobots)
-	opts.CrossDomain = getFlagBool("cross-domain", opts.CrossDomain)
-	opts.Retries = getFlagInt("retries", opts.Retries)
-	opts.RetryBackoff = getFlagDuration("retry-backoff", opts.RetryBackoff)
-	opts.Delay = getFlagDuration("delay", opts.Delay)
-	opts.Sitemap = getFlagBool("sitemap", opts.Sitemap)
-	opts.Resume = getFlagBool("resume", opts.Resume)
+	// Apply flag values if set
+	applyFlagValues(cmd, &opts)
 
 	// Override with key=value options (but only if flags weren't explicitly set)
+	applyKeyValueOptions(cmd, &opts, kvOpts)
+
+	return opts
+}
+
+// applyFlagValues reads flag values from the command and applies them to opts
+func applyFlagValues(cmd *cobra.Command, opts *ScanOptions) {
+	applyIntFlagValues(cmd, opts)
+	applyDurationFlagValues(cmd, opts)
+	applyStringFlagValues(cmd, opts)
+	applyBoolFlagValues(cmd, opts)
+}
+
+// applyIntFlagValues applies integer flag values to opts
+func applyIntFlagValues(cmd *cobra.Command, opts *ScanOptions) {
+	if f := cmd.Flags().Lookup("depth"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.Depth = val
+		}
+	}
+	if f := cmd.Flags().Lookup("timeout"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.Timeout = val
+		}
+	}
+	if f := cmd.Flags().Lookup("size"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.MaxSize = val
+		}
+	}
+	if f := cmd.Flags().Lookup("concurrency"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.Concurrency = val
+		}
+	}
+	if f := cmd.Flags().Lookup("host-concurrency"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.HostConcurrency = val
+		}
+	}
+	if f := cmd.Flags().Lookup("retries"); f != nil && f.Changed {
+		if val, ok := parseIntValue(f.Value.String()); ok {
+			opts.Retries = val
+		}
+	}
+}
+
+// applyDurationFlagValues applies duration flag values to opts
+func applyDurationFlagValues(cmd *cobra.Command, opts *ScanOptions) {
+	if f := cmd.Flags().Lookup("retry-backoff"); f != nil && f.Changed {
+		if val, ok := parseDurationValue(f.Value.String()); ok {
+			opts.RetryBackoff = val
+		}
+	}
+	if f := cmd.Flags().Lookup("delay"); f != nil && f.Changed {
+		if val, ok := parseDurationValue(f.Value.String()); ok {
+			opts.Delay = val
+		}
+	}
+}
+
+// applyStringFlagValues applies string flag values to opts
+func applyStringFlagValues(cmd *cobra.Command, opts *ScanOptions) {
+	if f := cmd.Flags().Lookup("proxy"); f != nil && f.Changed {
+		opts.Proxy = f.Value.String()
+	}
+	if f := cmd.Flags().Lookup("content-types"); f != nil && f.Changed {
+		opts.ContentTypes = f.Value.String()
+	}
+	if f := cmd.Flags().Lookup("output"); f != nil && f.Changed {
+		opts.Output = f.Value.String()
+	}
+	if f := cmd.Flags().Lookup("input-file"); f != nil && f.Changed {
+		opts.InputFile = f.Value.String()
+	}
+}
+
+// applyBoolFlagValues applies boolean flag values to opts
+func applyBoolFlagValues(cmd *cobra.Command, opts *ScanOptions) {
+	if f := cmd.Flags().Lookup("disable-redirects"); f != nil && f.Changed {
+		opts.DisableRedirects = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("show-source"); f != nil && f.Changed {
+		opts.ShowSource = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("insecure"); f != nil && f.Changed {
+		opts.Insecure = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("unique"); f != nil && f.Changed {
+		opts.Unique = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("ignore-robots"); f != nil && f.Changed {
+		opts.IgnoreRobots = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("cross-domain"); f != nil && f.Changed {
+		opts.CrossDomain = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("sitemap"); f != nil && f.Changed {
+		opts.Sitemap = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("resume"); f != nil && f.Changed {
+		opts.Resume = f.Value.String() == "true"
+	}
+	if f := cmd.Flags().Lookup("stdin"); f != nil && f.Changed {
+		opts.UseStdin = f.Value.String() == "true"
+	}
+}
+
+// applyKeyValueOptions applies key=value options only if the corresponding flag was not set
+func applyKeyValueOptions(cmd *cobra.Command, opts *ScanOptions, kvOpts ScanOptions) {
 	if !cmd.Flags().Lookup("depth").Changed {
 		opts.Depth = kvOpts.Depth
 	}
@@ -290,8 +366,6 @@ func mergeOptions(cmd *cobra.Command, kvOpts ScanOptions) ScanOptions {
 	if !cmd.Flags().Lookup("stdin").Changed {
 		opts.UseStdin = kvOpts.UseStdin
 	}
-
-	return opts
 }
 
 func parseKeyValue(args []string) (string, ScanOptions) {
@@ -760,7 +834,7 @@ func main() {
 	}
 }
 
-// handleCobraError maps cobra's error to a standardised exit code and exits.
+// handleCobraError maps cobra's error to a standardized exit code and exits.
 func handleCobraError(err error) {
 	errStr := err.Error()
 	switch {

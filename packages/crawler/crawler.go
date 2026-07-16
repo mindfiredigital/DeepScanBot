@@ -137,7 +137,7 @@ func (c *Crawler) Start() ([]storage.URLEntry, error) {
 }
 
 // StartReport runs the crawl and returns a detailed report.
-// If a timeout is configured, the crawl will be cancelled when the
+// If a timeout is configured, the crawl will be canceled when the
 // timeout expires and ErrTimeout is returned.
 func (c *Crawler) StartReport() (storage.CrawlReport, error) {
 	startedAt := time.Now()

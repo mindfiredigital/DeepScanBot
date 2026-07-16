@@ -39,40 +39,40 @@ func TestNewWithLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := NewWithLevel(tt.level)
+			lgr := NewWithLevel(tt.level)
 
-			if logger.IsQuiet() != tt.wantQuiet {
-				t.Errorf("IsQuiet() = %v, want %v", logger.IsQuiet(), tt.wantQuiet)
+			if lgr.IsQuiet() != tt.wantQuiet {
+				t.Errorf("IsQuiet() = %v, want %v", lgr.IsQuiet(), tt.wantQuiet)
 			}
-			if logger.IsVerbose() != tt.wantVerbose {
-				t.Errorf("IsVerbose() = %v, want %v", logger.IsVerbose(), tt.wantVerbose)
+			if lgr.IsVerbose() != tt.wantVerbose {
+				t.Errorf("IsVerbose() = %v, want %v", lgr.IsVerbose(), tt.wantVerbose)
 			}
-			if logger.IsDebug() != tt.wantDebug {
-				t.Errorf("IsDebug() = %v, want %v", logger.IsDebug(), tt.wantDebug)
+			if lgr.IsDebug() != tt.wantDebug {
+				t.Errorf("IsDebug() = %v, want %v", lgr.IsDebug(), tt.wantDebug)
 			}
 		})
 	}
 }
 
 func TestSetLevel(t *testing.T) {
-	logger := NewWithLevel(LevelInfo)
+	lgr := NewWithLevel(LevelInfo)
 
 	// Test setting to debug
-	logger.SetLevel(LevelDebug)
-	if !logger.IsDebug() {
-		t.Error("Expected IsDebug() to be true after SetLevel(LevelDebug)")
+	lgr.SetLevel(LevelDebug)
+	if !lgr.IsDebug() {
+		t.Error("Expected IsDebug() to be true after SetLevel(logger.LevelDebug)")
 	}
 
 	// Test setting to quiet
-	logger.SetLevel(LevelQuiet)
-	if !logger.IsQuiet() {
-		t.Error("Expected IsQuiet() to be true after SetLevel(LevelQuiet)")
+	lgr.SetLevel(LevelQuiet)
+	if !lgr.IsQuiet() {
+		t.Error("Expected IsQuiet() to be true after SetLevel(logger.LevelQuiet)")
 	}
 
 	// Test setting to verbose
-	logger.SetLevel(LevelVerbose)
-	if !logger.IsVerbose() {
-		t.Error("Expected IsVerbose() to be true after SetLevel(LevelVerbose)")
+	lgr.SetLevel(LevelVerbose)
+	if !lgr.IsVerbose() {
+		t.Error("Expected IsVerbose() to be true after SetLevel(logger.LevelVerbose)")
 	}
 }
 
@@ -81,18 +81,18 @@ func TestLoggingLevels(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	logger := NewWithLevel(LevelDebug)
+	lgr := NewWithLevel(LevelDebug)
 
-	logger.Debugf("debug message")
-	logger.Infof("info message")
-	logger.Warnf("warn message")
-	logger.Errorf("error message")
+	lgr.Debugf("debug message")
+	lgr.Infof("info message")
+	lgr.Warnf("warn message")
+	lgr.Errorf("error message")
 
 	w.Close()
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if !strings.Contains(output, "debug message") {
@@ -114,18 +114,18 @@ func TestQuietLevelFiltersMessages(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	logger := NewWithLevel(LevelQuiet)
+	lgr := NewWithLevel(LevelQuiet)
 
-	logger.Debugf("debug should not appear")
-	logger.Infof("info should not appear")
-	logger.Warnf("warn should appear")
-	logger.Errorf("error should appear")
+	lgr.Debugf("debug should not appear")
+	lgr.Infof("info should not appear")
+	lgr.Warnf("warn should appear")
+	lgr.Errorf("error should appear")
 
 	w.Close()
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if strings.Contains(output, "debug should not appear") {
@@ -147,18 +147,18 @@ func TestVerboseLevelFiltersMessages(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	logger := NewWithLevel(LevelVerbose)
+	lgr := NewWithLevel(LevelVerbose)
 
-	logger.Debugf("debug should not appear")
-	logger.Infof("info should appear")
-	logger.Warnf("warn should appear")
-	logger.Errorf("error should appear")
+	lgr.Debugf("debug should not appear")
+	lgr.Infof("info should appear")
+	lgr.Warnf("warn should appear")
+	lgr.Errorf("error should appear")
 
 	w.Close()
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if strings.Contains(output, "debug should not appear") {
@@ -180,18 +180,18 @@ func TestDebugLevelShowsAllMessages(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
-	logger := NewWithLevel(LevelDebug)
+	lgr := NewWithLevel(LevelDebug)
 
-	logger.Debugf("debug should appear")
-	logger.Infof("info should appear")
-	logger.Warnf("warn should appear")
-	logger.Errorf("error should appear")
+	lgr.Debugf("debug should appear")
+	lgr.Infof("info should appear")
+	lgr.Warnf("warn should appear")
+	lgr.Errorf("error should appear")
 
 	w.Close()
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	if !strings.Contains(output, "debug should appear") {
