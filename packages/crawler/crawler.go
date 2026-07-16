@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"net/url"
 	"runtime"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/temoto/robotstxt"
 
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 	"github.com/mindfiredigital/DeepScanBot/packages/logger"
 	"github.com/mindfiredigital/DeepScanBot/packages/parser"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
@@ -135,26 +137,68 @@ func (c *Crawler) Start() ([]storage.URLEntry, error) {
 }
 
 // StartReport runs the crawl and returns a detailed report.
+// If a timeout is configured, the crawl will be canceled when the
+// timeout expires and ErrTimeout is returned.
 func (c *Crawler) StartReport() (storage.CrawlReport, error) {
 	startedAt := time.Now()
 
 	c.log.Infof("Starting crawl: url=%s max-depth=%d concurrency=%d per-host-concurrency=%d retries=%d delay=%s sitemap=%t resumed=%d",
 		c.startURL, c.maxDepth, cap(c.sem), c.perHostLimit, c.retries, c.crawlDelay, c.includeSitemap, len(c.resumeEntries))
 
-	c.enqueueCrawl(c.startURL, "href", 0)
-
-	if c.includeSitemap && c.maxDepth > 0 {
-		c.enqueueSitemapURLs()
+	// Set up timeout context if configured
+	var cancel context.CancelFunc
+	ctx := context.Background()
+	if c.timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, c.timeout)
+		defer cancel()
 	}
 
-	c.wg.Wait()
+	// Channel to capture the report from the crawl goroutine
+	type reportResult struct {
+		report storage.CrawlReport
+		err    error
+	}
+	resultChan := make(chan reportResult, 1)
 
-	finishedAt := time.Now()
-	report := storage.NewCrawlReport(c.startURL, "", startedAt, finishedAt, c.pageStorage.Results())
-	c.log.Infof("Crawl finished: url=%s total=%d passed=%d failed=%d skipped=%d duration=%s",
-		c.startURL, report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped, finishedAt.Sub(startedAt).Round(time.Millisecond))
+	// Progress ticker for long-running crawls
+	progressTicker := time.NewTicker(5 * time.Second)
+	defer progressTicker.Stop()
 
-	return report, nil
+	// Run the crawl in a goroutine so we can select on timeout
+	go func() {
+		c.enqueueCrawl(c.startURL, "href", 0)
+
+		if c.includeSitemap && c.maxDepth > 0 {
+			c.enqueueSitemapURLs()
+		}
+
+		c.wg.Wait()
+
+		finishedAt := time.Now()
+		report := storage.NewCrawlReport(c.startURL, "", startedAt, finishedAt, c.pageStorage.Results())
+		c.log.Infof("Crawl finished: url=%s total=%d passed=%d failed=%d skipped=%d duration=%s",
+			c.startURL, report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped, finishedAt.Sub(startedAt).Round(time.Millisecond))
+
+		resultChan <- reportResult{report: report, err: nil}
+	}()
+
+	// Wait for completion, timeout, or progress updates
+	for {
+		select {
+		case result := <-resultChan:
+			return result.report, result.err
+		case <-ctx.Done():
+			c.log.Errorf("Crawl timed out after %s", c.timeout)
+			return storage.CrawlReport{}, exitcode.ErrTimeout
+		case <-progressTicker.C:
+			// Log progress update without interfering with command results
+			fetched := c.fetched.Load()
+			failed := c.failed.Load()
+			skipped := c.skipped.Load()
+			c.log.Infof("Crawl in progress: fetched=%d failed=%d skipped=%d elapsed=%s",
+				fetched, failed, skipped, time.Since(startedAt).Round(time.Millisecond))
+		}
+	}
 }
 
 // crawl processes a single URL: checks robots.txt, fetches, stores results, and parses links.

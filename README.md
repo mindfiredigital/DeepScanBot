@@ -86,6 +86,266 @@ deepscanbot doctor
 deepscanbot completion bash
 ```
 
+## JSON Output Mode
+
+DeepScanBot supports a consistent `--json` flag across all commands that return structured data. When enabled, all output is written as valid JSON to `stdout`, while progress messages and diagnostics are sent to `stderr`.
+
+## Non-Interactive Mode
+
+DeepScanBot is designed to run reliably in CI/CD pipelines, scripts, and AI agents without ever hanging on user input.
+
+### `--no-input` Flag
+
+Add `--no-input` to any command to disable all interactive prompts. If required input is missing, the CLI fails immediately with a clear error message instead of waiting.
+
+```bash
+# Run scan in non-interactive mode
+deepscanbot scan https://example.com --no-input --force
+
+# Check version non-interactively
+deepscanbot --no-input version --json
+
+# Run doctor in CI
+deepscanbot --no-input doctor
+```
+
+### `--force` Flag
+
+The `--force` flag allows overwriting existing output files without prompting. In non-interactive mode, the scan command refuses to overwrite an existing output file unless `--force` is explicitly passed.
+
+```bash
+# Safe for CI/CD — overwrites output if it exists
+deepscanbot scan https://example.com --no-input --force
+
+# Will fail in non-interactive mode without --force
+deepscanbot scan https://example.com --no-input
+# Error: Output file "crawler_results.txt" already exists.
+# Hint: Pass --force to overwrite or use output=<filename>.
+```
+
+### TTY Detection
+
+When stdin is not connected to a terminal (e.g., piped input, CI runners), the CLI automatically detects the non-TTY environment and never waits for user input. The `--no-input` flag provides an explicit override for cases where TTY detection is insufficient.
+
+### Best Practices for CI/CD
+
+```bash
+# Always use --no-input and --force for automated runs
+deepscanbot scan https://example.com --no-input --force --json
+
+# Use exit codes to check success
+if deepscanbot scan https://example.com --no-input --force depth=0; then
+  echo "Scan completed"
+else
+  echo "Scan failed with exit code $?"
+fi
+```
+
+## Exit Codes
+
+DeepScanBot uses standardized exit codes to make CLI failures predictable for scripts, CI/CD pipelines, and AI agents. Every command returns a consistent exit code that tells you exactly what happened.
+
+| Code | Constant          | Description                                      | Example Scenarios                              |
+| ---- | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
+| `0`  | `Success`         | Command completed successfully                   | Scan finished, version shown                   |
+| `1`  | `InvalidInput`    | Invalid argument or option value                 | Malformed URL, unknown flag, missing argument  |
+| `2`  | `ValidationError` | Semantic validation failure                      | Empty output filename, invalid option value    |
+| `3`  | `AuthFailure`     | Authentication failure with a remote service     | Invalid API token, missing credentials         |
+| `10` | `AuthzFailure`    | Authenticated but lacking permission             | Insufficient rights to access resource         |
+| `20` | `NotFound`        | Requested resource could not be located          | URL/file not found                             |
+| `30` | `NetworkFailure`  | Network request failed (non-timeout)             | DNS resolution failure, connection refused     |
+| `31` | `Timeout`         | Operation exceeded its configured deadline       | Request timed out, scan exceeded max duration  |
+| `70` | `InternalError`   | Unexpected internal error (likely a bug)         | Failed to write output file, serialization bug |
+
+### Checking Exit Codes
+
+```bash
+# Check exit code in a script
+deepscanbot scan https://example.com
+exit_code=$?
+echo "Exit code: $exit_code"
+
+# Conditional execution based on exit code
+if deepscanbot scan https://example.com depth=0; then
+  echo "Scan succeeded"
+else
+  echo "Scan failed with exit code $?"
+fi
+```
+
+### Error Messages
+
+All errors include:
+- **What went wrong** — a clear description of the problem
+- **Why it happened** — the root cause when possible
+- **How to fix it** — an actionable hint with an example
+
+```bash
+$ deepscanbot scan ftp://example.com
+Error: Invalid URL: "ftp://example.com" must be an absolute http:// or https:// URL.
+Hint: Example: https://example.com
+
+$ deepscanbot scan http://example.com output=
+Error: Output filename must not be empty.
+Hint: Use output=<filename> with a non-empty value.
+```
+
+## Usage
+
+```bash
+# Scan with JSON output
+deepscanbot scan https://example.com --json
+
+# Version with JSON output
+deepscanbot version --json
+
+# Doctor with JSON output
+deepscanbot doctor --json
+```
+
+### Sample JSON Output
+
+#### Scan Command
+
+```bash
+$ deepscanbot scan https://example.com depth=0 --json
+{
+  "status": "success",
+  "data": {
+    "start_url": "https://example.com",
+    "output_file": "crawler_results.json",
+    "started_at": "2024-01-15T10:30:00Z",
+    "finished_at": "2024-01-15T10:30:05Z",
+    "duration_ms": 5000,
+    "summary": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "discovered": 0,
+      "max_depth": 0
+    },
+    "urls": [
+      {
+        "url": "https://example.com",
+        "depth": 0,
+        "status_code": 200,
+        "content_type": "text/html",
+        "result": "passed"
+      }
+    ],
+    "skipped": null
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:05Z",
+    "command": "scan",
+    "duration_ms": 5000
+  }
+}
+```
+
+#### Version Command
+
+```bash
+$ deepscanbot version --json
+{
+  "status": "success",
+  "data": {
+    "version": "1.0.0",
+    "name": "DeepScanBot CLI"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "version",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Doctor Command
+
+```bash
+$ deepscanbot doctor --json
+{
+  "status": "success",
+  "data": {
+    "installed": true,
+    "executable": true,
+    "configured": true,
+    "checks_passed": 3,
+    "message": "All checks passed!"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "doctor",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Error Response
+
+```bash
+$ deepscanbot scan invalid-url --json
+{
+  "status": "error",
+  "error": {
+    "message": "invalid URL \"invalid-url\": must be an absolute http:// or https:// URL",
+    "code": "invalid_url"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "scan",
+    "duration_ms": 0
+  }
+}
+```
+
+### Key Features
+
+- **Valid JSON Only**: `stdout` contains only valid JSON when `--json` is enabled
+- **Separate Streams**: Progress messages, warnings, and logs are written to `stderr`
+- **Consistent Format**: All commands use the same JSON response structure
+- **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
+- **Extensible**: The centralized output formatting makes it easy to add new output formats in the future
+
+### Response Format
+
+All JSON responses follow this structure:
+
+```json
+{
+  "status": "success | error",
+  "data": { ... },        // Present on success
+  "error": {              // Present on error
+    "message": "Error description",
+    "code": "error_code"
+  },
+  "meta": {
+    "timestamp": "ISO8601 timestamp",
+    "command": "command_name",
+    "duration_ms": 1234
+  }
+}
+```
+
+### Piping and Automation
+
+The JSON output mode is designed for easy integration with scripts and tools:
+
+```bash
+# Parse with jq
+deepscanbot scan https://example.com --json | jq '.data.summary'
+
+# Extract specific fields
+deepscanbot version --json | jq -r '.data.version'
+
+# Check command success
+if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then
+  echo "Scan completed successfully"
+fi
+```
+
 ## Usage
 
 DeepScanBot uses a modern command-based CLI structure similar to git, docker, and kubectl.
@@ -286,8 +546,11 @@ project/
 │
 ├── packages/
 │   ├── crawler/          # Web crawling logic
+│   ├── exitcode/         # Standardized exit codes and error handling
+│   ├── noinput/          # Non-interactive mode and TTY detection
 │   ├── fetcher/          # HTTP fetching
 │   ├── logger/           # Logging utilities
+│   ├── output/           # Output formatting (JSON, human-readable, command tree)
 │   ├── parser/           # HTML parsing
 │   ├── storage/          # Output storage
 │   └── types/            # Shared types

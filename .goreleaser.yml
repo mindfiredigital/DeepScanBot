@@ -33,9 +33,9 @@ builds:
 
     ldflags:
       - -s -w
-      - -X main.version={{ .Version }}
-      - -X main.commit={{ .Commit }}
-      - -X main.date={{ .Date }}
+      - -X main.cliVersion={{ .Version }}
+      - -X main.gitCommit={{ .Commit }}
+      - -X main.buildDate={{ .Date }}
 
     mod_timestamp: "{{ .CommitTimestamp }}"
 

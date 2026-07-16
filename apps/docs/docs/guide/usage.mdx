@@ -134,65 +134,161 @@ https://example.com/contact [result=discovered]
 https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
 ```
 
-### JSON Output
+### JSON Output Mode
+
+DeepScanBot supports a consistent `--json` flag across all commands that return structured data. When enabled, all output is written as valid JSON to `stdout`, while progress messages and diagnostics are sent to `stderr`.
+
+#### Usage
+
+```bash
+# Scan with JSON output
+deepscanbot scan https://example.com --json
+
+# Version with JSON output
+deepscanbot version --json
+
+# Doctor with JSON output
+deepscanbot doctor --json
+```
+
+#### Scan Command JSON Output
+
+```bash
+$ deepscanbot scan https://example.com depth=0 --json
+{
+  "status": "success",
+  "data": {
+    "start_url": "https://example.com",
+    "output_file": "crawler_results.json",
+    "started_at": "2024-01-15T10:30:00Z",
+    "finished_at": "2024-01-15T10:30:05Z",
+    "duration_ms": 5000,
+    "summary": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "discovered": 0,
+      "max_depth": 0
+    },
+    "urls": [
+      {
+        "url": "https://example.com",
+        "depth": 0,
+        "status_code": 200,
+        "content_type": "text/html",
+        "result": "passed"
+      }
+    ],
+    "skipped": null
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:05Z",
+    "command": "scan",
+    "duration_ms": 5000
+  }
+}
+```
+
+#### Version Command JSON Output
+
+```bash
+$ deepscanbot version --json
+{
+  "status": "success",
+  "data": {
+    "version": "1.0.0",
+    "name": "DeepScanBot CLI"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "version",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Doctor Command JSON Output
+
+```bash
+$ deepscanbot doctor --json
+{
+  "status": "success",
+  "data": {
+    "installed": true,
+    "executable": true,
+    "configured": true,
+    "checks_passed": 3,
+    "message": "All checks passed!"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "doctor",
+    "duration_ms": 0
+  }
+}
+```
+
+#### Error Response
+
+```bash
+$ deepscanbot scan invalid-url --json
+{
+  "status": "error",
+  "error": {
+    "message": "invalid URL \"invalid-url\": must be an absolute http:// or https:// URL",
+    "code": "invalid_url"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "command": "scan",
+    "duration_ms": 0
+  }
+}
+```
+
+### JSON Response Format
+
+All JSON responses follow this structure:
 
 ```json
 {
-  "start_url": "https://example.com",
-  "started_at": "2024-01-01T00:00:00Z",
-  "finished_at": "2024-01-01T00:00:05Z",
-  "duration_ms": 5234,
-  "summary": {
-    "total": 45,
-    "passed": 30,
-    "failed": 2,
-    "skipped": 8,
-    "discovered": 5,
-    "skipped_by_robots": 3,
-    "skipped_by_domain": 2,
-    "skipped_by_duplicate": 2,
-    "skipped_by_content_type": 1,
-    "skipped_by_depth": 0,
-    "skipped_by_other": 0,
-    "retried_requests": 2,
-    "max_depth": 3,
-    "urls_by_status_code": {
-      "200": 30,
-      "404": 1,
-      "500": 1
-    },
-    "skipped_by_reason": {
-      "disallowed by robots.txt": 3,
-      "outside domain scope": 2,
-      "duplicate": 2,
-      "content type not allowed": 1
-    },
-    "retry_distribution": {
-      "2": 1,
-      "3": 1
-    }
+  "status": "success | error",
+  "data": { ... },        // Present on success
+  "error": {              // Present on error
+    "message": "Error description",
+    "code": "error_code"
   },
-  "urls": [
-    {
-      "url": "https://example.com",
-      "source": "href",
-      "depth": 0,
-      "status_code": 200,
-      "content_type": "text/html; charset=utf-8",
-      "result": "passed",
-      "attempts": 1
-    }
-  ],
-  "skipped": [
-    {
-      "url": "https://external.com/page",
-      "source": "href",
-      "depth": 1,
-      "result": "skipped",
-      "skipped_reason": "outside domain scope"
-    }
-  ]
+  "meta": {
+    "timestamp": "ISO8601 timestamp",
+    "command": "command_name",
+    "duration_ms": 1234
+  }
 }
+```
+
+### Key Features
+
+- **Valid JSON Only**: `stdout` contains only valid JSON when `--json` is enabled
+- **Separate Streams**: Progress messages, warnings, and logs are written to `stderr`
+- **Consistent Format**: All commands use the same JSON response structure
+- **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
+
+### Piping and Automation
+
+The JSON output mode is designed for easy integration with scripts and tools:
+
+```bash
+# Parse with jq
+deepscanbot scan https://example.com --json | jq '.data.summary'
+
+# Extract specific fields
+deepscanbot version --json | jq -r '.data.version'
+
+# Check command success
+if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then
+  echo "Scan completed successfully"
+fi
 ```
 
 ## Exit Codes
