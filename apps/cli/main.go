@@ -427,6 +427,10 @@ self-contained binary.`,
 	Version: cliVersion,
 }
 
+func init() {
+	rootCmd.SetVersionTemplate("{{.Version}}\n")
+}
+
 var scanCmd = &cobra.Command{
 	Use:   "scan <url> [options]",
 	Short: "Crawl and analyze a website",

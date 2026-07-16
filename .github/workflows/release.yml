@@ -19,21 +19,17 @@ env:
 
 jobs:
   build:
-    name: "@mindfiredigital/deepscanbot"
+    name: Build, Lint, and Test
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-          cache-dependency-path: "**/go.sum"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -43,34 +39,32 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Build Go binary
+        run: go build -v ./apps/cli/...
+
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          args: ./...
+          args: --timeout=5m ./...
 
       - name: Run tests
-        run: go test ./...
-
-      - name: Restore changes in json
-        run: |
-          git restore package-lock.json 2>/dev/null || true
-
-      - name: Set Git user name and email
-        run: |
-          git config --local user.email "github-actions@github.com"
-          git config --local user.name "GitHub Actions"
+        run: go test -v ./...
 
   create-github-release:
-    name: Create GitHub release document and publish to npm
+    name: Create Release and Publish
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: write
-      packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -86,20 +80,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Run GoReleaser (snapshot build)
-        run: goreleaser release --snapshot --clean
+      - name: Run GoReleaser
+        run: goreleaser release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Copy binaries to npm package
         run: bash scripts/copy-to-npm.sh
 
       - name: Semantic Release and npm release
-        run: |
-          npx semantic-release
+        run: npx semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify npm package files
-        run: |
-          echo "Files included in npm package:"
-          npm pack --dry-run
