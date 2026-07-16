@@ -58,6 +58,33 @@ changelog:
       - "^chore:"
       - "^Merge"
 
+homebrew_casks:
+  - name: deepscanbot
+    repository:
+      owner: mindfiredigital
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    # Casks must live in the Casks directory (default, no need to set explicitly)
+    # directory: Casks  # default, omitted
+    homepage: "https://github.com/mindfiredigital/DeepScanBot"
+    description: "A high-performance web crawler and scanner - recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports"
+    license: "MIT"
+    skip_upload: false
+    binaries:
+      - deepscanbot
+    url:
+      # Helps pass `homebrew audit` when homepage domain differs from download domain
+      verified: "github.com/mindfiredigital/DeepScanBot"
+    conflicts:
+      - cask: deepscanbot
+    commit_author:
+      name: "goreleaserbot"
+      email: "goreleaser@mindfiredigital.com"
+    commit_msg_template: "chore(homebrew): publish cask for {{ .ProjectName }} {{ .Tag }}"
+    dependencies:
+      - formula: git
+      - formula: ca-certificates
+
 release:
   github:
     owner: mindfiredigital
@@ -72,10 +99,31 @@ release:
     ## DeepScanBot CLI {{ .Version }}
 
   footer: |
-    ### Install from npm
+    ### Install via Homebrew
+
+    ```bash
+    brew install mindfiredigital/tap/deepscanbot
+    ```
+
+    ### Install via npm
 
     ```bash
     npm install -g @mindfiredigital/deepscanbot
     ```
 
+    ### Install via curl (Linux/macOS)
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
+    ```
+
+    ### Install via Go
+
+    ```bash
+    go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
+    ```
+
 dist: dist
+
+announce:
+  skip: "{{ .Env.SKIP_ANNOUNCE }}"

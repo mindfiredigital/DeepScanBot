@@ -41,19 +41,236 @@ DeepScanBot is a **feature-rich, concurrent web crawler** that makes website cra
 
 ## Installation
 
-### Via npm (Recommended)
+DeepScanBot ships as a single, self-contained binary with **zero runtime dependencies**. Choose the method that fits your workflow.
+
+| Method              | Platform                | Best for                          |
+| ------------------- | ----------------------- | --------------------------------- |
+| **Homebrew** 🍺      | macOS & Linux           | Developers, long-term maintenance |
+| **npm** 📦           | macOS, Linux, Windows   | Node.js ecosystem users           |
+| **curl** 🌐          | macOS & Linux           | CI/CD, scripting, one-liners      |
+| **PowerShell** 🪟    | Windows                 | Windows automation                |
+| **Go Install** 🔧    | Any (Go required)       | Go developers, building from source |
+| **Manual** 📥        | Any                     | Air-gapped, offline environments  |
+
+---
+
+### 🍺 Homebrew (macOS & Linux)
+
+```bash
+# One-time tap setup
+brew tap mindfiredigital/tap
+
+# Install
+brew install deepscanbot
+
+# Upgrade later
+brew upgrade deepscanbot
+```
+
+> **Prerequisite:** The [homebrew-tap](https://github.com/mindfiredigital/homebrew-tap) repository must be initialized on GitHub. See [Setup Instructions](#homebrew-tap-setup) below.
+
+---
+
+### 📦 npm (Cross-Platform)
 
 ```bash
 npm install -g @mindfiredigital/deepscanbot
 ```
 
-After installation, the `deepscanbot` command will be available globally:
+The npm package automatically detects your OS and architecture. No additional runtime dependencies are required.
 
 ```bash
 deepscanbot --help
 ```
 
-No additional runtime dependencies required. The npm package automatically installs the correct binary for your platform.
+---
+
+### 🌐 curl (macOS & Linux)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
+```
+
+Install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash -s -- -b /usr/local/bin -v v1.0.0
+```
+
+**What the script does:**
+1. Detects your OS (`linux` / `darwin`) and architecture (`amd64` / `arm64`)
+2. Fetches the latest release version from the GitHub API
+3. Downloads the binary and `checksums.txt` from the release
+4. Verifies the binary against its SHA256 checksum
+5. Installs to `/usr/local/bin` (or custom path via `-b`)
+6. Runs `deepscanbot version` to confirm the installation
+
+---
+
+### 🪟 PowerShell (Windows)
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.ps1'))
+```
+
+Install a specific version:
+
+```powershell
+.\install.ps1 -InstallDir "C:\tools" -Version "v1.0.0"
+```
+
+The script installs to `$env:ProgramFiles\DeepScanBot` by default and offers to add it to your PATH.
+
+---
+
+### 🔧 Go Install (From Source)
+
+Requires Go 1.22+:
+
+```bash
+go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
+```
+
+The binary is placed in `$GOPATH/bin` (typically `~/go/bin`).
+
+---
+
+### 📥 Manual Download
+
+Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest):
+
+| Platform      | Architecture | Binary Name                           |
+| ------------- | ------------ | ------------------------------------- |
+| macOS         | x86_64       | `deepscanbot_darwin_amd64`            |
+| macOS         | Apple Silicon | `deepscanbot_darwin_arm64`           |
+| Linux         | x86_64       | `deepscanbot_linux_amd64`            |
+| Linux         | ARM64        | `deepscanbot_linux_arm64`            |
+| Windows       | x86_64       | `deepscanbot_windows_amd64.exe`      |
+
+**Linux / macOS:**
+
+```bash
+chmod +x deepscanbot_*
+sudo mv deepscanbot_linux_amd64 /usr/local/bin/deepscanbot
+```
+
+**Windows (PowerShell as Administrator):**
+
+```powershell
+Move-Item .\deepscanbot_windows_amd64.exe C:\Windows\System32\deepscanbot.exe
+```
+
+---
+
+### ✅ Verify Your Installation
+
+Run these three commands to confirm DeepScanBot is installed correctly:
+
+```bash
+# 1. Check the version
+deepscanbot version
+
+# 2. Run the diagnostic checks
+deepscanbot doctor
+
+# 3. Verify the help output
+deepscanbot --help
+```
+
+Expected output for `deepscanbot version`:
+
+```
+DeepScanBot CLI v1.0.0
+```
+
+---
+
+### 🔐 Security Verification
+
+**Checksums:** Every release includes a `checksums.txt` file with SHA256 hashes of all binaries.
+
+```bash
+# Linux / macOS (sha256sum)
+sha256sum -c checksums.txt --ignore-missing
+
+# macOS (alternative with shasum)
+shasum -a 256 -c checksums.txt --ignore-missing
+
+# Windows PowerShell
+Get-FileHash .\deepscanbot_windows_amd64.exe -Algorithm SHA256
+```
+
+**Attestation:** GitHub signed attestations are generated for every release. Verify provenance with the GitHub CLI:
+
+```bash
+gh attestation verify deepscanbot_darwin_amd64 --owner mindfiredigital
+```
+
+---
+
+### Homebrew Tap Setup
+
+> **For maintainers:** These steps initialize the `homebrew-tap` repository so GoReleaser can publish Homebrew casks to it.
+
+**1. Create the repository on GitHub:**
+
+```bash
+# Visit https://github.com/new
+# Owner: mindfiredigital
+# Repository name: homebrew-tap
+# Visibility: Public
+# Do NOT initialize with a README
+```
+
+**2. Initialize the repository with the required files:**
+
+```bash
+mkdir homebrew-tap && cd homebrew-tap
+git init
+
+# Create the tap migration file (redirects old formula users to the new cask)
+cat > tap_migrations.json << 'EOF'
+{"deepscanbot": "mindfiredigital/tap/deepscanbot"}
+EOF
+
+# Create the Casks directory (GoReleaser will populate it)
+mkdir Casks
+touch Casks/.gitkeep
+
+# Create a README for the tap
+cat > README.md << 'EOF'
+# Mindfire Digital Homebrew Tap
+
+This tap provides the [DeepScanBot](https://github.com/mindfiredigital/DeepScanBot) CLI tool.
+
+## Usage
+
+```bash
+brew tap mindfiredigital/tap
+brew install deepscanbot
+```
+EOF
+
+git add .
+git commit -m "chore: initialize homebrew-tap"
+git remote add origin https://github.com/mindfiredigital/homebrew-tap.git
+git push -u origin main
+```
+
+**3. Configure the release secret:**
+
+```bash
+# Create a GitHub Personal Access Token with `repo` scope
+# Add it as a repository secret in DeepScanBot
+gh secret set TAP_GITHUB_TOKEN --repo mindfiredigital/DeepScanBot
+```
+
+**4. *(After first release)* — Migrate existing users:**
+
+Once GoReleaser publishes the first cask, existing users will automatically be redirected by the `tap_migrations.json` file. The old `Formula/` directory can then be removed from `homebrew-tap`.
+
+---
 
 ## Quick Start
 

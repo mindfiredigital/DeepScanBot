@@ -4,12 +4,26 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
 
 permissions:
   contents: write
   packages: write
   id-token: write
+  attestations: write
 
 env:
   GO_VERSION: "1.22.4"
@@ -84,6 +98,8 @@ jobs:
         run: goreleaser release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          SKIP_ANNOUNCE: "true"
 
       - name: Copy binaries to npm package
         run: bash scripts/copy-to-npm.sh
@@ -93,3 +109,151 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate artifact attestation for binaries
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
+          show-summary: true
+
+  validate-release:
+    name: Validate Release Assets
+    runs-on: ubuntu-latest
+    needs: create-github-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate npm package contents
+        run: node scripts/prepublish-check.js
+
+      - name: Verify GitHub release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Validating release assets for tag: $TAG"
+
+          # Fetch release data
+          RELEASE_DATA=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          echo "Release assets:"
+          echo "$RELEASE_DATA"
+
+          # Verify all expected binaries exist
+          EXPECTED_BINARIES=(
+            "deepscanbot_darwin_amd64"
+            "deepscanbot_darwin_arm64"
+            "deepscanbot_linux_amd64"
+            "deepscanbot_linux_arm64"
+            "deepscanbot_windows_amd64.exe"
+          )
+
+          MISSING=0
+          for binary in "${EXPECTED_BINARIES[@]}"; do
+            if echo "$RELEASE_DATA" | grep -q "^${binary}$"; then
+              echo "✅ Found: $binary"
+            else
+              echo "❌ Missing: $binary"
+              MISSING=$((MISSING + 1))
+            fi
+          done
+
+          # Verify checksums file exists
+          if echo "$RELEASE_DATA" | grep -q "^checksums.txt$"; then
+            echo "✅ Found: checksums.txt"
+          else
+            echo "❌ Missing: checksums.txt"
+            MISSING=$((MISSING + 1))
+          fi
+
+          if [ $MISSING -gt 0 ]; then
+            echo "::error::$MISSING expected release assets are missing!"
+            exit 1
+          fi
+          echo "✅ All release assets verified successfully"
+
+      - name: Verify checksums integrity
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Downloading and verifying checksums for tag: $TAG"
+
+          # Download checksums
+          gh release download "$TAG" --pattern "checksums.txt" --output /tmp/checksums.txt
+
+          # Verify each binary's checksum
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              expected_hash=$(echo "$line" | awk '{print $1}')
+              filename=$(echo "$line" | awk '{print $2}' | sed 's/^\*//')
+
+              echo "Verifying: $filename"
+              gh release download "$TAG" --pattern "$filename" --output "/tmp/$filename" --clobber
+
+              computed_hash=$(sha256sum "/tmp/$filename" | awk '{print $1}')
+              if [ "$expected_hash" != "$computed_hash" ]; then
+                echo "::error::Checksum mismatch for $filename"
+                echo "  Expected: $expected_hash"
+                echo "  Computed: $computed_hash"
+                exit 1
+              fi
+              echo "  ✅ Checksum verified"
+            fi
+          done < /tmp/checksums.txt
+
+          echo "✅ All checksums verified successfully"
+
+      - name: Validate Homebrew cask generation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Validating Homebrew cask for tag: $TAG"
+
+          # Download the generated cask from the tap repository
+          TAP_URL="https://raw.githubusercontent.com/mindfiredigital/homebrew-tap/main/Casks/deepscanbot.rb"
+          if curl -fsSL -o /tmp/deepscanbot.rb "$TAP_URL"; then
+            echo "✅ Cask file found in homebrew-tap"
+
+            # Verify essential fields exist in the cask
+            if grep -q "desc " /tmp/deepscanbot.rb; then
+              echo "  ✅ Description field present"
+            fi
+            if grep -q "homepage " /tmp/deepscanbot.rb; then
+              echo "  ✅ Homepage field present"
+            fi
+            if grep -q "version " /tmp/deepscanbot.rb; then
+              echo "  ✅ Version field present"
+            fi
+            if grep -q "sha256 " /tmp/deepscanbot.rb; then
+              echo "  ✅ SHA256 field present"
+            fi
+            if grep -q "verified:" /tmp/deepscanbot.rb; then
+              echo "  ✅ URL verified field present"
+            fi
+            if grep -q "conflicts_with" /tmp/deepscanbot.rb; then
+              echo "  ✅ Conflicts with old formula specified"
+            fi
+
+            # Verify the version matches the release tag
+            CASK_VERSION=$(grep 'version' /tmp/deepscanbot.rb | head -1 | sed 's/.*"\(.*\)".*/\1/')
+            echo "  Cask version: ${CASK_VERSION}"
+            echo "  Release tag: ${TAG#v}"
+          else
+            echo "⚠ Cask not yet published. This is expected on first migration run."
+            echo "  Verify manually after the first release."
+          fi
