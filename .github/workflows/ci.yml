@@ -117,7 +117,7 @@ jobs:
           ls -la dist/
           echo ""
           echo "=== Binary files ==="
-          find dist/ -type f -name "my-cli*" -exec file {} \;
+          find dist/ -type f -name "deepscanbot*" -exec file {} \;
           echo ""
           echo "=== Checksums ==="
           cat dist/checksums.txt 2>/dev/null || echo "No checksums file found"

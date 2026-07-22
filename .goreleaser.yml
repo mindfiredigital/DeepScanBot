@@ -90,7 +90,7 @@ release:
     owner: mindfiredigital
     name: DeepScanBot
 
-  draft: true
+  draft: false
   prerelease: auto
 
   name_template: "v{{ .Version }}"

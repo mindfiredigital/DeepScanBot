@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/mindfiredigital/DeepScanBot/actions/workflows/ci.yml/badge.svg)](https://github.com/mindfiredigital/DeepScanBot/actions/workflows/ci.yml)
 [![Release](https://github.com/mindfiredigital/DeepScanBot/actions/workflows/release.yml/badge.svg)](https://github.com/mindfiredigital/DeepScanBot/actions/workflows/release.yml)
-[![npm version](https://img.shields.io/npm/v/@mindfiredigital/deep-scan-bot)](https://www.npmjs.com/package/@mindfiredigital/deep-scan-bot)
+[![npm version](https://img.shields.io/npm/v/@mindfiredigital/deepscanbot)](https://www.npmjs.com/package/@mindfiredigital/deepscanbot)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/mindfiredigital/DeepScanBot)](https://golang.org/)
 [![License](https://img.shields.io/github/license/mindfiredigital/DeepScanBot)](LICENSE.md)
 
@@ -43,14 +43,14 @@ DeepScanBot is a **feature-rich, concurrent web crawler** that makes website cra
 
 DeepScanBot ships as a single, self-contained binary with **zero runtime dependencies**. Choose the method that fits your workflow.
 
-| Method              | Platform                | Best for                          |
-| ------------------- | ----------------------- | --------------------------------- |
-| **Homebrew** 🍺      | macOS & Linux           | Developers, long-term maintenance |
-| **npm** 📦           | macOS, Linux, Windows   | Node.js ecosystem users           |
-| **curl** 🌐          | macOS & Linux           | CI/CD, scripting, one-liners      |
-| **PowerShell** 🪟    | Windows                 | Windows automation                |
-| **Go Install** 🔧    | Any (Go required)       | Go developers, building from source |
-| **Manual** 📥        | Any                     | Air-gapped, offline environments  |
+| Method            | Platform              | Best for                            |
+| ----------------- | --------------------- | ----------------------------------- |
+| **Homebrew** 🍺   | macOS & Linux         | Developers, long-term maintenance   |
+| **npm** 📦        | macOS, Linux, Windows | Node.js ecosystem users             |
+| **curl** 🌐       | macOS & Linux         | CI/CD, scripting, one-liners        |
+| **PowerShell** 🪟 | Windows               | Windows automation                  |
+| **Go Install** 🔧 | Any (Go required)     | Go developers, building from source |
+| **Manual** 📥     | Any                   | Air-gapped, offline environments    |
 
 ---
 
@@ -67,7 +67,7 @@ brew install deepscanbot
 brew upgrade deepscanbot
 ```
 
-> **Prerequisite:** The [homebrew-tap](https://github.com/mindfiredigital/homebrew-tap) repository must be initialized on GitHub. See [Setup Instructions](#homebrew-tap-setup) below.
+> **Prerequisite:** The [homebrew-tap](https://github.com/mindfiredigital/homebrew-tap) repository must be initialized on GitHub. See [Homebrew Tap Setup](#homebrew-tap-setup) below.
 
 ---
 
@@ -98,6 +98,7 @@ curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/sc
 ```
 
 **What the script does:**
+
 1. Detects your OS (`linux` / `darwin`) and architecture (`amd64` / `arm64`)
 2. Fetches the latest release version from the GitHub API
 3. Downloads the binary and `checksums.txt` from the release
@@ -140,13 +141,13 @@ The binary is placed in `$GOPATH/bin` (typically `~/go/bin`).
 
 Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest):
 
-| Platform      | Architecture | Binary Name                           |
-| ------------- | ------------ | ------------------------------------- |
-| macOS         | x86_64       | `deepscanbot_darwin_amd64`            |
-| macOS         | Apple Silicon | `deepscanbot_darwin_arm64`           |
-| Linux         | x86_64       | `deepscanbot_linux_amd64`            |
-| Linux         | ARM64        | `deepscanbot_linux_arm64`            |
-| Windows       | x86_64       | `deepscanbot_windows_amd64.exe`      |
+| Platform | Architecture  | Binary Name                     |
+| -------- | ------------- | ------------------------------- |
+| macOS    | x86_64        | `deepscanbot_darwin_amd64`      |
+| macOS    | Apple Silicon | `deepscanbot_darwin_arm64`      |
+| Linux    | x86_64        | `deepscanbot_linux_amd64`       |
+| Linux    | ARM64         | `deepscanbot_linux_arm64`       |
+| Windows  | x86_64        | `deepscanbot_windows_amd64.exe` |
 
 **Linux / macOS:**
 
@@ -225,7 +226,7 @@ gh attestation verify deepscanbot_darwin_amd64 --owner mindfiredigital
 
 **2. Initialize the repository with the required files:**
 
-```bash
+````bash
 mkdir homebrew-tap && cd homebrew-tap
 git init
 
@@ -249,14 +250,16 @@ This tap provides the [DeepScanBot](https://github.com/mindfiredigital/DeepScanB
 ```bash
 brew tap mindfiredigital/tap
 brew install deepscanbot
-```
+````
+
 EOF
 
 git add .
 git commit -m "chore: initialize homebrew-tap"
 git remote add origin https://github.com/mindfiredigital/homebrew-tap.git
 git push -u origin main
-```
+
+````
 
 **3. Configure the release secret:**
 
@@ -264,9 +267,9 @@ git push -u origin main
 # Create a GitHub Personal Access Token with `repo` scope
 # Add it as a repository secret in DeepScanBot
 gh secret set TAP_GITHUB_TOKEN --repo mindfiredigital/DeepScanBot
-```
+````
 
-**4. *(After first release)* — Migrate existing users:**
+**4. _(After first release)_ — Migrate existing users:**
 
 Once GoReleaser publishes the first cask, existing users will automatically be redirected by the `tap_migrations.json` file. The old `Formula/` directory can then be removed from `homebrew-tap`.
 
@@ -362,17 +365,17 @@ fi
 
 DeepScanBot uses standardized exit codes to make CLI failures predictable for scripts, CI/CD pipelines, and AI agents. Every command returns a consistent exit code that tells you exactly what happened.
 
-| Code | Constant          | Description                                      | Example Scenarios                              |
-| ---- | ----------------- | ------------------------------------------------ | ---------------------------------------------- |
-| `0`  | `Success`         | Command completed successfully                   | Scan finished, version shown                   |
-| `1`  | `InvalidInput`    | Invalid argument or option value                 | Malformed URL, unknown flag, missing argument  |
-| `2`  | `ValidationError` | Semantic validation failure                      | Empty output filename, invalid option value    |
-| `3`  | `AuthFailure`     | Authentication failure with a remote service     | Invalid API token, missing credentials         |
-| `10` | `AuthzFailure`    | Authenticated but lacking permission             | Insufficient rights to access resource         |
-| `20` | `NotFound`        | Requested resource could not be located          | URL/file not found                             |
-| `30` | `NetworkFailure`  | Network request failed (non-timeout)             | DNS resolution failure, connection refused     |
-| `31` | `Timeout`         | Operation exceeded its configured deadline       | Request timed out, scan exceeded max duration  |
-| `70` | `InternalError`   | Unexpected internal error (likely a bug)         | Failed to write output file, serialization bug |
+| Code | Constant          | Description                                  | Example Scenarios                              |
+| ---- | ----------------- | -------------------------------------------- | ---------------------------------------------- |
+| `0`  | `Success`         | Command completed successfully               | Scan finished, version shown                   |
+| `1`  | `InvalidInput`    | Invalid argument or option value             | Malformed URL, unknown flag, missing argument  |
+| `2`  | `ValidationError` | Semantic validation failure                  | Empty output filename, invalid option value    |
+| `3`  | `AuthFailure`     | Authentication failure with a remote service | Invalid API token, missing credentials         |
+| `10` | `AuthzFailure`    | Authenticated but lacking permission         | Insufficient rights to access resource         |
+| `20` | `NotFound`        | Requested resource could not be located      | URL/file not found                             |
+| `30` | `NetworkFailure`  | Network request failed (non-timeout)         | DNS resolution failure, connection refused     |
+| `31` | `Timeout`         | Operation exceeded its configured deadline   | Request timed out, scan exceeded max duration  |
+| `70` | `InternalError`   | Unexpected internal error (likely a bug)     | Failed to write output file, serialization bug |
 
 ### Checking Exit Codes
 
@@ -393,6 +396,7 @@ fi
 ### Error Messages
 
 All errors include:
+
 - **What went wrong** — a clear description of the problem
 - **Why it happened** — the root cause when possible
 - **How to fix it** — an actionable hint with an example
