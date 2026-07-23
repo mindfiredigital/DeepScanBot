@@ -49,7 +49,6 @@
     "verify": "node scripts/prepublish-check.js",
     "test": "go test ./...",
     "pack": "npm pack",
-    "prepare": "lefthook install",
     "lint": "golangci-lint run ./..."
   },
   "publishConfig": {
