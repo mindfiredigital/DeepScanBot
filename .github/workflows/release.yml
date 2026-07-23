@@ -81,7 +81,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Run GoReleaser
-        run: goreleaser release --clean
+        run: goreleaser release --clean --snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
