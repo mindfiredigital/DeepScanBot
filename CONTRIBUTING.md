@@ -35,7 +35,7 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 
 ### Prerequisites
 
-- **Go** (version 1.21 or higher)
+- **Go** (version 1.22 or higher)
 - **Git**
 
 ### Installation
@@ -64,7 +64,7 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 4. Build the project:
 
    ```bash
-   go build -o deepscanbot .
+   go build -o deepscanbot ./apps/cli
    ```
 
 5. Verify the installation:
@@ -76,16 +76,28 @@ By participating in this project, you agree to abide by the [CODE_OF_CONDUCT.md]
 
 ```
 DeepScanBot/
-├── crawler/          # Core crawling logic and orchestration
-├── fetcher/          # HTTP fetching and content-type filtering
-├── parser/           # HTML parsing and link extraction
-├── storage/          # Data storage and report generation
-├── logger/           # Logging utilities
-├── types/            # Type definitions and structures
-├── tests/            # Unit and integration tests
-├── docs/             # Documentation
-├── main.go           # Entry point
-└── go.mod            # Go module definition
+├── apps/
+│   └── cli/              # Go CLI application
+│       ├── main.go
+│       └── tests/
+├── packages/
+│   ├── crawler/          # Web crawling logic
+│   ├── exitcode/         # Standardized exit codes and error handling
+│   ├── fetcher/          # HTTP fetching
+│   ├── logger/           # Logging utilities
+│   ├── noinput/          # Non-interactive mode and TTY detection
+│   ├── output/           # Output formatting (JSON, human-readable, command tree)
+│   ├── parser/           # HTML parsing
+│   ├── storage/          # Output storage
+│   └── types/            # Shared types
+├── scripts/              # Helper scripts
+├── .github/
+│   └── workflows/        # CI/CD workflows
+├── .goreleaser.yml       # GoReleaser configuration
+├── package.json          # npm package configuration
+├── postinstall.js        # npm post-install script
+├── go.mod                # Go module definition
+└── go.sum                # Go module checksums
 ```
 
 ## How to Contribute
@@ -111,11 +123,11 @@ Feature requests are welcome! Please use the [feature request template](.github/
 
 ### Contributing Code
 
-1. Create a new branch from `development`:
+1. Create a new branch from `main`:
 
    ```bash
-   git checkout development
-   git pull upstream development
+   git checkout main
+   git pull upstream main
    git checkout -b feat/your-feature-name
    ```
 
@@ -151,7 +163,7 @@ Feature requests are welcome! Please use the [feature request template](.github/
 3. All tests must pass
 4. Code must be linted and follow project standards
 5. At least one maintainer must approve the PR
-6. The PR will be squashed and merged into the `development` branch
+6. The PR will be squashed and merged into the `main` branch
 
 ### PR Title Convention
 

@@ -4,11 +4,11 @@ sidebar_position: 2
 
 # Installation
 
-Get DeepScanBot up and running in minutes.
+Get DeepScanBot up and running in minutes. The CLI ships as a single, self-contained binary with **zero runtime dependencies**.
 
 ---
 
-## Quick Install (Recommended)
+## Quick Install (npm - Cross-Platform)
 
 The easiest way to install DeepScanBot is via npm. This method automatically downloads the correct pre-built binary for your operating system and architecture.
 
@@ -34,7 +34,103 @@ deepscanbot doctor
 - Node.js 18+ (for npm installation)
 - No additional runtime dependencies required
 
-## How It Works
+---
+
+## 🍺 Homebrew (macOS & Linux)
+
+```bash
+# One-time tap setup
+brew tap mindfiredigital/tap
+
+# Install
+brew install deepscanbot
+
+# Upgrade later
+brew upgrade deepscanbot
+```
+
+> **Prerequisite:** The [homebrew-tap](https://github.com/mindfiredigital/homebrew-tap) repository must be initialized on GitHub.
+
+---
+
+## 🌐 One-Line Installer (macOS & Linux)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
+```
+
+Install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash -s -- -b /usr/local/bin -v v1.0.0
+```
+
+**What the script does:**
+
+1. Detects your OS (`linux` / `darwin`) and architecture (`amd64` / `arm64`)
+2. Fetches the latest release version from the GitHub API
+3. Downloads the binary and `checksums.txt` from the release
+4. Verifies the binary against its SHA256 checksum
+5. Installs to `/usr/local/bin` (or custom path via `-b`)
+6. Runs `deepscanbot version` to confirm the installation
+
+---
+
+## 🪟 PowerShell (Windows)
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.ps1'))
+```
+
+Install a specific version:
+
+```powershell
+.\install.ps1 -InstallDir "C:\tools" -Version "v1.0.0"
+```
+
+The script installs to `$env:ProgramFiles\DeepScanBot` by default and offers to add it to your PATH.
+
+---
+
+## 🔧 Go Install (From Source)
+
+Requires Go 1.22+:
+
+```bash
+go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
+```
+
+The binary is placed in `$GOPATH/bin` (typically `~/go/bin`).
+
+---
+
+## 📥 Manual Download
+
+Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest):
+
+| Platform | Architecture  | Binary Name                     |
+| -------- | ------------- | ------------------------------- |
+| macOS    | x86_64        | `deepscanbot_darwin_amd64`      |
+| macOS    | Apple Silicon | `deepscanbot_darwin_arm64`      |
+| Linux    | x86_64        | `deepscanbot_linux_amd64`       |
+| Linux    | ARM64         | `deepscanbot_linux_arm64`       |
+| Windows  | x86_64        | `deepscanbot_windows_amd64.exe` |
+
+**Linux / macOS:**
+
+```bash
+chmod +x deepscanbot_*
+sudo mv deepscanbot_linux_amd64 /usr/local/bin/deepscanbot
+```
+
+**Windows (PowerShell as Administrator):**
+
+```powershell
+Move-Item .\deepscanbot_windows_amd64.exe C:\Windows\System32\deepscanbot.exe
+```
+
+## How npm Installation Works
 
 DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the `postinstall` script:
 
@@ -58,6 +154,29 @@ deepscanbot doctor
 # Quick smoke test
 deepscanbot scan https://example.com depth=0 json=true
 ```
+
+## Security Verification
+
+**Checksums:** Every release includes a `checksums.txt` file with SHA256 hashes of all binaries.
+
+```bash
+# Linux / macOS (sha256sum)
+sha256sum -c checksums.txt --ignore-missing
+
+# macOS (alternative with shasum)
+shasum -a 256 -c checksums.txt --ignore-missing
+
+# Windows PowerShell
+Get-FileHash .\deepscanbot_windows_amd64.exe -Algorithm SHA256
+```
+
+**Attestation:** GitHub signed attestations are generated for every release. Verify provenance with the GitHub CLI:
+
+```bash
+gh attestation verify deepscanbot_darwin_amd64 --owner mindfiredigital
+```
+
+For a comprehensive verification of all installation methods, see the [Verification Checklist](https://github.com/mindfiredigital/DeepScanBot/blob/main/VERIFICATION_CHECKLIST.md).
 
 ## Next Steps
 

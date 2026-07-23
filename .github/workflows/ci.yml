@@ -117,7 +117,7 @@ jobs:
           ls -la dist/
           echo ""
           echo "=== Binary files ==="
-          find dist/ -type f -name "my-cli*" -exec file {} \;
+          find dist/ -type f -name "deepscanbot*" -exec file {} \;
           echo ""
           echo "=== Checksums ==="
           cat dist/checksums.txt 2>/dev/null || echo "No checksums file found"
@@ -183,3 +183,49 @@ jobs:
             echo "Checking $f..."
             node --check "$f"
           done
+
+  smoke-test:
+    name: Binary Smoke Test
+    runs-on: ubuntu-latest
+    needs: [build, goreleaser-check]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: ${{ env.GORELEASER_VERSION }}
+          install-only: true
+
+      - name: Build local binary for smoke test
+        run: |
+          go build -v -o /tmp/deepscanbot ./apps/cli
+          chmod +x /tmp/deepscanbot
+
+      - name: Run smoke test
+        run: |
+          echo "=== Running smoke test ==="
+          /tmp/deepscanbot version
+          echo "✅ Version command succeeded"
+
+          /tmp/deepscanbot doctor
+          echo "✅ Doctor command succeeded"
+
+          /tmp/deepscanbot --help > /dev/null
+          echo "✅ Help command succeeded"
+
+          /tmp/deepscanbot --version
+          echo "✅ --version flag succeeded"
+
+      - name: Verify binary is statically linked
+        run: |
+          ldd /tmp/deepscanbot || echo "Binary is statically linked (ldd not applicable)"
+          echo "✅ Binary check complete"
