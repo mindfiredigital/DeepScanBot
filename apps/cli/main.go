@@ -17,6 +17,7 @@ import (
 	"github.com/mindfiredigital/DeepScanBot/packages/noinput"
 	"github.com/mindfiredigital/DeepScanBot/packages/output"
 	"github.com/mindfiredigital/DeepScanBot/packages/storage"
+	"github.com/mindfiredigital/DeepScanBot/packages/types"
 	"github.com/mindfiredigital/DeepScanBot/packages/version"
 )
 
@@ -368,7 +369,7 @@ func applyKeyValueOptions(cmd *cobra.Command, opts *ScanOptions, kvOpts ScanOpti
 	}
 }
 
-func parseKeyValue(args []string) (string, ScanOptions) {
+func parseKeyValue(args []string) ([]string, ScanOptions) {
 	opts := ScanOptions{
 		Depth:           2,
 		Timeout:         2,
@@ -380,7 +381,7 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 		HostConcurrency: 2,
 	}
 
-	var url string
+	var urls []string
 
 	for _, arg := range args {
 		// Skip flags (they start with - and are handled by Cobra)
@@ -393,12 +394,12 @@ func parseKeyValue(args []string) (string, ScanOptions) {
 			key := strings.ToLower(strings.TrimSpace(parts[0]))
 			val := strings.TrimSpace(parts[1])
 			applyScanOption(&opts, key, val)
-		} else if url == "" {
-			url = arg
+		} else {
+			urls = append(urls, arg)
 		}
 	}
 
-	return url, opts
+	return urls, opts
 }
 
 var rootCmd = &cobra.Command{
@@ -432,22 +433,29 @@ func init() {
 }
 
 var scanCmd = &cobra.Command{
-	Use:   "scan <url> [options]",
-	Short: "Crawl and analyze a website",
-	Long: `Scan crawls a website starting from the specified URL, following links
+	Use:   "scan <url> [url...] [options]",
+	Short: "Crawl and analyze one or more websites",
+	Long: `Scan crawls one or more websites starting from the specified URL(s), following links
 up to a configurable depth, and produces a report of all discovered URLs.
+
+You can provide multiple URLs as positional arguments. All URLs will be crawled
+in parallel with the same configuration options.
 
 Options can be specified as either flags (--depth=3) or key=value pairs (depth=3).
 Both formats are supported for backward compatibility.
 
 Examples:
   deepscanbot scan https://example.com --depth=3 --json --output=results
+  deepscanbot scan https://example.com https://xyz.com --depth=3
   deepscanbot scan https://example.com --concurrency=10 --delay=500ms
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
   deepscanbot scan https://example.com depth=3 json=true output=results`,
 	Args: cobra.MinimumNArgs(1),
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
+
+  # Scan multiple sites
+  deepscanbot scan https://example.com https://xyz.com
 
   # Scan with depth and JSON output (flag format)
   deepscanbot scan https://example.com --depth=3 --json
@@ -471,18 +479,23 @@ Examples:
   deepscanbot scan https://example.com --yes --force`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse key=value options for backward compatibility
-		url, keyValueOpts := parseKeyValue(args)
+		urls, keyValueOpts := parseKeyValue(args)
 
 		// Merge with flag-based options (flags take precedence)
 		opts := mergeOptions(cmd, keyValueOpts)
 
-		if url == "" {
+		if len(urls) == 0 {
 			exitcode.HandleError(exitcode.ErrEmptyURL)
 		}
 
-		parsedURL, err := validateStartURL(url)
-		if err != nil {
-			exitcode.HandleError(err)
+		// Validate all URLs
+		var parsedURLs []string
+		for _, u := range urls {
+			parsed, err := validateStartURL(u)
+			if err != nil {
+				exitcode.HandleError(err)
+			}
+			parsedURLs = append(parsedURLs, parsed)
 		}
 
 		// Check for --json flag (persistent flag from root command)
@@ -519,13 +532,13 @@ Examples:
 			log.Infof("Loaded %d URLs from %s", len(urlsToScan),
 				map[bool]string{true: "stdin", false: "file " + opts.InputFile}[opts.UseStdin])
 		} else {
-			// Use the positional URL argument
-			urlsToScan = []string{parsedURL}
+			// Use the positional URL arguments
+			urlsToScan = parsedURLs
 		}
 
 		// --- Dry-run mode: preview actions and exit without making changes ---
 		if dryRun {
-			printDryRunPlan(parsedURL, outputFilename, opts, len(urlsToScan))
+			printDryRunPlan(parsedURLs[0], outputFilename, opts, len(urlsToScan))
 			return
 		}
 
@@ -557,50 +570,127 @@ Examples:
 			log.Infof("Resume mode loaded %d existing results from %s", len(resumeEntries), outputFilename)
 		}
 
-		// For now, we only support scanning a single URL at a time
-		// In the future, this could be extended to scan multiple URLs
+		// Multi-site crawling support
+		var multiSiteReport types.MultiSiteReport
 		if len(urlsToScan) > 1 {
-			log.Warnf("Multiple URLs provided, only scanning the first one: %s", urlsToScan[0])
+			multiSiteReport = types.NewMultiSiteReport()
+			multiSiteReport.StartedAt = time.Now()
+			log.Infof("Starting multi-site crawl of %d URLs", len(urlsToScan))
 		}
 
-		c := crawler.NewCrawlerWithOptions(urlsToScan[0], opts.Depth, timeoutDuration, opts.Proxy, opts.MaxSize, opts.DisableRedirects, opts.Insecure, opts.Unique, opts.Concurrency, parseContentTypes(opts.ContentTypes), opts.IgnoreRobots, opts.CrossDomain, crawler.Options{
-			Retries:            opts.Retries,
-			RetryBackoff:       opts.RetryBackoff,
-			CrawlDelay:         opts.Delay,
-			PerHostConcurrency: opts.HostConcurrency,
-			IncludeSitemap:     opts.Sitemap,
-			ResumeEntries:      resumeEntries,
-		})
+		// Crawl all URLs
+		for i, targetURL := range urlsToScan {
+			log.Infof("Crawling site %d/%d: %s", i+1, len(urlsToScan), targetURL)
 
-		report, err := c.StartReport()
-		if err != nil {
-			exitcode.HandleErrorWithMessage("scan failed", err)
-		}
+			// Build output filename for this site
+			siteOutputFilename := outputFilename
+			if len(urlsToScan) > 1 {
+				// For multi-site, create separate files per site
+				parsed, _ := url.Parse(targetURL)
+				siteBaseName := fmt.Sprintf("%s_%s", opts.Output, strings.ReplaceAll(parsed.Host, ".", "_"))
+				siteOutputFilename, err = buildOutputFilename(siteBaseName, opts.JSON)
+				if err != nil {
+					log.Errorf("Failed to build output filename for %s: %v", targetURL, err)
+					continue
+				}
+			}
 
-		// Create output formatter
-		formatter := output.NewFormatter(opts.JSON)
+			c := crawler.NewCrawlerWithOptions(targetURL, opts.Depth, timeoutDuration, opts.Proxy, opts.MaxSize, opts.DisableRedirects, opts.Insecure, opts.Unique, opts.Concurrency, parseContentTypes(opts.ContentTypes), opts.IgnoreRobots, opts.CrossDomain, crawler.Options{
+				Retries:            opts.Retries,
+				RetryBackoff:       opts.RetryBackoff,
+				CrawlDelay:         opts.Delay,
+				PerHostConcurrency: opts.HostConcurrency,
+				IncludeSitemap:     opts.Sitemap,
+				ResumeEntries:      resumeEntries,
+			})
 
-		// Write to file
-		if opts.JSON {
-			err = storage.WriteJSONReportToFile(outputFilename, report)
-		} else {
-			err = storage.WriteTextToFile(outputFilename, report.URLs, opts.ShowSource)
-		}
+			siteStartTime := time.Now()
+			report, err := c.StartReport()
+			siteEndTime := time.Now()
 
-		if err != nil {
-			exitcode.HandleErrorWithMessage("write output file", exitcode.ErrWriteOutput)
-		}
-
-		// If JSON mode, write report to stdout
-		if opts.JSON {
-			meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
-			err = formatter.WriteSuccess(os.Stdout, report, meta)
 			if err != nil {
-				exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				log.Errorf("Failed to crawl %s: %v", targetURL, err)
+				continue
+			}
+
+			// Create output formatter
+			formatter := output.NewFormatter(opts.JSON)
+
+			// Write to file
+			if opts.JSON {
+				err = storage.WriteJSONReportToFile(siteOutputFilename, report)
+			} else {
+				err = storage.WriteTextToFile(siteOutputFilename, report.URLs, opts.ShowSource)
+			}
+
+			if err != nil {
+				log.Errorf("Failed to write output for %s: %v", targetURL, err)
+				continue
+			}
+
+			// Add to multi-site report if crawling multiple sites
+			if len(urlsToScan) > 1 {
+				siteReport := types.SiteReport{
+					StartURL:   targetURL,
+					OutputFile: siteOutputFilename,
+					StartedAt:  siteStartTime,
+					FinishedAt: siteEndTime,
+					DurationMS: siteEndTime.Sub(siteStartTime).Milliseconds(),
+					Report:     report,
+				}
+				multiSiteReport.AddSiteReport(siteReport)
+				log.Infof("Completed site %d/%d: %s (URLs: %d, Passed: %d, Failed: %d, Skipped: %d)",
+					i+1, len(urlsToScan), targetURL,
+					report.Summary.Total, report.Summary.Passed, report.Summary.Failed, report.Summary.Skipped)
+			} else {
+				// Single site: write report to stdout if JSON mode
+				if opts.JSON {
+					meta := output.NewResponseMetadata("scan", time.Duration(report.DurationMS)*time.Millisecond)
+					err = formatter.WriteSuccess(os.Stdout, report, meta)
+					if err != nil {
+						exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+					}
+				}
+				log.Infof("Results written to %s", siteOutputFilename)
 			}
 		}
 
-		log.Infof("Results written to %s", outputFilename)
+		// Handle multi-site report
+		if len(urlsToScan) > 1 {
+			multiSiteReport.FinishedAt = time.Now()
+			multiSiteReport.Finalize()
+
+			// Write multi-site summary (always write for multi-site scans)
+			summaryFilename := opts.Output + "_summary.json"
+			err = storage.WriteMultiSiteReportToFile(summaryFilename, multiSiteReport)
+			if err != nil {
+				log.Errorf("Failed to write multi-site summary: %v", err)
+			} else {
+				log.Infof("Multi-site summary written to %s", summaryFilename)
+			}
+
+			// Print summary to stdout
+			formatter := output.NewFormatter(opts.JSON)
+			if opts.JSON {
+				meta := output.NewResponseMetadata("multi-site-scan", time.Duration(multiSiteReport.DurationMS)*time.Millisecond)
+				err = formatter.WriteSuccess(os.Stdout, multiSiteReport, meta)
+				if err != nil {
+					exitcode.HandleErrorWithMessage("write JSON output", exitcode.ErrJSONOutput)
+				}
+			} else {
+				log.Infof("")
+				log.Infof("═══ Multi-Site Scan Summary ═══")
+				log.Infof("Sites crawled: %d", multiSiteReport.Summary.TotalSites)
+				log.Infof("Total URLs: %d", multiSiteReport.Summary.TotalURLs)
+				log.Infof("Passed: %d", multiSiteReport.Summary.TotalPassed)
+				log.Infof("Failed: %d", multiSiteReport.Summary.TotalFailed)
+				log.Infof("Skipped: %d", multiSiteReport.Summary.TotalSkipped)
+				log.Infof("Discovered: %d", multiSiteReport.Summary.TotalDiscovered)
+				log.Infof("Duration: %s", time.Duration(multiSiteReport.DurationMS)*time.Millisecond)
+				log.Infof("")
+				log.Infof("Individual site reports saved with prefix: %s_*", opts.Output)
+			}
+		}
 	},
 }
 
