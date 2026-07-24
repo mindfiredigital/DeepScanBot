@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mindfiredigital/DeepScanBot/packages/types"
 )
 
 // WriteJSONToFile writes URL entries as a JSON report file.
@@ -26,6 +28,15 @@ func WriteJSONReportToFile(filename string, report CrawlReport) error {
 	}
 
 	// Use atomic write to prevent corruption if interrupted
+	return WriteFileAtomic(filename, jsonData, 0o644)
+}
+
+// WriteMultiSiteReportToFile writes a MultiSiteReport as a JSON file.
+func WriteMultiSiteReportToFile(filename string, report types.MultiSiteReport) error {
+	jsonData, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return err
+	}
 	return WriteFileAtomic(filename, jsonData, 0o644)
 }
 
