@@ -4,32 +4,20 @@ sidebar_position: 1
 
 # Usage Guide
 
-Learn how to use DeepScanBot effectively for production web crawling.
-
----
+DeepScanBot uses a simple command structure. After installation, you can start crawling websites right away.
 
 ## Basic Usage
-
-After installing DeepScanBot via npm, use the `deepscanbot` command:
 
 ```bash
 deepscanbot scan https://example.com
 ```
 
-This will:
-- Crawl the start page
-- Follow links up to 2 levels deep
-- Output results to `crawler_results.txt`
+This crawls the start page, follows links up to 2 levels deep, and writes results to `crawler_results.txt`.
 
 ## Version Information
 
-Check the installed version of DeepScanBot:
-
 ```bash
-# Using the --version flag
 deepscanbot --version
-
-# Or using the version subcommand
 deepscanbot version
 ```
 
@@ -45,7 +33,7 @@ deepscanbot scan https://example.com depth=0
 
 ### Full Site Crawl
 
-Crawl an entire website with greater depth and higher concurrency:
+Crawl with greater depth and higher concurrency:
 
 ```bash
 deepscanbot scan https://example.com depth=5 concurrency=20
@@ -53,23 +41,17 @@ deepscanbot scan https://example.com depth=5 concurrency=20
 
 ### JSON Output
 
-Export results in JSON format for programmatic processing and integration:
-
 ```bash
 deepscanbot scan https://example.com json=true output=results
 ```
 
 ### Crawl with Proxy
 
-Route all traffic through a proxy server:
-
 ```bash
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
 ```
 
 ### Content-Type Filtering
-
-Filter which file types to download. Multiple types must be quoted as a single argument.
 
 ```bash
 # Only HTML pages
@@ -79,23 +61,12 @@ deepscanbot scan https://example.com content-types="text/html"
 deepscanbot scan https://example.com content-types="*/*"
 ```
 
-### Unique URLs Only
-
-Avoid processing duplicate URLs:
-
-```bash
-deepscanbot scan https://example.com unique=true
-```
-
 ### Resume a Crawl
 
-Stop and resume a crawl without recrawling already visited URLs:
+Stop and resume later without recrawling already visited URLs:
 
 ```bash
-# Initial crawl
 deepscanbot scan https://example.com depth=3 output=my-crawl
-
-# Resume (skips already crawled URLs)
 deepscanbot scan https://example.com depth=3 resume=true output=my-crawl
 ```
 
@@ -107,21 +78,13 @@ Add delays to avoid overwhelming servers:
 deepscanbot scan https://example.com delay=500ms host-concurrency=2
 ```
 
-### Crawl with Retry and Error Handling
+### Crawl with Retry
 
 ```bash
-deepscanbot scan https://docs.example.com depth=2 retries=3 retry-backoff=2s delay=1s host-concurrency=1
+deepscanbot scan https://docs.example.com retries=3 retry-backoff=2s delay=1s
 ```
 
-Retries failed requests up to 3 times with exponential backoff, waits 1 second between requests to the same host, and allows only 1 concurrent request per host.
-
-### Cross-Domain Crawl with Sitemap
-
-```bash
-deepscanbot scan https://example.com depth=3 cross-domain=true sitemap=true concurrency=10 host-concurrency=2 json=true
-```
-
-Discovers URLs from sitemap.xml, follows links to any domain, with 10 total workers and 2 per host.
+Retries failed requests up to 3 times with exponential backoff.
 
 ## Output Formats
 
@@ -134,24 +97,17 @@ https://example.com/contact [result=discovered]
 https://example.com/admin [result=skipped] [skipped=disallowed by robots.txt]
 ```
 
-### JSON Output Mode
+### JSON Output
 
-DeepScanBot supports a consistent `--json` flag across all commands that return structured data. When enabled, all output is written as valid JSON to `stdout`, while progress messages and diagnostics are sent to `stderr`.
-
-#### Usage
+Use the `--json` flag to get structured output:
 
 ```bash
-# Scan with JSON output
 deepscanbot scan https://example.com --json
-
-# Version with JSON output
 deepscanbot version --json
-
-# Doctor with JSON output
 deepscanbot doctor --json
 ```
 
-#### Scan Command JSON Output
+Sample JSON output:
 
 ```bash
 $ deepscanbot scan https://example.com depth=0 --json
@@ -190,105 +146,11 @@ $ deepscanbot scan https://example.com depth=0 --json
 }
 ```
 
-#### Version Command JSON Output
+### Piping with jq
 
 ```bash
-$ deepscanbot version --json
-{
-  "status": "success",
-  "data": {
-    "version": "1.0.0",
-    "name": "DeepScanBot CLI"
-  },
-  "meta": {
-    "timestamp": "2024-01-15T10:30:00Z",
-    "command": "version",
-    "duration_ms": 0
-  }
-}
-```
-
-#### Doctor Command JSON Output
-
-```bash
-$ deepscanbot doctor --json
-{
-  "status": "success",
-  "data": {
-    "installed": true,
-    "executable": true,
-    "configured": true,
-    "checks_passed": 3,
-    "message": "All checks passed!"
-  },
-  "meta": {
-    "timestamp": "2024-01-15T10:30:00Z",
-    "command": "doctor",
-    "duration_ms": 0
-  }
-}
-```
-
-#### Error Response
-
-```bash
-$ deepscanbot scan invalid-url --json
-{
-  "status": "error",
-  "error": {
-    "message": "invalid URL \"invalid-url\": must be an absolute http:// or https:// URL",
-    "code": "invalid_url"
-  },
-  "meta": {
-    "timestamp": "2024-01-15T10:30:00Z",
-    "command": "scan",
-    "duration_ms": 0
-  }
-}
-```
-
-### JSON Response Format
-
-All JSON responses follow this structure:
-
-```json
-{
-  "status": "success | error",
-  "data": { ... },        // Present on success
-  "error": {              // Present on error
-    "message": "Error description",
-    "code": "error_code"
-  },
-  "meta": {
-    "timestamp": "ISO8601 timestamp",
-    "command": "command_name",
-    "duration_ms": 1234
-  }
-}
-```
-
-### Key Features
-
-- **Valid JSON Only**: `stdout` contains only valid JSON when `--json` is enabled
-- **Separate Streams**: Progress messages, warnings, and logs are written to `stderr`
-- **Consistent Format**: All commands use the same JSON response structure
-- **Backward Compatible**: Existing behavior is preserved when `--json` is not specified
-
-### Piping and Automation
-
-The JSON output mode is designed for easy integration with scripts and tools:
-
-```bash
-# Parse with jq
 deepscanbot scan https://example.com --json | jq '.data.summary'
-
-# Extract specific fields
 deepscanbot version --json | jq -r '.data.version'
-
-# Check command success
-if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then
-  echo "Scan completed successfully"
-fi
 ```
 
 ## Exit Codes
@@ -296,4 +158,8 @@ fi
 | Code | Meaning |
 |------|---------|
 | `0` | Success |
-| `1` | Error (invalid arguments, crawl failure) |
+| `1` | Invalid input (bad URL, unknown flag) |
+| `2` | Validation error |
+| `30` | Network failure |
+| `31` | Timeout |
+| `70` | Internal error |

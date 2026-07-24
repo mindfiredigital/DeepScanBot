@@ -4,14 +4,13 @@ sidebar_position: 2
 
 # Features
 
-DeepScanBot comes with a comprehensive set of features designed for production web crawling at scale.
-
----
+DeepScanBot comes with a set of features designed for production web crawling.
 
 ## Core Features
 
 ### Concurrent Crawling
-Multi-threaded architecture with configurable concurrency limits for optimal performance.
+
+Multi-threaded crawling with configurable concurrency limits.
 
 ```bash
 # Use 10 concurrent workers
@@ -24,9 +23,10 @@ deepscanbot scan https://example.com concurrency=20 host-concurrency=2
 deepscanbot scan https://example.com
 ```
 
-The crawler automatically uses all available CPU cores by default. You can override this with the `concurrency` option for fine-grained control.
+The crawler uses all available CPU cores by default. You can override this with the `concurrency` option.
 
 ### Configurable Crawl Depth
+
 Control how deep the crawler explores linked pages.
 
 ```bash
@@ -41,6 +41,7 @@ deepscanbot scan https://example.com depth=5
 ```
 
 ### Robots.txt Compliance
+
 DeepScanBot respects robots.txt rules by default, with an option to bypass when needed.
 
 ```bash
@@ -52,6 +53,7 @@ deepscanbot scan https://example.com ignore-robots=true
 ```
 
 ### Retry Logic
+
 Automatic retry with exponential backoff for transient failures such as timeouts, rate limits (429), and server errors (5xx).
 
 ```bash
@@ -62,9 +64,10 @@ deepscanbot scan https://example.com retries=3 retry-backoff=2s
 deepscanbot scan https://example.com retries=5 retry-backoff=5s timeout=30
 ```
 
-The crawler also respects `Retry-After` headers from servers, adding extra backoff for 429 responses.
+The crawler also respects `Retry-After` headers from servers.
 
-### Politeness & Rate Limiting
+### Politeness and Rate Limiting
+
 Avoid overwhelming servers with configurable delays and per-host concurrency limits.
 
 ```bash
@@ -78,6 +81,7 @@ deepscanbot scan https://example.com delay=500ms concurrency=2 host-concurrency=
 ## Advanced Features
 
 ### Content Filtering
+
 Filter crawled pages by MIME type and enforce page size limits.
 
 ```bash
@@ -95,7 +99,8 @@ deepscanbot scan https://example.com content-types="*/*"
 ```
 
 ### Proxy Support
-Route traffic through HTTP/HTTPS proxy servers.
+
+Route traffic through HTTP or HTTPS proxy servers.
 
 ```bash
 # Use HTTP proxy
@@ -109,7 +114,8 @@ deepscanbot scan https://example.com proxy=http://127.0.0.1:8080 insecure=true
 ```
 
 ### Sitemap Discovery
-Automatically discover and crawl URLs from the site's `sitemap.xml`, including nested sitemap indexes.
+
+Automatically discover and crawl URLs from the site's sitemap.xml, including nested sitemap indexes.
 
 ```bash
 # Discover and crawl sitemap URLs
@@ -120,6 +126,7 @@ deepscanbot scan https://example.com depth=5 sitemap=true concurrency=10
 ```
 
 ### Resume Mode
+
 Resume interrupted crawls without recrawling already visited URLs.
 
 ```bash
@@ -131,6 +138,7 @@ deepscanbot scan https://example.com depth=3 resume=true output=my-crawl
 ```
 
 ### Cross-Domain Crawling
+
 Optionally follow links to external domains beyond the starting URL.
 
 ```bash
@@ -142,6 +150,7 @@ deepscanbot scan https://example.com cross-domain=true sitemap=true
 ```
 
 ### Multiple Output Formats
+
 Export results in JSON or plain text format with detailed analytics.
 
 ```bash
@@ -155,7 +164,8 @@ deepscanbot scan https://example.com json=true output=results
 deepscanbot scan https://example.com json=true show-source=true
 ```
 
-### TLS & Security Options
+### TLS and Security Options
+
 Control TLS verification and redirect behavior.
 
 ```bash
