@@ -261,6 +261,6 @@ if (errors.length > 0) {
   process.exit(1);
 } else {
   console.log("=======================================================");
-  console.log("✅ All checks passed. Ready to publish.");
+  console.log("All checks passed. Ready to publish.");
   process.exit(0);
 }
