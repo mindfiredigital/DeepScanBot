@@ -7,27 +7,27 @@ type MultiSiteReport struct {
 	StartedAt  time.Time        `json:"started_at"`
 	FinishedAt time.Time        `json:"finished_at"`
 	DurationMS int64            `json:"duration_ms"`
-	Sites      []SiteReport    `json:"sites"`
+	Sites      []SiteReport     `json:"sites"`
 	Summary    MultiSiteSummary `json:"summary"`
 }
 
 // SiteReport contains the crawl report for a single seed URL.
 type SiteReport struct {
-	StartURL   string       `json:"start_url"`
-	OutputFile string       `json:"output_file,omitempty"`
-	StartedAt  time.Time    `json:"started_at,omitempty"`
-	FinishedAt time.Time    `json:"finished_at,omitempty"`
-	DurationMS int64        `json:"duration_ms"`
-	Report     CrawlReport  `json:"report"`
+	StartURL   string      `json:"start_url"`
+	OutputFile string      `json:"output_file,omitempty"`
+	StartedAt  time.Time   `json:"started_at,omitempty"`
+	FinishedAt time.Time   `json:"finished_at,omitempty"`
+	DurationMS int64       `json:"duration_ms"`
+	Report     CrawlReport `json:"report"`
 }
 
 // MultiSiteSummary holds aggregate statistics across all crawled sites.
 type MultiSiteSummary struct {
-	TotalSites     int `json:"total_sites"`
-	TotalURLs      int `json:"total_urls"`
-	TotalPassed    int `json:"total_passed"`
-	TotalFailed    int `json:"total_failed"`
-	TotalSkipped   int `json:"total_skipped"`
+	TotalSites      int `json:"total_sites"`
+	TotalURLs       int `json:"total_urls"`
+	TotalPassed     int `json:"total_passed"`
+	TotalFailed     int `json:"total_failed"`
+	TotalSkipped    int `json:"total_skipped"`
 	TotalDiscovered int `json:"total_discovered"`
 }
 
