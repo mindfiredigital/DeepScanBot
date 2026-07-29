@@ -28,16 +28,18 @@ DeepScanBot is a **feature-rich, concurrent web crawler** that makes website cra
 
 ## Features
 
-- **⚡ Concurrent Crawling**: Multi-threaded architecture with configurable concurrency, per-host rate limiting, and CPU-aware auto-scaling
-- **🛡️ Robots.txt Compliance**: Automatically respects robots.txt rules with optional bypass
-- **🔄 Retry & Rate-Limit Handling**: Automatic retry with exponential backoff and Retry-After header parsing
-- **📊 Rich Output**: JSON or text reports with detailed summaries, status code distribution, and skip reason breakdowns
-- **🗺️ Sitemap Discovery**: Auto-discover and crawl URLs from sitemap.xml, including nested sitemap indexes
-- **📁 Content-Type Filtering**: Filter downloads by MIME type, enforce page size limits
-- **🌐 Proxy Support**: Route traffic through HTTP/HTTPS proxy servers
-- **▶️ Resume Mode**: Resume interrupted crawls without recrawling already visited URLs
-- **🌍 Cross-Domain Crawling**: Optionally follow links to external domains
-- **🔒 TLS Options**: Disable TLS verification for self-signed certificates
+Here's what DeepScanBot can do for you:
+
+- **Concurrent Crawling**: Multi-threaded architecture with configurable concurrency, per-host rate limiting, and CPU-aware auto-scaling
+- **Robots.txt Compliance**: Automatically respects robots.txt rules with optional bypass
+- **Retry & Rate-Limit Handling**: Automatic retry with exponential backoff and Retry-After header parsing
+- **Rich Output**: JSON or text reports with detailed summaries, status code distribution, and skip reason breakdowns
+- **Sitemap Discovery**: Auto-discover and crawl URLs from sitemap.xml, including nested sitemap indexes
+- **Content-Type Filtering**: Filter downloads by MIME type, enforce page size limits
+- **Proxy Support**: Route traffic through HTTP/HTTPS proxy servers
+- **Resume Mode**: Resume interrupted crawls without recrawling already visited URLs
+- **Cross-Domain Crawling**: Optionally follow links to external domains
+- **TLS Options**: Disable TLS verification for self-signed certificates
 
 ## Installation
 
@@ -45,16 +47,16 @@ DeepScanBot ships as a single, self-contained binary with **zero runtime depende
 
 | Method            | Platform              | Best for                            |
 | ----------------- | --------------------- | ----------------------------------- |
-| **Homebrew** 🍺   | macOS & Linux         | Developers, long-term maintenance   |
-| **npm** 📦        | macOS, Linux, Windows | Node.js ecosystem users             |
-| **curl** 🌐       | macOS & Linux         | CI/CD, scripting, one-liners        |
-| **PowerShell** 🪟 | Windows               | Windows automation                  |
-| **Go Install** 🔧 | Any (Go required)     | Go developers, building from source |
-| **Manual** 📥     | Any                   | Air-gapped, offline environments    |
+| **Homebrew**      | macOS & Linux         | Developers, long-term maintenance   |
+| **npm**           | macOS, Linux, Windows | Node.js ecosystem users             |
+| **curl**          | macOS & Linux         | CI/CD, scripting, one-liners        |
+| **PowerShell**    | Windows               | Windows automation                  |
+| **Go Install**    | Any (Go required)     | Go developers, building from source |
+| **Manual**        | Any                   | Air-gapped, offline environments    |
 
 ---
 
-### 🍺 Homebrew (macOS & Linux)
+### Homebrew (macOS & Linux)
 
 ```bash
 # One-time tap setup
@@ -71,7 +73,7 @@ brew upgrade deepscanbot
 
 ---
 
-### 📦 npm (Cross-Platform)
+### npm (Cross-Platform)
 
 ```bash
 npm install -g @mindfiredigital/deepscanbot
@@ -85,7 +87,7 @@ deepscanbot --help
 
 ---
 
-### 🌐 curl (macOS & Linux)
+### curl (macOS & Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
@@ -104,11 +106,11 @@ curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/sc
 3. Downloads the binary and `checksums.txt` from the release
 4. Verifies the binary against its SHA256 checksum
 5. Installs to `/usr/local/bin` (or custom path via `-b`)
-6. Runs `deepscanbot version` to confirm the installation
+6. Runs `deepscanbot --version` to confirm the installation
 
 ---
 
-### 🪟 PowerShell (Windows)
+### PowerShell (Windows)
 
 ```powershell
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -125,7 +127,7 @@ The script installs to `$env:ProgramFiles\DeepScanBot` by default and offers to 
 
 ---
 
-### 🔧 Go Install (From Source)
+### Go Install (From Source)
 
 Requires Go 1.22+:
 
@@ -137,7 +139,7 @@ The binary is placed in `$GOPATH/bin` (typically `~/go/bin`).
 
 ---
 
-### 📥 Manual Download
+### Manual Download
 
 Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest):
 
@@ -164,13 +166,13 @@ Move-Item .\deepscanbot_windows_amd64.exe C:\Windows\System32\deepscanbot.exe
 
 ---
 
-### ✅ Verify Your Installation
+### Verify Your Installation
 
 Run these three commands to confirm DeepScanBot is installed correctly:
 
 ```bash
 # 1. Check the version
-deepscanbot version
+deepscanbot --version
 
 # 2. Run the diagnostic checks
 deepscanbot doctor
@@ -179,7 +181,7 @@ deepscanbot doctor
 deepscanbot --help
 ```
 
-Expected output for `deepscanbot version`:
+Expected output for `deepscanbot --version`:
 
 ```
 DeepScanBot CLI v1.0.0
@@ -187,7 +189,7 @@ DeepScanBot CLI v1.0.0
 
 ---
 
-### 🔐 Security Verification
+### Security Verification
 
 **Checksums:** Every release includes a `checksums.txt` file with SHA256 hashes of all binaries.
 
@@ -297,7 +299,7 @@ deepscanbot scan https://example.com sitemap=true
 deepscanbot scan https://example.com resume=true output=crawler_results
 
 # Show version
-deepscanbot version
+deepscanbot --version
 
 # Verify installation
 deepscanbot doctor
@@ -323,7 +325,7 @@ Add `--no-input` to any command to disable all interactive prompts. If required 
 deepscanbot scan https://example.com --no-input --force
 
 # Check version non-interactively
-deepscanbot --no-input version --json
+deepscanbot --no-input --version --json
 
 # Run doctor in CI
 deepscanbot --no-input doctor
@@ -418,7 +420,7 @@ Hint: Use output=<filename> with a non-empty value.
 deepscanbot scan https://example.com --json
 
 # Version with JSON output
-deepscanbot version --json
+deepscanbot --version --json
 
 # Doctor with JSON output
 deepscanbot doctor --json
@@ -468,7 +470,7 @@ $ deepscanbot scan https://example.com depth=0 --json
 #### Version Command
 
 ```bash
-$ deepscanbot version --json
+$ deepscanbot --version --json
 {
   "status": "success",
   "data": {
@@ -559,7 +561,7 @@ The JSON output mode is designed for easy integration with scripts and tools:
 deepscanbot scan https://example.com --json | jq '.data.summary'
 
 # Extract specific fields
-deepscanbot version --json | jq -r '.data.version'
+deepscanbot --version --json | jq -r '.data.version'
 
 # Check command success
 if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then
