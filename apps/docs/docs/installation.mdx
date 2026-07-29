@@ -4,13 +4,15 @@ sidebar_position: 2
 
 # Installation
 
-Get DeepScanBot up and running in minutes. The CLI ships as a single, self-contained binary with **zero runtime dependencies**.
+DeepScanBot ships as a single binary with no runtime dependencies. Choose your platform below to see the install instructions.
 
----
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-## Quick Install (npm - Cross-Platform)
+<Tabs>
+  <TabItem value="npm" label="npm (All Platforms)">
 
-The easiest way to install DeepScanBot is via npm. This method automatically downloads the correct pre-built binary for your operating system and architecture.
+The easiest way to install is via npm. It downloads the correct binary for your operating system and architecture.
 
 ```bash
 npm install -g @mindfiredigital/deepscanbot
@@ -23,37 +25,24 @@ deepscanbot --help
 deepscanbot doctor
 ```
 
-**Supported platforms:**
+**Supported platforms:** macOS (Intel x64, Apple Silicon arm64), Linux (amd64, arm64), Windows (amd64)
 
-- macOS (Intel x64, Apple Silicon arm64)
-- Linux (amd64, arm64)
-- Windows (amd64)
+**Requirements:** Node.js 18+. No additional runtime dependencies.
 
-**Requirements:**
+DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the postinstall script detects your OS and architecture, locates the correct binary, and installs it to your npm global bin directory. You get the performance of a native binary with the convenience of npm package management.
 
-- Node.js 18+ (for npm installation)
-- No additional runtime dependencies required
+  </TabItem>
+  <TabItem value="mac" label="macOS">
 
----
-
-## 🍺 Homebrew (macOS & Linux)
+**Homebrew:**
 
 ```bash
-# One-time tap setup
 brew tap mindfiredigital/tap
-
-# Install
 brew install deepscanbot
-
-# Upgrade later
 brew upgrade deepscanbot
 ```
 
-> **Prerequisite:** The [homebrew-tap](https://github.com/mindfiredigital/homebrew-tap) repository must be initialized on GitHub.
-
----
-
-## 🌐 One-Line Installer (macOS & Linux)
+**One-liner:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
@@ -65,18 +54,53 @@ Install a specific version:
 curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash -s -- -b /usr/local/bin -v v1.0.0
 ```
 
-**What the script does:**
+The script detects your OS and architecture, downloads the binary, verifies the checksum, and installs it.
 
-1. Detects your OS (`linux` / `darwin`) and architecture (`amd64` / `arm64`)
-2. Fetches the latest release version from the GitHub API
-3. Downloads the binary and `checksums.txt` from the release
-4. Verifies the binary against its SHA256 checksum
-5. Installs to `/usr/local/bin` (or custom path via `-b`)
-6. Runs `deepscanbot version` to confirm the installation
+**Manual download:**
 
----
+| Architecture  | Binary Name                     |
+| ------------- | ------------------------------- |
+| Intel x64     | `deepscanbot_darwin_amd64`      |
+| Apple Silicon | `deepscanbot_darwin_arm64`      |
 
-## 🪟 PowerShell (Windows)
+```bash
+chmod +x deepscanbot_darwin_*
+sudo mv deepscanbot_darwin_amd64 /usr/local/bin/deepscanbot
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+**One-liner:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash
+```
+
+Install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/scripts/install.sh | bash -s -- -b /usr/local/bin -v v1.0.0
+```
+
+The script detects your OS and architecture, downloads the binary, verifies the checksum, and installs it.
+
+**Manual download:**
+
+| Architecture | Binary Name                     |
+| ------------ | ------------------------------- |
+| amd64        | `deepscanbot_linux_amd64`       |
+| arm64        | `deepscanbot_linux_arm64`       |
+
+```bash
+chmod +x deepscanbot_linux_*
+sudo mv deepscanbot_linux_amd64 /usr/local/bin/deepscanbot
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+**PowerShell:**
 
 ```powershell
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -91,9 +115,20 @@ Install a specific version:
 
 The script installs to `$env:ProgramFiles\DeepScanBot` by default and offers to add it to your PATH.
 
----
+**Manual download:**
 
-## 🔧 Go Install (From Source)
+| Architecture | Binary Name                           |
+| ------------ | ------------------------------------- |
+| amd64        | `deepscanbot_windows_amd64.exe`       |
+
+Run PowerShell as Administrator:
+
+```powershell
+Move-Item .\deepscanbot_windows_amd64.exe C:\Windows\System32\deepscanbot.exe
+```
+
+  </TabItem>
+  <TabItem value="source" label="From Source">
 
 Requires Go 1.22+:
 
@@ -103,108 +138,15 @@ go install github.com/mindfiredigital/DeepScanBot/apps/cli@latest
 
 The binary is placed in `$GOPATH/bin` (typically `~/go/bin`).
 
----
-
-## 📥 Manual Download
-
-Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest):
-
-| Platform | Architecture  | Binary Name                     |
-| -------- | ------------- | ------------------------------- |
-| macOS    | x86_64        | `deepscanbot_darwin_amd64`      |
-| macOS    | Apple Silicon | `deepscanbot_darwin_arm64`      |
-| Linux    | x86_64        | `deepscanbot_linux_amd64`       |
-| Linux    | ARM64         | `deepscanbot_linux_arm64`       |
-| Windows  | x86_64        | `deepscanbot_windows_amd64.exe` |
-
-**Linux / macOS:**
-
-```bash
-chmod +x deepscanbot_*
-sudo mv deepscanbot_linux_amd64 /usr/local/bin/deepscanbot
-```
-
-**Windows (PowerShell as Administrator):**
-
-```powershell
-Move-Item .\deepscanbot_windows_amd64.exe C:\Windows\System32\deepscanbot.exe
-```
-
-## How npm Installation Works
-
-DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the `postinstall` script:
-
-1. Detects your operating system and CPU architecture
-2. Locates the correct pre-built binary from the package
-3. Installs it to your npm global bin directory
-4. Sets executable permissions
-5. Verifies the binary works correctly
-
-This means you get the performance of a native binary with the convenience of npm package management.
+  </TabItem>
+</Tabs>
 
 ## Verify Installation
 
 ```bash
-# Show help and available commands
 deepscanbot --help
-
-# Run diagnostics
 deepscanbot doctor
-
-# Quick smoke test
 deepscanbot scan https://example.com depth=0 json=true
 ```
 
-## Security Verification
-
-**Checksums:** Every release includes a `checksums.txt` file with SHA256 hashes of all binaries.
-
-```bash
-# Linux / macOS (sha256sum)
-sha256sum -c checksums.txt --ignore-missing
-
-# macOS (alternative with shasum)
-shasum -a 256 -c checksums.txt --ignore-missing
-
-# Windows PowerShell
-Get-FileHash .\deepscanbot_windows_amd64.exe -Algorithm SHA256
-```
-
-**Attestation:** GitHub signed attestations are generated for every release. Verify provenance with the GitHub CLI:
-
-```bash
-gh attestation verify deepscanbot_darwin_amd64 --owner mindfiredigital
-```
-
-For a comprehensive verification of all installation methods, see the [Verification Checklist](https://github.com/mindfiredigital/DeepScanBot/blob/main/VERIFICATION_CHECKLIST.md).
-
-## Next Steps
-
-<div className="row">
-  <div className="col col--6" style={{ marginBottom: '1rem' }}>
-    <div style={{
-      padding: '1rem',
-      borderRadius: '0.5rem',
-      border: '1px solid var(--ifm-color-emphasis-200)',
-      textAlign: 'center',
-      background: 'var(--ifm-card-background-color)',
-    }}>
-      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📖</div>
-      <a href="/docs/guide/usage"><strong>Usage Guide</strong></a>
-      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Learn how to use all CLI options</p>
-    </div>
-  </div>
-  <div className="col col--6" style={{ marginBottom: '1rem' }}>
-    <div style={{
-      padding: '1rem',
-      borderRadius: '0.5rem',
-      border: '1px solid var(--ifm-color-emphasis-200)',
-      textAlign: 'center',
-      background: 'var(--ifm-card-background-color)',
-    }}>
-      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>✨</div>
-      <a href="/docs/guide/features"><strong>Features</strong></a>
-      <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: 'var(--ifm-color-emphasis-600)' }}>Explore all features in depth</p>
-    </div>
-  </div>
-</div>
+Download the binary for your platform from the [latest release](https://github.com/mindfiredigital/DeepScanBot/releases/latest).

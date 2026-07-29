@@ -103,3 +103,158 @@ func TestCLIVersionCommand(t *testing.T) {
 		t.Errorf("version output = %q, want version 'dev'", output)
 	}
 }
+
+func TestCLIHelpFlag(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+
+	output, err := testutil.RunCLI(t, binary, t.TempDir(), "--help")
+	if err != nil {
+		t.Fatalf("run --help: %v\n%s", err, output)
+	}
+
+	// Verify help output contains key sections
+	requiredSections := []string{
+		"Usage:",
+		"deepscanbot",
+		"scan",
+		"version",
+		"doctor",
+		"Flags:",
+		"--json",
+		"--help",
+	}
+	for _, section := range requiredSections {
+		if !strings.Contains(output, section) {
+			t.Errorf("help output missing section %q:\n%s", section, output)
+		}
+	}
+}
+
+func TestCLIScanHelp(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+
+	output, err := testutil.RunCLI(t, binary, t.TempDir(), "scan", "--help")
+	if err != nil {
+		t.Fatalf("run scan --help: %v\n%s", err, output)
+	}
+
+	// Verify scan command help contains expected options
+	expectedOptions := []string{
+		"--depth",
+		"--timeout",
+		"--output",
+		"--json",
+		"--concurrency",
+		"<url>",
+	}
+	for _, option := range expectedOptions {
+		if !strings.Contains(output, option) {
+			t.Errorf("scan help missing option %q:\n%s", option, output)
+		}
+	}
+}
+
+func TestCLIJSONOutput(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = w.Write([]byte("User-agent: *\nAllow: /\n"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body><h1>Test</h1></body></html>"))
+	}))
+	defer server.Close()
+
+	// Test --json flag produces JSON output
+	output, err := testutil.RunCLI(t, binary, workdir, "scan", server.URL, "--json", "depth=0")
+	if err != nil {
+		t.Fatalf("run with --json: %v\n%s", err, output)
+	}
+
+	// Verify output is valid JSON and contains expected fields
+	if !strings.Contains(output, `"start_url"`) {
+		t.Errorf("JSON output missing start_url field: %s", output)
+	}
+	if !strings.Contains(output, `"summary"`) {
+		t.Errorf("JSON output missing summary field: %s", output)
+	}
+	if !strings.Contains(output, `"urls"`) {
+		t.Errorf("JSON output missing urls field: %s", output)
+	}
+}
+
+func TestCLIMultipleURLs(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	// Create two test servers
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body><a href='/page1'>Link 1</a></body></html>"))
+	}))
+	defer server1.Close()
+
+	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body><a href='/page2'>Link 2</a></body></html>"))
+	}))
+	defer server2.Close()
+
+	// Test scanning multiple URLs
+	output, err := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, server2.URL, "depth=0")
+	if err != nil {
+		t.Fatalf("run multi-site scan: %v\n%s", err, output)
+	}
+
+	// Verify multi-site summary is generated
+	if !strings.Contains(output, "Multi-Site Scan Summary") {
+		t.Errorf("Multi-site scan output missing summary:\n%s", output)
+	}
+	if !strings.Contains(output, "Sites crawled:") {
+		t.Errorf("Multi-site scan output missing sites count: %s", output)
+	}
+
+	// Verify individual site reports were created
+	expectedFiles := []string{
+		"crawler_results_summary.json",
+	}
+	for _, file := range expectedFiles {
+		if _, err := os.Stat(filepath.Join(workdir, file)); os.IsNotExist(err) {
+			t.Errorf("Expected file %s was not created", file)
+		}
+	}
+}
+
+func TestCLIMultipleURLsWithJSON(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body>Site 1</body></html>"))
+	}))
+	defer server1.Close()
+
+	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body>Site 2</body></html>"))
+	}))
+	defer server2.Close()
+
+	// Test multi-site with JSON output
+	output, err := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, server2.URL, "--json", "depth=0")
+	if err != nil {
+		t.Fatalf("run multi-site with JSON: %v\n%s", err, output)
+	}
+
+	// Verify JSON structure for multi-site report
+	if !strings.Contains(output, `"total_sites"`) {
+		t.Errorf("Multi-site JSON missing total_sites: %s", output)
+	}
+	if !strings.Contains(output, `"sites"`) {
+		t.Errorf("Multi-site JSON missing sites array: %s", output)
+	}
+}
