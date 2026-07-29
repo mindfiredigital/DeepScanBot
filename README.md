@@ -106,7 +106,7 @@ curl -fsSL https://raw.githubusercontent.com/mindfiredigital/DeepScanBot/main/sc
 3. Downloads the binary and `checksums.txt` from the release
 4. Verifies the binary against its SHA256 checksum
 5. Installs to `/usr/local/bin` (or custom path via `-b`)
-6. Runs `deepscanbot version` to confirm the installation
+6. Runs `deepscanbot --version` to confirm the installation
 
 ---
 
@@ -172,7 +172,7 @@ Run these three commands to confirm DeepScanBot is installed correctly:
 
 ```bash
 # 1. Check the version
-deepscanbot version
+deepscanbot --version
 
 # 2. Run the diagnostic checks
 deepscanbot doctor
@@ -181,7 +181,7 @@ deepscanbot doctor
 deepscanbot --help
 ```
 
-Expected output for `deepscanbot version`:
+Expected output for `deepscanbot --version`:
 
 ```
 DeepScanBot CLI v1.0.0
@@ -299,7 +299,7 @@ deepscanbot scan https://example.com sitemap=true
 deepscanbot scan https://example.com resume=true output=crawler_results
 
 # Show version
-deepscanbot version
+deepscanbot --version
 
 # Verify installation
 deepscanbot doctor
@@ -325,7 +325,7 @@ Add `--no-input` to any command to disable all interactive prompts. If required 
 deepscanbot scan https://example.com --no-input --force
 
 # Check version non-interactively
-deepscanbot --no-input version --json
+deepscanbot --no-input --version --json
 
 # Run doctor in CI
 deepscanbot --no-input doctor
@@ -420,7 +420,7 @@ Hint: Use output=<filename> with a non-empty value.
 deepscanbot scan https://example.com --json
 
 # Version with JSON output
-deepscanbot version --json
+deepscanbot --version --json
 
 # Doctor with JSON output
 deepscanbot doctor --json
@@ -470,7 +470,7 @@ $ deepscanbot scan https://example.com depth=0 --json
 #### Version Command
 
 ```bash
-$ deepscanbot version --json
+$ deepscanbot --version --json
 {
   "status": "success",
   "data": {
@@ -561,7 +561,7 @@ The JSON output mode is designed for easy integration with scripts and tools:
 deepscanbot scan https://example.com --json | jq '.data.summary'
 
 # Extract specific fields
-deepscanbot version --json | jq -r '.data.version'
+deepscanbot --version --json | jq -r '.data.version'
 
 # Check command success
 if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; then

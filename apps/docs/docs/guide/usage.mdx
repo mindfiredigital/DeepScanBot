@@ -18,7 +18,6 @@ This crawls the start page, follows links up to 2 levels deep, and writes result
 
 ```bash
 deepscanbot --version
-deepscanbot version
 ```
 
 ## Common Use Cases
@@ -103,7 +102,7 @@ Use the `--json` flag to get structured output:
 
 ```bash
 deepscanbot scan https://example.com --json
-deepscanbot version --json
+deepscanbot --version --json
 deepscanbot doctor --json
 ```
 
@@ -150,7 +149,7 @@ $ deepscanbot scan https://example.com depth=0 --json
 
 ```bash
 deepscanbot scan https://example.com --json | jq '.data.summary'
-deepscanbot version --json | jq -r '.data.version'
+deepscanbot --version --json | jq -r '.data.version'
 ```
 
 ## Exit Codes
