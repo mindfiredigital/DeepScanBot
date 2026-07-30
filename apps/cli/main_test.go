@@ -258,3 +258,43 @@ func TestCLIMultipleURLsWithJSON(t *testing.T) {
 		t.Errorf("Multi-site JSON missing sites array: %s", output)
 	}
 }
+
+func TestCLIMultipleURLsWithPartialFailure(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	// Create one reachable test server
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body>Reachable Site</body></html>"))
+	}))
+	defer server1.Close()
+
+	// Use an unreachable URL (invalid port)
+	unreachableURL := "http://127.0.0.1:59999"
+
+	// Test multi-site scan with one reachable and one unreachable URL
+	output, _ := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, unreachableURL, "depth=0")
+
+	// The crawler reports failures in the summary rather than returning an error
+	// Verify the output indicates partial failure
+	if !strings.Contains(output, "Multi-Site Scan Summary") {
+		t.Errorf("Multi-site scan output missing summary:\n%s", output)
+	}
+
+	// Verify summary shows the failure
+	if !strings.Contains(output, "Failed:") {
+		t.Errorf("Multi-site scan output should report failures:\n%s", output)
+	}
+
+	// Verify the summary shows 1 failed site
+	if !strings.Contains(output, "Failed: 1") {
+		t.Errorf("Multi-site scan should show 1 failed site:\n%s", output)
+	}
+
+	// Verify summary file was still created
+	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
+	if _, statErr := os.Stat(summaryFile); os.IsNotExist(statErr) {
+		t.Errorf("Summary file should be created even with partial failures: %s", summaryFile)
+	}
+}
