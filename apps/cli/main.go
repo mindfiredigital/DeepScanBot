@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -672,14 +673,36 @@ Examples:
 			if err != nil {
 				log.Errorf("Failed to crawl %s: %v", targetURL, err)
 				if len(urlsToScan) > 1 {
+					errorCode := exitcode.NetworkFailure
+					if errors.Is(err, exitcode.ErrTimeout) {
+						errorCode = exitcode.Timeout
+					}
 					failedSiteReports = append(failedSiteReports, types.SiteReport{
 						StartURL:   targetURL,
 						StartedAt:  siteStartTime,
 						FinishedAt: siteEndTime,
 						Error:      err.Error(),
-						ErrorCode:  exitcode.NetworkFailure,
+						ErrorCode:  errorCode,
 					})
 				}
+				continue
+			}
+
+			// Check if the report has failures (crawler records failures in summary, not as errors)
+			if len(urlsToScan) > 1 && report.Summary.Failed > 0 {
+				failedSiteReports = append(failedSiteReports, types.SiteReport{
+					StartURL:   targetURL,
+					OutputFile: siteOutputFilename,
+					StartedAt:  siteStartTime,
+					FinishedAt: siteEndTime,
+					DurationMS: siteEndTime.Sub(siteStartTime).Milliseconds(),
+					Report:     report,
+					Error:      fmt.Sprintf("Crawl completed with %d failed URLs", report.Summary.Failed),
+					ErrorCode:  exitcode.NetworkFailure,
+				})
+				log.Infof("Completed site %d/%d: %s with failures (URLs: %d, Failed: %d)",
+					i+1, len(urlsToScan), targetURL,
+					report.Summary.Total, report.Summary.Failed)
 				continue
 			}
 

@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -270,11 +271,25 @@ func TestCLIMultipleURLsWithPartialFailure(t *testing.T) {
 	}))
 	defer server1.Close()
 
-	// Use an unreachable URL (invalid port)
-	unreachableURL := "http://127.0.0.1:59999"
+	// Use an unreachable URL with an ephemeral port (bind to port 0 to get an available port)
+	listener, listenErr := net.Listen("tcp", "localhost:0")
+	if listenErr != nil {
+		t.Fatalf("Failed to create ephemeral listener: %v", listenErr)
+	}
+	unreachableAddr := listener.Addr().String()
+	listener.Close() // Close immediately so the port is unavailable
+	unreachableURL := "http://" + unreachableAddr
 
 	// Test multi-site scan with one reachable and one unreachable URL
-	output, _ := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, unreachableURL, "depth=0")
+	output, err := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, unreachableURL, "depth=0")
+
+	// Verify the CLI returns exit code 30 (NetworkFailure) for partial failures
+	if err == nil {
+		t.Fatal("Expected CLI to return exit code 30 for partial failures, but got no error")
+	}
+	if !strings.Contains(err.Error(), "exit code 30") {
+		t.Errorf("Expected exit code 30 for network failures, got: %v", err)
+	}
 
 	// The crawler reports failures in the summary rather than returning an error
 	// Verify the output indicates partial failure
