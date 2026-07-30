@@ -159,6 +159,9 @@ deepscanbot --version --json | jq -r '.data.version'
 | `0` | Success |
 | `1` | Invalid input (bad URL, unknown flag) |
 | `2` | Validation error |
+| `3` | Authentication failure |
+| `10` | Authorization failure (authenticated but lacks permission) |
+| `20` | Resource not found |
 | `30` | Network failure |
 | `31` | Timeout |
 | `70` | Internal error |

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -439,7 +442,7 @@ var scanCmd = &cobra.Command{
 up to a configurable depth, and produces a report of all discovered URLs.
 
 You can provide multiple URLs as positional arguments. All URLs will be crawled
-in parallel with the same configuration options.
+sequentially with the same configuration options.
 
 Options can be specified as either flags (--depth=3) or key=value pairs (depth=3).
 Both formats are supported for backward compatibility.
@@ -484,20 +487,6 @@ Examples:
 		// Merge with flag-based options (flags take precedence)
 		opts := mergeOptions(cmd, keyValueOpts)
 
-		if len(urls) == 0 {
-			exitcode.HandleError(exitcode.ErrEmptyURL)
-		}
-
-		// Validate all URLs
-		var parsedURLs []string
-		for _, u := range urls {
-			parsed, err := validateStartURL(u)
-			if err != nil {
-				exitcode.HandleError(err)
-			}
-			parsedURLs = append(parsedURLs, parsed)
-		}
-
 		// Check for --json flag (persistent flag from root command)
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		if jsonFlag {
@@ -516,6 +505,7 @@ Examples:
 
 		// --- Read URLs from stdin or file if specified ---
 		var urlsToScan []string
+		var firstURL string
 		if opts.InputFile != "" || opts.UseStdin {
 			inputURLs, err := input.ReadInput(opts.InputFile, opts.UseStdin)
 			if err != nil {
@@ -529,16 +519,36 @@ Examples:
 				})
 			}
 			urlsToScan = inputURLs
+			firstURL = urlsToScan[0]
 			log.Infof("Loaded %d URLs from %s", len(urlsToScan),
 				map[bool]string{true: "stdin", false: "file " + opts.InputFile}[opts.UseStdin])
 		} else {
 			// Use the positional URL arguments
+			if len(urls) == 0 {
+				exitcode.HandleError(exitcode.ErrEmptyURL)
+			}
+
+			// Validate all URLs
+			var parsedURLs []string
+			for _, u := range urls {
+				parsed, err := validateStartURL(u)
+				if err != nil {
+					exitcode.HandleError(err)
+				}
+				parsedURLs = append(parsedURLs, parsed)
+			}
 			urlsToScan = parsedURLs
+			firstURL = urlsToScan[0]
+		}
+
+		// Validate we have URLs to scan after all input resolution
+		if len(urlsToScan) == 0 {
+			exitcode.HandleError(exitcode.ErrEmptyURL)
 		}
 
 		// --- Dry-run mode: preview actions and exit without making changes ---
 		if dryRun {
-			printDryRunPlan(parsedURLs[0], outputFilename, opts, len(urlsToScan))
+			printDryRunPlan(firstURL, outputFilename, opts, len(urlsToScan))
 			return
 		}
 
@@ -578,6 +588,9 @@ Examples:
 			log.Infof("Starting multi-site crawl of %d URLs", len(urlsToScan))
 		}
 
+		// Track failures with error categories for proper exit codes
+		var failedSiteReports []types.SiteReport
+
 		// Crawl all URLs
 		for i, targetURL := range urlsToScan {
 			log.Infof("Crawling site %d/%d: %s", i+1, len(urlsToScan), targetURL)
@@ -586,12 +599,61 @@ Examples:
 			siteOutputFilename := outputFilename
 			if len(urlsToScan) > 1 {
 				// For multi-site, create separate files per site
-				parsed, _ := url.Parse(targetURL)
-				siteBaseName := fmt.Sprintf("%s_%s", opts.Output, strings.ReplaceAll(parsed.Host, ".", "_"))
+				parsed, parseErr := url.Parse(targetURL)
+				if parseErr != nil {
+					log.Errorf("Failed to parse URL %s: %v", targetURL, parseErr)
+					failedSiteReports = append(failedSiteReports, types.SiteReport{
+						StartURL:   targetURL,
+						StartedAt:  time.Now(),
+						FinishedAt: time.Now(),
+						Error:      parseErr.Error(),
+						ErrorCode:  exitcode.InvalidInput,
+					})
+					continue
+				}
+
+				// Sanitize host and path for filename
+				sanitizedHost := strings.ReplaceAll(parsed.Host, ".", "_")
+				sanitizedPath := strings.ReplaceAll(parsed.Path, "/", "_")
+				sanitizedPath = strings.Trim(sanitizedPath, "_")
+
+				// Generate stable hash of normalized full URL (including query string)
+				normalizedURL := parsed.String()
+				urlHash := hashString(normalizedURL)
+
+				siteBaseName := fmt.Sprintf("%s_%s_%s", opts.Output, sanitizedHost, urlHash)
+				if sanitizedPath != "" {
+					siteBaseName = fmt.Sprintf("%s_%s", siteBaseName, sanitizedPath)
+				}
+
 				siteOutputFilename, err = buildOutputFilename(siteBaseName, opts.JSON)
 				if err != nil {
 					log.Errorf("Failed to build output filename for %s: %v", targetURL, err)
+					failedSiteReports = append(failedSiteReports, types.SiteReport{
+						StartURL:   targetURL,
+						StartedAt:  time.Now(),
+						FinishedAt: time.Now(),
+						Error:      err.Error(),
+						ErrorCode:  exitcode.ValidationError,
+					})
 					continue
+				}
+
+				// Apply destructive-overwrite protection for per-site files
+				if _, statErr := os.Stat(siteOutputFilename); statErr == nil {
+					if !forceOverwrite && !yesFlag {
+						if !noinput.IsInteractive() {
+							log.Warnf("Output file %q already exists, skipping site %s", siteOutputFilename, targetURL)
+							failedSiteReports = append(failedSiteReports, types.SiteReport{
+								StartURL:   targetURL,
+								StartedAt:  time.Now(),
+								FinishedAt: time.Now(),
+								Error:      fmt.Sprintf("Output file %q already exists", siteOutputFilename),
+								ErrorCode:  exitcode.InvalidInput,
+							})
+							continue
+						}
+					}
 				}
 			}
 
@@ -610,6 +672,37 @@ Examples:
 
 			if err != nil {
 				log.Errorf("Failed to crawl %s: %v", targetURL, err)
+				if len(urlsToScan) > 1 {
+					errorCode := exitcode.NetworkFailure
+					if errors.Is(err, exitcode.ErrTimeout) {
+						errorCode = exitcode.Timeout
+					}
+					failedSiteReports = append(failedSiteReports, types.SiteReport{
+						StartURL:   targetURL,
+						StartedAt:  siteStartTime,
+						FinishedAt: siteEndTime,
+						Error:      err.Error(),
+						ErrorCode:  errorCode,
+					})
+				}
+				continue
+			}
+
+			// Check if the report has failures (crawler records failures in summary, not as errors)
+			if len(urlsToScan) > 1 && report.Summary.Failed > 0 {
+				failedSiteReports = append(failedSiteReports, types.SiteReport{
+					StartURL:   targetURL,
+					OutputFile: siteOutputFilename,
+					StartedAt:  siteStartTime,
+					FinishedAt: siteEndTime,
+					DurationMS: siteEndTime.Sub(siteStartTime).Milliseconds(),
+					Report:     report,
+					Error:      fmt.Sprintf("Crawl completed with %d failed URLs", report.Summary.Failed),
+					ErrorCode:  exitcode.NetworkFailure,
+				})
+				log.Infof("Completed site %d/%d: %s with failures (URLs: %d, Failed: %d)",
+					i+1, len(urlsToScan), targetURL,
+					report.Summary.Total, report.Summary.Failed)
 				continue
 			}
 
@@ -625,6 +718,16 @@ Examples:
 
 			if err != nil {
 				log.Errorf("Failed to write output for %s: %v", targetURL, err)
+				if len(urlsToScan) > 1 {
+					failedSiteReports = append(failedSiteReports, types.SiteReport{
+						StartURL:   targetURL,
+						StartedAt:  siteStartTime,
+						FinishedAt: siteEndTime,
+						Report:     report,
+						Error:      err.Error(),
+						ErrorCode:  exitcode.InternalError,
+					})
+				}
 				continue
 			}
 
@@ -660,7 +763,12 @@ Examples:
 			multiSiteReport.FinishedAt = time.Now()
 			multiSiteReport.Finalize()
 
-			// Write multi-site summary (always write for multi-site scans)
+			// Add failed site reports to the multi-site report
+			for _, failedReport := range failedSiteReports {
+				multiSiteReport.AddSiteReport(failedReport)
+			}
+
+			// Write multi-site summary (always write for multi-site scans, even if some sites failed)
 			summaryFilename := opts.Output + "_summary.json"
 			err = storage.WriteMultiSiteReportToFile(summaryFilename, multiSiteReport)
 			if err != nil {
@@ -689,6 +797,36 @@ Examples:
 				log.Infof("Duration: %s", time.Duration(multiSiteReport.DurationMS)*time.Millisecond)
 				log.Infof("")
 				log.Infof("Individual site reports saved with prefix: %s_*", opts.Output)
+			}
+
+			// If any sites failed, return appropriate exit code based on failure categories
+			if len(failedSiteReports) > 0 {
+				// Determine the most severe exit code from all failures
+				maxExitCode := exitcode.Success
+				for _, failedReport := range failedSiteReports {
+					if failedReport.ErrorCode > maxExitCode {
+						maxExitCode = failedReport.ErrorCode
+					}
+				}
+
+				// Count failures by category for the error message
+				networkFailures := 0
+				for _, failedReport := range failedSiteReports {
+					if failedReport.ErrorCode == exitcode.NetworkFailure || failedReport.ErrorCode == exitcode.Timeout {
+						networkFailures++
+					}
+				}
+
+				message := fmt.Sprintf("%d of %d sites failed to crawl", len(failedSiteReports), len(urlsToScan))
+				if networkFailures > 0 {
+					message = fmt.Sprintf("%d of %d sites failed to crawl (%d network failures)", len(failedSiteReports), len(urlsToScan), networkFailures)
+				}
+
+				exitcode.HandleError(&exitcode.ExitCode{
+					Code:    maxExitCode,
+					Message: message,
+					Hint:    "Check network connectivity and URL accessibility",
+				})
 			}
 		}
 	},
@@ -1046,4 +1184,11 @@ func parseContentTypes(value string) []string {
 	}
 
 	return contentTypes
+}
+
+// hashString generates a stable SHA-256 hash of the input string and returns
+// the first 16 hex characters for use in filenames.
+func hashString(input string) string {
+	hash := sha256.Sum256([]byte(input))
+	return hex.EncodeToString(hash[:])[:16]
 }

@@ -15,10 +15,12 @@ type MultiSiteReport struct {
 type SiteReport struct {
 	StartURL   string      `json:"start_url"`
 	OutputFile string      `json:"output_file,omitempty"`
-	StartedAt  time.Time   `json:"started_at,omitempty"`
-	FinishedAt time.Time   `json:"finished_at,omitempty"`
+	StartedAt  time.Time   `json:"started_at"`
+	FinishedAt time.Time   `json:"finished_at"`
 	DurationMS int64       `json:"duration_ms"`
 	Report     CrawlReport `json:"report"`
+	Error      string      `json:"error,omitempty"`      // Error message if the site failed
+	ErrorCode  int         `json:"error_code,omitempty"` // Standardized exit code for the failure
 }
 
 // MultiSiteSummary holds aggregate statistics across all crawled sites.

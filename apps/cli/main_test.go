@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -256,5 +257,59 @@ func TestCLIMultipleURLsWithJSON(t *testing.T) {
 	}
 	if !strings.Contains(output, `"sites"`) {
 		t.Errorf("Multi-site JSON missing sites array: %s", output)
+	}
+}
+
+func TestCLIMultipleURLsWithPartialFailure(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	// Create one reachable test server
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html><body>Reachable Site</body></html>"))
+	}))
+	defer server1.Close()
+
+	// Use an unreachable URL with an ephemeral port (bind to port 0 to get an available port)
+	listener, listenErr := net.Listen("tcp", "localhost:0")
+	if listenErr != nil {
+		t.Fatalf("Failed to create ephemeral listener: %v", listenErr)
+	}
+	unreachableAddr := listener.Addr().String()
+	listener.Close() // Close immediately so the port is unavailable
+	unreachableURL := "http://" + unreachableAddr
+
+	// Test multi-site scan with one reachable and one unreachable URL
+	output, err := testutil.RunCLI(t, binary, workdir, "scan", server1.URL, unreachableURL, "depth=0")
+
+	// Verify the CLI returns exit code 30 (NetworkFailure) for partial failures
+	if err == nil {
+		t.Fatal("Expected CLI to return exit code 30 for partial failures, but got no error")
+	}
+	if !strings.Contains(err.Error(), "exit code 30") {
+		t.Errorf("Expected exit code 30 for network failures, got: %v", err)
+	}
+
+	// The crawler reports failures in the summary rather than returning an error
+	// Verify the output indicates partial failure
+	if !strings.Contains(output, "Multi-Site Scan Summary") {
+		t.Errorf("Multi-site scan output missing summary:\n%s", output)
+	}
+
+	// Verify summary shows the failure
+	if !strings.Contains(output, "Failed:") {
+		t.Errorf("Multi-site scan output should report failures:\n%s", output)
+	}
+
+	// Verify the summary shows 1 failed site
+	if !strings.Contains(output, "Failed: 1") {
+		t.Errorf("Multi-site scan should show 1 failed site:\n%s", output)
+	}
+
+	// Verify summary file was still created
+	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
+	if _, statErr := os.Stat(summaryFile); os.IsNotExist(statErr) {
+		t.Errorf("Summary file should be created even with partial failures: %s", summaryFile)
 	}
 }
