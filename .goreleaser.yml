@@ -58,12 +58,12 @@ changelog:
       - "^chore:"
       - "^Merge"
 
-homebrew_casks:
-  - name: deepscanbot
-    repository:
-      owner: mindfiredigital
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+  homebrew_casks:
+    - name: deepscanbot
+      repository:
+        owner: anujmindfire
+        name: homebrew-tap
+        token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     # Casks must live in the Casks directory (default, no need to set explicitly)
     # directory: Casks  # default, omitted
     homepage: "https://github.com/mindfiredigital/DeepScanBot"
