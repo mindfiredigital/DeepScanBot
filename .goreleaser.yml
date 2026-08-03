@@ -61,7 +61,7 @@ changelog:
   homebrew_casks:
     - name: deepscanbot
       repository:
-        owner: anujmindfire
+        owner: mindfiredigital
         name: homebrew-tap
         token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     # Casks must live in the Casks directory (default, no need to set explicitly)
