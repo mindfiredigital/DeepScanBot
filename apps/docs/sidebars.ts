@@ -15,7 +15,11 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Contribution Guide',
-      items: ['contribution-guide/how-to-contribute', 'contribution-guide/code-of-conduct'],
+      items: [
+        'contribution-guide/how-to-contribute',
+        'contribution-guide/code-of-conduct',
+        'contribution-guide/homebrew-tap-setup',
+      ],
     },
   ],
 };
