@@ -32,19 +32,19 @@ deepscanbot doctor
 DeepScanBot is distributed as an npm package containing pre-built binaries for all supported platforms. During installation, the postinstall script detects your OS and architecture, locates the correct binary, and installs it to your npm global bin directory. You get the performance of a native binary with the convenience of npm package management.
 
   </TabItem>
-  <TabItem value="mac" label="macOS">
+  <TabItem value="macos" label="macOS">
 
 **Homebrew:**
 
-**Status:** Homebrew installation is currently unavailable until the `mindfiredigital/homebrew-tap` repository is released.
+```bash
+brew tap mindfiredigital/tap
+brew install deepscanbot
+```
 
-**Alternatives:** Use the [npm installation](#npm-all-platforms) or the [one-liner script](#one-liner) below as temporary installation methods.
+To upgrade to the latest version:
 
 ```bash
-# Coming soon when tap is released:
-# brew tap mindfiredigital/tap
-# brew install deepscanbot
-# brew upgrade deepscanbot
+brew upgrade deepscanbot
 ```
 
 **One-liner:**
