@@ -1,0 +1,198 @@
+# Homebrew Tap Repository Setup
+
+This guide explains how to set up the `mindfiredigital/homebrew-tap` repository for Homebrew cask distribution.
+
+## Overview
+
+DeepScanBot uses [GoReleaser](https://goreleaser.com/) to automate the release process. When a new version is tagged, GoReleaser automatically:
+
+1. Builds binaries for all supported platforms
+2. Creates a GitHub release with all binaries
+3. Generates and publishes a Homebrew cask to the `mindfiredigital/homebrew-tap` repository
+4. Publishes to npm
+
+## Prerequisites
+
+- A GitHub account with access to the `mindfiredigital` organization
+- A GitHub Personal Access Token (PAT) with `repo` scope permissions
+- The `mindfiredigital/homebrew-tap` repository must exist
+
+## Step 1: Create the Homebrew Tap Repository
+
+1. Go to [GitHub](https://github.com/organizations/mindfiredigital/repositories/new)
+2. Create a new public repository named `homebrew-tap`
+3. Initialize it with a README file
+
+## Step 2: Configure Repository Settings
+
+The repository should be public and have the following basic structure:
+
+```
+homebrew-tap/
+├── Casks/
+│   └── deepscanbot.rb
+└── README.md
+```
+
+The `Casks/` directory will be automatically populated by GoReleaser during releases.
+
+## Step 3: Configure GitHub Secrets
+
+In the main DeepScanBot repository (`mindfiredigital/DeepScanBot`), add the following secret:
+
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Add the following secret:
+   - **Name:** `TAP_GITHUB_TOKEN`
+   - **Value:** Your GitHub PAT with `repo` scope
+
+This token allows GoReleaser to push the generated cask file to the homebrew-tap repository.
+
+## Step 4: Verify GoReleaser Configuration
+
+The `.goreleaser.yml` file in the main repository is already configured for Homebrew cask publishing. Key configuration:
+
+```yaml
+homebrew_casks:
+  - name: deepscanbot
+    repository:
+      owner: mindfiredigital
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/mindfiredigital/DeepScanBot"
+    description: "A high-performance web crawler and scanner..."
+    license: "MIT"
+    binaries:
+      - deepscanbot
+```
+
+## Step 5: Test the Setup
+
+To test the Homebrew cask generation without creating a full release:
+
+1. Create a test tag locally:
+
+   ```bash
+   git tag v1.0.0-test
+   git push origin v1.0.0-test
+   ```
+
+2. The CI/CD pipeline will run and attempt to publish the cask
+
+3. Verify the cask was created in the homebrew-tap repository:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/mindfiredigital/homebrew-tap/main/Casks/deepscanbot.rb
+   ```
+
+4. Test installation:
+
+   ```bash
+   brew tap mindfiredigital/tap
+   brew install deepscanbot
+   ```
+
+5. Clean up the test tag:
+   ```bash
+   git tag -d v1.0.0-test
+   git push origin :refs/tags/v1.0.0-test
+   ```
+
+## Step 6: Production Release
+
+Once testing is complete, create a proper release:
+
+1. Update the version in relevant files
+2. Commit and push changes
+3. Create and push a version tag:
+
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+4. The CI/CD pipeline will automatically:
+   - Build all binaries
+   - Create a GitHub release
+   - Publish the Homebrew cask
+   - Publish to npm
+
+## Troubleshooting
+
+### Cask Not Found After Release
+
+If the cask is not immediately available:
+
+1. Wait a few minutes for GitHub to process the commit
+2. Verify the cask file exists:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/mindfiredigital/homebrew-tap/main/Casks/deepscanbot.rb
+   ```
+
+3. Update Homebrew:
+   ```bash
+   brew update
+   ```
+
+### Permission Denied Errors
+
+If GoReleaser cannot push to the tap repository:
+
+1. Verify the `TAP_GITHUB_TOKEN` secret is set correctly
+2. Ensure the token has `repo` scope permissions
+3. Check that the token hasn't expired
+
+### Cask Validation Failures
+
+The CI/CD pipeline validates the cask file. If validation fails:
+
+1. Check the workflow logs for specific errors
+2. Verify the cask file contains all required fields:
+   - `desc` (description)
+   - `homepage`
+   - `version`
+   - `sha256`
+   - `url` with `verified` field
+   - `conflicts_with`
+
+## Manual Cask Update (Emergency)
+
+If you need to manually update the cask without waiting for a release:
+
+1. Download the latest binary from GitHub releases
+2. Calculate its SHA256 checksum:
+
+   ```bash
+   shasum -a 256 deepscanbot_darwin_amd64
+   ```
+
+3. Create or update `Casks/deepscanbot.rb` in the homebrew-tap repository:
+
+   ```ruby
+   cask "deepscanbot" do
+     desc "A high-performance web crawler and scanner"
+     homepage "https://github.com/mindfiredigital/DeepScanBot"
+     version "1.0.0"
+
+     if Hardware::CPU.intel?
+       url "https://github.com/mindfiredigital/DeepScanBot/releases/download/v1.0.0/deepscanbot_darwin_amd64"
+       sha256 "<calculated-sha256>"
+     else
+       url "https://github.com/mindfiredigital/DeepScanBot/releases/download/v1.0.0/deepscanbot_darwin_arm64"
+       sha256 "<calculated-sha256>"
+     end
+
+     binary "deepscanbot"
+
+     conflicts_with cask: "deepscanbot"
+   end
+   ```
+
+4. Commit and push to the homebrew-tap repository
+
+## References
+
+- [Homebrew Cask Documentation](https://docs.brew.sh/Cask-Cookbook)
+- [GoReleaser Homebrew Cask Guide](https://goreleaser.com/customization/homebrew/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
