@@ -146,7 +146,7 @@ func TestCLIScanHelp(t *testing.T) {
 		"--output",
 		"--json",
 		"--concurrency",
-		"<url>",
+		"[url]", // URLs are now optional (can use --input-file or --stdin)
 	}
 	for _, option := range expectedOptions {
 		if !strings.Contains(output, option) {
