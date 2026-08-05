@@ -5,6 +5,11 @@ on:
     types: [published]
   workflow_dispatch:
 
+# Ensure releases and manual runs don't overlap
+concurrency:
+  group: homebrew-tap-sync-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -13,10 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+        # Retain release tag for maintainability: ${{ github.event.release.tag_name }}
 
       - name: Setup Git
         run: |
@@ -24,6 +30,8 @@ jobs:
           git config user.email "goreleaser@mindfiredigital.com"
 
       - name: Create homebrew-tap branch
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           # Create or update the homebrew-tap branch
           git checkout --orphan homebrew-tap || git checkout homebrew-tap
@@ -34,15 +42,21 @@ jobs:
           # Create Casks directory
           mkdir -p Casks
           
-          # Copy the generated cask file from the main branch
-          git show main:homebrew-tap/Casks/deepscanbot.rb > Casks/deepscanbot.rb || true
+          # Copy the generated cask file from the main branch (fail if not found)
+          git show main:homebrew-tap/Casks/deepscanbot.rb > Casks/deepscanbot.rb
           
-          # Copy README
+          # Validate cask file exists and is non-empty
+          if [ ! -s Casks/deepscanbot.rb ]; then
+            echo "❌ Error: Cask file is missing or empty. GoReleaser may not have generated it."
+            exit 1
+          fi
+          
+          # Copy README (optional, continue if not found)
           git show main:homebrew-tap/README.md > README.md || true
           
           # Add and commit
           git add Casks/deepscanbot.rb README.md
-          git diff --cached --quiet || git commit -m "chore(homebrew): publish cask for deepscanbot ${{ github.event.release.tag_name }}"
+          git diff --cached --quiet || git commit -m "chore(homebrew): publish cask for deepscanbot ${RELEASE_TAG}"
           
           # Push to homebrew-tap branch
           git push origin homebrew-tap --force
