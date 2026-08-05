@@ -69,7 +69,7 @@ brew install deepscanbot
 brew upgrade deepscanbot
 ```
 
-> **Note:** The Homebrew tap is automatically maintained via a dedicated `homebrew-tap` branch in this repository. No separate repository is needed.
+> **Note:** The Homebrew tap is automatically maintained via a dedicated `homebrew-tap` branch in this repository. No separate repository is needed. After a new release, run `brew update` before installing to ensure Homebrew recognizes the updated cask.
 
 ---
 
@@ -225,7 +225,7 @@ The Homebrew tap is automatically managed using a **dedicated branch** in this r
 
 #### Repository Structure
 
-```
+```text
 DeepScanBot/
 ├── main branch
 │   ├── homebrew-tap/
@@ -677,11 +677,14 @@ Update package.json version
       ↓
 npm publish
       ↓
-Sync homebrew-tap branch
-      ↓
 npm install -g @mindfiredigital/deepscanbot
-brew install deepscanbot
+      ↓
+[Async] Sync homebrew-tap branch (may take a few minutes)
+      ↓
+brew update && brew install deepscanbot
 ```
+
+> **Note:** Homebrew tap synchronization happens asynchronously after the release. If the cask is not immediately available, wait a few minutes for the `homebrew-tap` branch to update, then run `brew update` before installing.
 
 ### Creating a Release
 
