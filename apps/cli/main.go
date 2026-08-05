@@ -456,7 +456,7 @@ Examples:
   deepscanbot scan https://example.com --concurrency=10 --delay=500ms
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
   deepscanbot scan https://example.com depth=3 json=true output=results`,
-	Args: cobra.NoArgs,
+	Args: cobra.ArbitraryArgs,
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
 
