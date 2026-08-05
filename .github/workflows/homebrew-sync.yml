@@ -1,0 +1,57 @@
+name: Sync Homebrew Tap
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-tap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "goreleaserbot"
+          git config user.email "goreleaser@mindfiredigital.com"
+
+      - name: Create homebrew-tap branch
+        run: |
+          # Create or update the homebrew-tap branch
+          git checkout --orphan homebrew-tap || git checkout homebrew-tap
+          
+          # Remove all files from the branch
+          git rm -rf .
+          
+          # Create Casks directory
+          mkdir -p Casks
+          
+          # Copy the generated cask file from the main branch
+          git show main:homebrew-tap/Casks/deepscanbot.rb > Casks/deepscanbot.rb || true
+          
+          # Copy README
+          git show main:homebrew-tap/README.md > README.md || true
+          
+          # Add and commit
+          git add Casks/deepscanbot.rb README.md
+          git diff --cached --quiet || git commit -m "chore(homebrew): publish cask for deepscanbot ${{ github.event.release.tag_name }}"
+          
+          # Push to homebrew-tap branch
+          git push origin homebrew-tap --force
+
+      - name: Verify cask file
+        run: |
+          if [ -f Casks/deepscanbot.rb ]; then
+            echo "✅ Cask file created successfully"
+            cat Casks/deepscanbot.rb
+          else
+            echo "⚠️  Warning: Cask file not found. This is expected on first release before GoReleaser runs."
+          fi
