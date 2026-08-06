@@ -1,0 +1,185 @@
+---
+title: Homebrew Tap Setup
+sidebar_label: Homebrew Tap Setup
+description: Learn how to set up and maintain the DeepScanBot Homebrew tap for macOS and Linux users
+---
+
+# Homebrew Tap Setup
+
+This guide explains how the DeepScanBot Homebrew tap is set up and maintained.
+
+## Overview
+
+DeepScanBot uses a [Homebrew tap](https://docs.brew.sh/Taps) to distribute the application to macOS and Linux users via Homebrew. The tap is automatically updated when new releases are published.
+
+## Tap Repository
+
+The Homebrew tap is hosted at:
+- **Repository**: `mindfiredigital/homebrew-tap`
+- **Cask File**: `Casks/deepscanbot.rb`
+- **Install Command**: `brew install mindfiredigital/tap/deepscanbot`
+
+## Automated Workflow
+
+The tap is automatically updated via GitHub Actions when a new release is published. The workflow (`homebrew-sync.yml`) performs the following steps:
+
+1. **Trigger**: Runs when a GitHub release is published
+2. **Checkout**: Checks out the main repository
+3. **Generate Cask**: GoReleaser generates the Homebrew cask file
+4. **Create/Update Branch**: Creates or updates the `homebrew-tap` branch
+5. **Commit & Push**: Commits the cask file and pushes to the branch
+
+## Manual Setup (For Maintainers)
+
+If you need to manually update the tap:
+
+### Prerequisites
+
+- GoReleaser installed (`brew install goreleaser/tap/goreleaser`)
+- GitHub CLI (`gh`) installed and authenticated
+- Write access to the repository
+
+### Steps
+
+1. **Create a new release tag**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **Create a GitHub release** (this triggers the automated workflow):
+   ```bash
+   gh release create v1.0.0 \
+     --title "v1.0.0" \
+     --notes "Release notes here"
+   ```
+
+3. **Verify the tap was updated**:
+   ```bash
+   # Wait a few minutes for the workflow to complete
+   gh release view v1.0.0 --json url --jq .url
+   
+   # Check the tap repository
+   gh api repos/mindfiredigital/homebrew-tap/contents/Casks/deepscanbot.rb
+   ```
+
+## Installation for Users
+
+### Using Homebrew
+
+```bash
+# Add the tap (one-time setup)
+brew tap mindfiredigital/tap
+
+# Install DeepScanBot
+brew install deepscanbot
+
+# Or install directly without tapping
+brew install mindfiredigital/tap/deepscanbot
+```
+
+### Verify Installation
+
+```bash
+deepscanbot --version
+deepscanbot doctor
+```
+
+### Updating
+
+```bash
+brew update
+brew upgrade deepscanbot
+```
+
+## Cask File Structure
+
+The `deepscanbot.rb` cask file contains:
+
+```ruby
+cask "deepscanbot" do
+  version "1.0.0"
+  sha256 "..."
+  
+  url "https://github.com/mindfiredigital/DeepScanBot/releases/download/v1.0.0/deepscanbot_Darwin_arm64.tar.gz"
+  name "DeepScanBot"
+  desc "A high-performance web crawler and scanner"
+  homepage "https://github.com/mindfiredigital/DeepScanBot"
+  
+  binary "deepscanbot"
+  
+  conflicts_with cask: "deepscanbot"
+  
+  # Requires Git and CA certificates
+  depends_on formula: ["git", "ca-certificates"]
+  
+  # Verification
+  verified: "github.com/mindfiredigital/DeepScanBot"
+end
+```
+
+## Troubleshooting
+
+### Tap Not Updating
+
+If the tap is not updating after a release:
+
+1. **Check workflow status**:
+   ```bash
+   gh run list --workflow=homebrew-sync.yml --limit=5
+   ```
+
+2. **View workflow logs**:
+   ```bash
+   gh run view <run-id> --log-failed
+   ```
+
+3. **Common issues**:
+   - Missing `GITHUB_TOKEN` secret (should be automatic)
+   - Network issues during workflow execution
+   - GoReleaser configuration errors
+
+### Cask Installation Fails
+
+If `brew install` fails:
+
+1. **Check cask file syntax**:
+   ```bash
+   brew audit --cask mindfiredigital/tap/deepscanbot
+   ```
+
+2. **Verify checksum**:
+   ```bash
+   shasum -a 256 /path/to/downloaded/file
+   ```
+
+3. **Check for conflicts**:
+   ```bash
+   brew list | grep deepscanbot
+   ```
+
+## Configuration
+
+The Homebrew tap configuration is defined in `.goreleaser.yml`:
+
+```yaml
+homebrew_casks:
+  - name: deepscanbot
+    directory: homebrew-tap/Casks
+    homepage: "https://github.com/mindfiredigital/DeepScanBot"
+    description: "A high-performance web crawler and scanner"
+    license: "MIT"
+    skip_upload: true
+    binaries:
+      - deepscanbot
+    commit_author:
+      name: "goreleaserbot"
+      email: "goreleaser@mindfiredigital.com"
+    commit_msg_template: "chore(homebrew): publish cask for {{ .ProjectName }} {{ .Tag }}"
+```
+
+## Related Documentation
+
+- [How to Contribute](./how-to-contribute)
+- [Code of Conduct](./code-of-conduct)
+- [Introduction](../introduction)
