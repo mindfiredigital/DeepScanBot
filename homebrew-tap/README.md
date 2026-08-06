@@ -2,8 +2,8 @@
 
 This directory contains the Homebrew cask files for DeepScanBot.
 
-This directory is managed automatically by GoReleaser during the release process.
-The `homebrew-sync.yml` workflow syncs these files to the homebrew-tap repository.
+GoReleaser generates the cask file in this directory during the release process.
+The `homebrew-sync.yml` workflow then syncs these files to the `homebrew-tap` branch of this repository.
 
 ## Installation
 
