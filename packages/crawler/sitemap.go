@@ -29,7 +29,12 @@ func (c *Crawler) enqueueSitemapURLs() {
 
 	urls, err := c.fetchSitemapURLs(sitemapURL, 0)
 	if err != nil {
-		c.log.Infof("Sitemap unavailable at %s: %v", sitemapURL, err)
+		// Check if it's a 404 (not found) - this is expected and not an error
+		if strings.Contains(err.Error(), "bad status code: 404") {
+			c.log.Warnf("Sitemap not found at %s (404), continuing without sitemap", sitemapURL)
+		} else {
+			c.log.Errorf("Sitemap fetch failed at %s: %v", sitemapURL, err)
+		}
 		return
 	}
 
@@ -62,6 +67,11 @@ func (c *Crawler) fetchSitemapURLs(sitemapURL string, depth int) ([]string, erro
 
 	if response.StatusCode < 200 || response.StatusCode >= 400 {
 		return nil, fmt.Errorf("bad status code: %d", response.StatusCode)
+	}
+
+	// Check for 404 specifically to allow graceful handling
+	if response.StatusCode == 404 {
+		return nil, fmt.Errorf("bad status code: 404")
 	}
 
 	body, err := io.ReadAll(io.LimitReader(response.Body, 10*1024*1024))
