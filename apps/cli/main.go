@@ -436,12 +436,13 @@ func init() {
 }
 
 var scanCmd = &cobra.Command{
-	Use:   "scan <url> [url...] [options]",
+	Use:   "scan [url] [url...] [options]",
 	Short: "Crawl and analyze one or more websites",
 	Long: `Scan crawls one or more websites starting from the specified URL(s), following links
 up to a configurable depth, and produces a report of all discovered URLs.
 
-You can provide multiple URLs as positional arguments. All URLs will be crawled
+You can provide multiple URLs as positional arguments, read URLs from a file using
+--input-file, or pipe URLs via stdin using --stdin. All URLs will be crawled
 sequentially with the same configuration options.
 
 Options can be specified as either flags (--depth=3) or key=value pairs (depth=3).
@@ -450,10 +451,12 @@ Both formats are supported for backward compatibility.
 Examples:
   deepscanbot scan https://example.com --depth=3 --json --output=results
   deepscanbot scan https://example.com https://xyz.com --depth=3
+  deepscanbot scan --input-file=urls.txt --depth=3
+  deepscanbot scan --stdin --depth=3 < urls.txt
   deepscanbot scan https://example.com --concurrency=10 --delay=500ms
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
   deepscanbot scan https://example.com depth=3 json=true output=results`,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ArbitraryArgs,
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
 
@@ -496,7 +499,13 @@ Examples:
 			opts.JSON = true
 		}
 
-		timeoutDuration := time.Duration(opts.Timeout) * time.Second
+		// Auto-adjust timeout for cross-domain crawling
+		effectiveTimeout := opts.Timeout
+		if opts.CrossDomain && opts.Timeout < 5 {
+			effectiveTimeout = 5
+			log.Infof("Cross-domain mode detected, using minimum timeout of %ds (requested: %ds)", effectiveTimeout, opts.Timeout)
+		}
+		timeoutDuration := time.Duration(effectiveTimeout) * time.Second
 
 		outputFilename, err := buildOutputFilename(opts.Output, opts.JSON)
 		if err != nil {
@@ -924,6 +933,12 @@ var configCmd = &cobra.Command{
 	Long:  `View and modify DeepScanBot configuration settings.`,
 	Example: `  # View current configuration
   deepscanbot config`,
+	Run: func(cmd *cobra.Command, args []string) {
+		log.Info("Configuration management is not yet implemented.")
+		log.Info("Currently, all settings must be specified via command-line flags.")
+		log.Info("")
+		log.Info("Example: deepscanbot scan https://example.com --timeout=10 --depth=3")
+	},
 }
 
 var completionCmd = &cobra.Command{

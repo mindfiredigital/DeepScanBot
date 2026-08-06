@@ -60,16 +60,11 @@ changelog:
 
 homebrew_casks:
   - name: deepscanbot
-    repository:
-      owner: mindfiredigital
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
-    # Casks must live in the Casks directory (default, no need to set explicitly)
-    # directory: Casks  # default, omitted
+    directory: homebrew-tap/Casks
     homepage: "https://github.com/mindfiredigital/DeepScanBot"
     description: "A high-performance web crawler and scanner - recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports"
     license: "MIT"
-    skip_upload: false
+    skip_upload: true
     binaries:
       - deepscanbot
     url:

@@ -73,7 +73,8 @@ func FetchWithDetails(targetURL string, timeout time.Duration, proxyURL string, 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return FetchResult{StatusCode: 0, Err: err}
+		wrappedErr := wrapProxyError(err, proxyURL)
+		return FetchResult{StatusCode: 0, Err: wrappedErr}
 	}
 	defer resp.Body.Close()
 
@@ -125,6 +126,39 @@ func FetchWithDetails(targetURL string, timeout time.Duration, proxyURL string, 
 
 // parseRetryAfter parses the Retry-After HTTP header and returns the duration to wait.
 // It supports both seconds (integer) and HTTP-date formats.
+// wrapProxyError wraps low-level proxy errors with user-friendly messages
+func wrapProxyError(err error, proxyURL string) error {
+	if proxyURL == "" {
+		return err
+	}
+
+	errStr := err.Error()
+
+	// Check for specific error patterns and provide user-friendly messages
+	if strings.Contains(errStr, "connection refused") {
+		return fmt.Errorf("failed to connect to proxy at %s: connection refused\nHint: Verify the proxy server is running and accessible", proxyURL)
+	}
+
+	if strings.Contains(errStr, "dial tcp") {
+		return fmt.Errorf("failed to establish connection to proxy at %s\nHint: Check proxy address and network connectivity", proxyURL)
+	}
+
+	if strings.Contains(errStr, "proxyconnect") {
+		return fmt.Errorf("proxy connection failed for %s\nHint: Verify proxy configuration and credentials", proxyURL)
+	}
+
+	if strings.Contains(errStr, "timeout") || strings.Contains(errStr, "i/o timeout") {
+		return fmt.Errorf("connection to proxy at %s timed out\nHint: Check network connectivity and proxy performance", proxyURL)
+	}
+
+	if strings.Contains(errStr, "unsupported protocol scheme") {
+		return fmt.Errorf("invalid proxy protocol in %s\nHint: Use http:// or https:// for proxy URLs", proxyURL)
+	}
+
+	// Generic proxy error
+	return fmt.Errorf("proxy error: %s\nHint: Check proxy configuration", errStr)
+}
+
 func parseRetryAfter(val string) time.Duration {
 	if val == "" {
 		return 0
