@@ -18,7 +18,6 @@ const sidebars: SidebarsConfig = {
       items: [
         'contribution-guide/how-to-contribute',
         'contribution-guide/code-of-conduct',
-        'contribution-guide/homebrew-tap-setup',
       ],
     },
   ],

@@ -18,10 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.release.tag_name }}
         # Retain release tag for maintainability: ${{ github.event.release.tag_name }}
 
       - name: Setup Git
@@ -33,26 +34,78 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          # Create or update the homebrew-tap branch
-          git checkout --orphan homebrew-tap || git checkout homebrew-tap
+          # First, copy the cask and README from the release tag to a temporary location
+          mkdir -p /tmp/homebrew-cask
+          if [ -f homebrew-tap/Casks/deepscanbot.rb ]; then
+            cp homebrew-tap/Casks/deepscanbot.rb /tmp/homebrew-cask/deepscanbot.rb
+            echo "✅ Found cask file in release tag at homebrew-tap/Casks/deepscanbot.rb"
+          else
+            echo "❌ Error: Cask file not found at homebrew-tap/Casks/deepscanbot.rb in release tag"
+            echo "   GoReleaser may not have generated it correctly."
+            exit 1
+          fi
           
-          # Remove all files from the branch
-          git rm -rf .
+          # Also copy README.md if it exists
+          if [ -f homebrew-tap/README.md ]; then
+            cp homebrew-tap/README.md /tmp/homebrew-cask/README.md
+            echo "✅ Found README.md in release tag at homebrew-tap/README.md"
+          fi
+          
+          # Validate cask file exists and is non-empty
+          if [ ! -s /tmp/homebrew-cask/deepscanbot.rb ]; then
+            echo "❌ Error: Cask file is missing or empty."
+            exit 1
+          fi
+          
+          # Check if homebrew-tap branch exists
+          if git ls-remote --heads origin homebrew-tap | grep -q homebrew-tap; then
+            echo "Branch homebrew-tap exists, checking it out..."
+            git checkout homebrew-tap
+            git pull origin homebrew-tap
+          else
+            echo "Branch homebrew-tap does not exist, creating orphan branch..."
+            git checkout --orphan homebrew-tap
+            git rm -rf .
+          fi
           
           # Create Casks directory
           mkdir -p Casks
           
-          # Copy the generated cask file from the main branch (fail if not found)
-          git show main:homebrew-tap/Casks/deepscanbot.rb > Casks/deepscanbot.rb
-          
-          # Validate cask file exists and is non-empty
-          if [ ! -s Casks/deepscanbot.rb ]; then
-            echo "❌ Error: Cask file is missing or empty. GoReleaser may not have generated it."
-            exit 1
-          fi
+          # Copy the cask file from temporary location
+          cp /tmp/homebrew-cask/deepscanbot.rb Casks/deepscanbot.rb
+          echo "✅ Copied cask file to homebrew-tap branch"
           
           # Copy README (optional, continue if not found)
-          git show main:homebrew-tap/README.md > README.md || true
+          if [ -f /tmp/homebrew-cask/README.md ]; then
+            cp /tmp/homebrew-cask/README.md README.md
+            echo "✅ Copied README.md"
+          else
+            echo "📝 Creating default README.md for homebrew-tap"
+            cat > README.md << 'EOF'
+              # DeepScanBot Homebrew Tap
+              
+              This is the official Homebrew tap for DeepScanBot.
+              
+              ## Installation
+              
+              ```bash
+              brew install mindfiredigital/tap/deepscanbot
+              ```
+              
+              ## Usage
+              
+              ```bash
+              deepscanbot --help
+              deepscanbot doctor
+              ```
+              
+              ## More Information
+              
+              - [Documentation](https://mindfiredigital.github.io/DeepScanBot/)
+              - [GitHub Repository](https://github.com/mindfiredigital/DeepScanBot)
+              - [Report Issues](https://github.com/mindfiredigital/DeepScanBot/issues)
+              EOF
+          fi
           
           # Add and commit
           git add Casks/deepscanbot.rb README.md
