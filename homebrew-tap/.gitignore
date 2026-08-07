@@ -7,3 +7,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# GoReleaser generated files (synced via homebrew-sync workflow)
+Casks/
