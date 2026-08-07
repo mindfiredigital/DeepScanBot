@@ -121,4 +121,7 @@ release:
 dist: dist
 
 announce:
-  skip: "{{ .Env.SKIP_ANNOUNCE }}"
+  skip: "{{ .Env.SKIP_ANNOUNCE }}"    repository:
+      owner: mindfiredigital
+      name: DeepScanBot
+      token: "{{ .Env.GITHUB_TOKEN }}"
