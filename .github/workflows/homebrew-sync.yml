@@ -82,30 +82,30 @@ jobs:
           else
             echo "📝 Creating default README.md for homebrew-tap"
             cat > README.md << 'READMEEOF'
-# DeepScanBot Homebrew Tap
+            # DeepScanBot Homebrew Tap
 
-This is the official Homebrew tap for DeepScanBot.
+            This is the official Homebrew tap for DeepScanBot.
 
-## Installation
+            ## Installation
 
-```bash
-brew tap mindfiredigital/DeepScanBot homebrew-tap
-brew install deepscanbot
-```
+            ```bash
+            brew tap mindfiredigital/DeepScanBot homebrew-tap
+            brew install deepscanbot
+            ```
 
-## Usage
+            ## Usage
 
-```bash
-deepscanbot --help
-deepscanbot doctor
-```
+            ```bash
+            deepscanbot --help
+            deepscanbot doctor
+            ```
 
-## More Information
+            ## More Information
 
-- [Documentation](https://mindfiredigital.github.io/DeepScanBot/)
-- [GitHub Repository](https://github.com/mindfiredigital/DeepScanBot)
-- [Report Issues](https://github.com/mindfiredigital/DeepScanBot/issues)
-READMEEOF
+            - [Documentation](https://mindfiredigital.github.io/DeepScanBot/)
+            - [GitHub Repository](https://github.com/mindfiredigital/DeepScanBot)
+            - [Report Issues](https://github.com/mindfiredigital/DeepScanBot/issues)
+            READMEEOF
           fi
           
           # Add and commit

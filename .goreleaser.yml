@@ -84,6 +84,7 @@ release:
   github:
     owner: mindfiredigital
     name: DeepScanBot
+    token: "{{ .Env.GITHUB_TOKEN }}"
 
   draft: false
   prerelease: auto
@@ -121,7 +122,4 @@ release:
 dist: dist
 
 announce:
-  skip: "{{ .Env.SKIP_ANNOUNCE }}"    repository:
-      owner: mindfiredigital
-      name: DeepScanBot
-      token: "{{ .Env.GITHUB_TOKEN }}"
+  skip: "{{ .Env.SKIP_ANNOUNCE }}"

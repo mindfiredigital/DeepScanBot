@@ -39,9 +39,6 @@ cask "deepscanbot" do
   livecheck do
     skip "Auto-generated on release."
   end
-  conflicts_with cask: [
-      "deepscanbot",
-    ]
 
   depends_on formula: [
       "ca-certificates",
