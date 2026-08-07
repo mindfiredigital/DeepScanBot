@@ -60,7 +60,10 @@ changelog:
 
 homebrew_casks:
   - name: deepscanbot
-    directory: homebrew-tap/Casks
+    repository:
+      owner: mindfiredigital
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/mindfiredigital/DeepScanBot"
     description: "A high-performance web crawler and scanner - recursively crawls websites, respects robots.txt, handles rate-limiting, and produces comprehensive JSON or text reports"
     license: "MIT"
@@ -84,6 +87,7 @@ release:
   github:
     owner: mindfiredigital
     name: DeepScanBot
+    token: "{{ .Env.GITHUB_TOKEN }}"
 
   draft: false
   prerelease: auto

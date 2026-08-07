@@ -30,25 +30,25 @@ jobs:
           git config user.name "goreleaserbot"
           git config user.email "goreleaser@mindfiredigital.com"
 
-      - name: Create homebrew-tap branch
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+      - name: Check if cask file exists
         run: |
-          # First, copy the cask and README from the release tag to a temporary location
-          mkdir -p /tmp/homebrew-cask
-          if [ -f homebrew-tap/Casks/deepscanbot.rb ]; then
-            cp homebrew-tap/Casks/deepscanbot.rb /tmp/homebrew-cask/deepscanbot.rb
-            echo "✅ Found cask file in release tag at homebrew-tap/Casks/deepscanbot.rb"
-          else
-            echo "❌ Error: Cask file not found at homebrew-tap/Casks/deepscanbot.rb in release tag"
-            echo "   GoReleaser may not have generated it correctly."
+          if [ ! -f homebrew-tap/Casks/deepscanbot.rb ]; then
+            echo "❌ Error: Cask file not found at homebrew-tap/Casks/deepscanbot.rb"
+            echo "   Please ensure the cask file exists in the repository."
             exit 1
           fi
+          echo "✅ Found cask file at homebrew-tap/Casks/deepscanbot.rb"
+
+      - name: Create or update homebrew-tap branch
+        run: |
+          # Copy the cask file to temporary location
+          mkdir -p /tmp/homebrew-cask
+          cp homebrew-tap/Casks/deepscanbot.rb /tmp/homebrew-cask/deepscanbot.rb
           
-          # Also copy README.md if it exists
+          # Copy README if it exists
           if [ -f homebrew-tap/README.md ]; then
             cp homebrew-tap/README.md /tmp/homebrew-cask/README.md
-            echo "✅ Found README.md in release tag at homebrew-tap/README.md"
+            echo "✅ Found README.md in homebrew-tap/README.md"
           fi
           
           # Validate cask file exists and is non-empty
@@ -75,41 +75,42 @@ jobs:
           cp /tmp/homebrew-cask/deepscanbot.rb Casks/deepscanbot.rb
           echo "✅ Copied cask file to homebrew-tap branch"
           
-          # Copy README (optional, continue if not found)
+          # Copy README (optional, create default if not found)
           if [ -f /tmp/homebrew-cask/README.md ]; then
             cp /tmp/homebrew-cask/README.md README.md
             echo "✅ Copied README.md"
           else
             echo "📝 Creating default README.md for homebrew-tap"
-            cat > README.md << 'EOF'
-              # DeepScanBot Homebrew Tap
-              
-              This is the official Homebrew tap for DeepScanBot.
-              
-              ## Installation
-              
-              ```bash
-              brew install mindfiredigital/tap/deepscanbot
-              ```
-              
-              ## Usage
-              
-              ```bash
-              deepscanbot --help
-              deepscanbot doctor
-              ```
-              
-              ## More Information
-              
-              - [Documentation](https://mindfiredigital.github.io/DeepScanBot/)
-              - [GitHub Repository](https://github.com/mindfiredigital/DeepScanBot)
-              - [Report Issues](https://github.com/mindfiredigital/DeepScanBot/issues)
-              EOF
+            cat > README.md << 'READMEEOF'
+            # DeepScanBot Homebrew Tap
+
+            This is the official Homebrew tap for DeepScanBot.
+
+            ## Installation
+
+            ```bash
+            brew tap mindfiredigital/DeepScanBot homebrew-tap
+            brew install deepscanbot
+            ```
+
+            ## Usage
+
+            ```bash
+            deepscanbot --help
+            deepscanbot doctor
+            ```
+
+            ## More Information
+
+            - [Documentation](https://mindfiredigital.github.io/DeepScanBot/)
+            - [GitHub Repository](https://github.com/mindfiredigital/DeepScanBot)
+            - [Report Issues](https://github.com/mindfiredigital/DeepScanBot/issues)
+            READMEEOF
           fi
           
           # Add and commit
           git add Casks/deepscanbot.rb README.md
-          git diff --cached --quiet || git commit -m "chore(homebrew): publish cask for deepscanbot ${RELEASE_TAG}"
+          git diff --cached --quiet || git commit -m "chore(homebrew): sync cask to homebrew-tap branch"
           
           # Push to homebrew-tap branch
           git push origin homebrew-tap --force
@@ -117,8 +118,11 @@ jobs:
       - name: Verify cask file
         run: |
           if [ -f Casks/deepscanbot.rb ]; then
-            echo "✅ Cask file created successfully"
+            echo "✅ Cask file synced successfully to homebrew-tap branch"
+            echo ""
+            echo "Cask file contents:"
             cat Casks/deepscanbot.rb
           else
-            echo "⚠️  Warning: Cask file not found. This is expected on first release before GoReleaser runs."
+            echo "❌ Error: Cask file not found after sync"
+            exit 1
           fi

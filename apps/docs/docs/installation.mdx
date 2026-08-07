@@ -6,11 +6,11 @@ sidebar_position: 2
 
 DeepScanBot ships as a single binary with no runtime dependencies. Choose your platform below to see the install instructions.
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 <Tabs>
-  <TabItem value="npm" label="npm (All Platforms)">
+  <TabItem value="npm" label="npm">
 
 The easiest way to install is via npm. It downloads the correct binary for your operating system and architecture.
 
@@ -37,7 +37,7 @@ DeepScanBot is distributed as an npm package containing pre-built binaries for a
 **Homebrew:**
 
 ```bash
-brew tap mindfiredigital/tap
+brew tap mindfiredigital/DeepScanBot homebrew-tap
 brew install deepscanbot
 ```
 
@@ -63,10 +63,10 @@ The script detects your OS and architecture, downloads the binary, verifies the 
 
 **Manual download:**
 
-| Architecture  | Binary Name                     |
-| ------------- | ------------------------------- |
-| Intel x64     | `deepscanbot_darwin_amd64`      |
-| Apple Silicon | `deepscanbot_darwin_arm64`      |
+| Architecture  | Binary Name                |
+| ------------- | -------------------------- |
+| Intel x64     | `deepscanbot_darwin_amd64` |
+| Apple Silicon | `deepscanbot_darwin_arm64` |
 
 ```bash
 chmod +x deepscanbot_darwin_*
@@ -92,10 +92,10 @@ The script detects your OS and architecture, downloads the binary, verifies the 
 
 **Manual download:**
 
-| Architecture | Binary Name                     |
-| ------------ | ------------------------------- |
-| amd64        | `deepscanbot_linux_amd64`       |
-| arm64        | `deepscanbot_linux_arm64`       |
+| Architecture | Binary Name               |
+| ------------ | ------------------------- |
+| amd64        | `deepscanbot_linux_amd64` |
+| arm64        | `deepscanbot_linux_arm64` |
 
 ```bash
 chmod +x deepscanbot_linux_*
@@ -122,9 +122,9 @@ The script installs to `$env:ProgramFiles\DeepScanBot` by default and offers to 
 
 **Manual download:**
 
-| Architecture | Binary Name                           |
-| ------------ | ------------------------------------- |
-| amd64        | `deepscanbot_windows_amd64.exe`       |
+| Architecture | Binary Name                     |
+| ------------ | ------------------------------- |
+| amd64        | `deepscanbot_windows_amd64.exe` |
 
 Run PowerShell as Administrator:
 
