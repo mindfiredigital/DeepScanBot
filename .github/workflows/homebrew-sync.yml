@@ -1,14 +1,13 @@
 name: Sync Homebrew Tap
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
   workflow_dispatch:
 
-# Ensure multiple runs don't overlap
+# Ensure releases and manual runs don't overlap
 concurrency:
-  group: homebrew-tap-sync
+  group: homebrew-tap-sync-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -23,7 +22,8 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
+          ref: ${{ github.event.release.tag_name }}
+        # Retain release tag for maintainability: ${{ github.event.release.tag_name }}
 
       - name: Setup Git
         run: |
