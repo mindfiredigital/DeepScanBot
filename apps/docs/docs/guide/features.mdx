@@ -206,6 +206,8 @@ deepscanbot scan <url> [key=value ...]
 |-----------------------|----------------------|--------------------------------------|
 | `depth`               | `2`                  | Maximum crawl depth                  |
 | `timeout`             | `2`                  | Request timeout in seconds           |
+
+> **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
 | `concurrency`         | `0`                  | Max concurrent workers (0 = CPU)     |
 | `host-concurrency`    | `0`                  | Max concurrent requests per host     |
 | `content-types`       | `"text/html"`        | Allowed MIME types                   |
