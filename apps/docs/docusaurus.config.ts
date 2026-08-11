@@ -42,7 +42,7 @@ const config: Config = {
     navbar: {
       title: 'Deep Scan Bot',
       logo: {
-        alt: 'Deep Scan Bot Logo',
+        alt: 'DeepScanBot',
         src: 'img/deepscanbot-logo.png',
       },
       items: [

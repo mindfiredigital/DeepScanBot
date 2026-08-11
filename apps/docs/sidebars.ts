@@ -10,50 +10,9 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Usage Guide',
-      items: ['guide/usage', 'guide/features'],
-    },
-    {
-      type: 'category',
-      label: 'CLI Reference',
       items: [
-        {
-          type: 'doc',
-          id: 'guide/usage',
-          label: 'Commands & Options',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Output & JSON',
-      items: [
-        {
-          type: 'doc',
-          id: 'guide/usage',
-          label: 'Output Formats',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Automation & CI/CD',
-      items: [
-        {
-          type: 'doc',
-          id: 'guide/usage',
-          label: 'Automation Guide',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Troubleshooting',
-      items: [
-        {
-          type: 'doc',
-          id: 'guide/usage',
-          label: 'Common Issues',
-        },
+        'guide/usage',
+        'guide/features',
       ],
     },
     {
