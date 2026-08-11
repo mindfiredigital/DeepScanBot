@@ -52,6 +52,39 @@ No additional runtime dependencies. The npm package installs the correct binary 
 - **Cross-Domain Crawling** - Optionally follow links to external domains
 - **TLS Options** - Disable TLS verification for self-signed certificates
 
+> **Note:** Screenshots and demo videos of actual scan results will be added here to demonstrate the tool in action. See the [Scanning Guide](/docs/guide/usage) for example outputs.
+
+## See It In Action
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+<Tabs>
+  <TabItem value="terminal" label="Terminal Output" default>
+
+![Terminal scan output](/img/scan-terminal-example.png)
+
+Real-time terminal output showing DeepScanBot crawling a website with progress indicators and results summary.
+
+  </TabItem>
+  <TabItem value="text" label="Text Report">
+
+![Text output example](/img/scan-text-output.png)
+
+Human-readable text report with color-coded results, status codes, and detailed summary statistics.
+
+  </TabItem>
+  <TabItem value="json" label="JSON Output">
+
+![JSON output example](/img/scan-json-output.png)
+
+Structured JSON output perfect for automation, scripting, and integration with other tools.
+
+  </TabItem>
+</Tabs>
+
+> **Note:** These are example outputs. Run `deepscanbot scan https://example.com` to see it in action on your own website.
+
 ## Why DeepScanBot?
 
 | | DeepScanBot | Other Crawlers |
