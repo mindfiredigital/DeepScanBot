@@ -11,9 +11,37 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Usage Guide',
       items: [
-        'guide/usage',
-        'guide/features',
+        {
+          type: 'doc',
+          id: 'guide/usage',
+          label: 'Usage Guide',
+        },
+        {
+          type: 'doc',
+          id: 'guide/features',
+          label: 'Features',
+        },
       ],
+    },
+    {
+      type: 'category',
+      label: 'CLI Reference',
+      items: ['cli-reference'],
+    },
+    {
+      type: 'category',
+      label: 'Output & JSON',
+      items: ['output-json'],
+    },
+    {
+      type: 'category',
+      label: 'Automation & CI/CD',
+      items: ['automation-ci'],
+    },
+    {
+      type: 'category',
+      label: 'Troubleshooting',
+      items: ['troubleshooting'],
     },
     {
       type: 'category',

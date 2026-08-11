@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Deep Scan Bot',
   tagline: 'A powerful, feature-rich web crawler for modern applications',
-  favicon: 'img/deepscanbot-logo.png',
+  favicon: 'img/ignix-logo.png',
   future: {
     v4: true,
   },
@@ -33,7 +33,7 @@ const config: Config = {
     ],
   ],
   themeConfig: {
-    image: 'img/deepscanbot-social-preview.png',
+    image: 'img/ignix-logo.png',
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
@@ -43,7 +43,7 @@ const config: Config = {
       title: 'Deep Scan Bot',
       logo: {
         alt: 'DeepScanBot',
-        src: 'img/deepscanbot-logo.png',
+        src: 'img/ignix-logo.png',
       },
       items: [
         {
