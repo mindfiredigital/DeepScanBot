@@ -42,7 +42,7 @@ These options are specific to the `scan` command and can be provided as flags (`
 | `--host-concurrency` | `2` | Max concurrent requests per host (0 = use effective concurrency) |
 | `--content-types` | `"text/html"` | Allowed MIME types |
 | `--output` | `"crawler_results"` | Output filename base (automatically gets .txt or .json extension) |
-| `--json` | `false` | JSON output (scan-specific flag) |
+| `--json` | `false` | Output results in JSON format (global flag; also accepted as `json=true` key=value) |
 | `--size` | `-1` | Page size limit in KB (-1 = unlimited) |
 | `--proxy` | `""` | Proxy URL |
 | `--unique` | `false` | Unique URLs only |
@@ -62,8 +62,9 @@ These options are specific to the `scan` command and can be provided as flags (`
 | `--stdin` | `false` | Read URLs from standard input (one per line) |
 
 > **Note on flag scopes:**
-> - **Global flags** (`--json`, `--no-input`, etc.) work with any command
-> - **Scan options** (`--depth`, `--timeout`, etc.) only work with the `scan` command
-> - Scan options support both flag syntax (`--depth=3`) and key=value syntax (`depth=3`) for backward compatibility
+> - **Global flags** (`--json`, `--no-input`, `--verbose`, `--debug`, `--quiet`, `--dry-run`) work with any command and use `--flag` syntax only
+> - **Scan options** (`--force`, `--yes`, `--input-file`, `--stdin`, `--depth`, `--timeout`, etc.) only work with the `scan` command
+> - Scan options accept both flag syntax (`--depth=3`) and key=value syntax (`depth=3`); a few, such as `--force` and `--yes`, are flag-only
+> - `--json` is a global flag; `json=true` is also accepted as a scan key=value option for backward compatibility
 
 > **Note:** For detailed examples and usage instructions, see the [Usage Guide](/docs/guide/usage).

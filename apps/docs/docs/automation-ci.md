@@ -68,8 +68,6 @@ DeepScanBot uses standardized exit codes to make CLI failures predictable for sc
 | `31` | `Timeout` | Operation exceeded deadline | Request timed out |
 | `70` | `InternalError` | Unexpected internal error | Failed to write output |
 
-> **Note:** Exit codes 3 (AuthFailure), 10 (AuthzFailure), and 20 (NotFound) are defined in the codebase for future use but are not currently returned by any runtime errors.
-
 ### Checking Exit Codes
 
 ```bash
