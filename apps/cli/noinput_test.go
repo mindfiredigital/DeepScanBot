@@ -197,6 +197,73 @@ func TestCLINoInputHelpJSON(t *testing.T) {
 	}
 }
 
+// TestCLINoInputSummaryRefusesOverwriteWithoutForce verifies that a multi-site
+// scan in non-interactive mode refuses to overwrite an existing summary file
+// unless --force is explicitly provided, and leaves the existing summary intact.
+func TestCLINoInputSummaryRefusesOverwriteWithoutForce(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server1 := newTestServer()
+	defer server1.Close()
+	server2 := newTestServer()
+	defer server2.Close()
+
+	// Create an existing summary file that must not be overwritten.
+	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
+	if err := os.WriteFile(summaryFile, []byte(`{"existing":true}`), 0o644); err != nil {
+		t.Fatalf("create summary file: %v", err)
+	}
+
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server1.URL, server2.URL, "depth=0")
+
+	if code == 0 {
+		t.Error("Expected non-zero exit when summary file exists in --no-input mode without --force")
+	}
+	if !strings.Contains(stderr, "already exists") {
+		t.Errorf("stderr should mention the existing summary, got: %s", stderr)
+	}
+
+	data, err := os.ReadFile(summaryFile)
+	if err != nil {
+		t.Fatalf("read summary file: %v", err)
+	}
+	if string(data) != `{"existing":true}` {
+		t.Errorf("summary file was overwritten without --force: got %q", string(data))
+	}
+}
+
+// TestCLINoInputSummaryForceOverwrites verifies that a multi-site scan with an
+// explicitly provided --force overwrites an existing summary file.
+func TestCLINoInputSummaryForceOverwrites(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server1 := newTestServer()
+	defer server1.Close()
+	server2 := newTestServer()
+	defer server2.Close()
+
+	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
+	if err := os.WriteFile(summaryFile, []byte(`{"existing":true}`), 0o644); err != nil {
+		t.Fatalf("create summary file: %v", err)
+	}
+
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server1.URL, server2.URL, "depth=0", "--force")
+
+	if code != 0 {
+		t.Errorf("expected exit code 0 with --force, got %d; stderr: %s", code, stderr)
+	}
+
+	data, err := os.ReadFile(summaryFile)
+	if err != nil {
+		t.Fatalf("read summary file: %v", err)
+	}
+	if string(data) == `{"existing":true}` {
+		t.Error("summary file was not overwritten even with --force")
+	}
+}
+
 // newTestServer creates a simple HTTP test server that responds with valid
 // HTML for scanning.
 func newTestServer() *httptest.Server {
