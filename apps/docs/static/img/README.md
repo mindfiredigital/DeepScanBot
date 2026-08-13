@@ -25,7 +25,7 @@ Add the following screenshots to demonstrate DeepScanBot in action:
 
 ## Adding Images to Documentation
 
-Reference images in MDX files using relative paths:
+Reference images in MDX files using site-root paths (beginning with /img/):
 
 ```markdown
 ![Scan Terminal Example](/img/scan-terminal-example.png)

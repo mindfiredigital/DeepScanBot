@@ -302,7 +302,7 @@ deepscanbot scan https://example.com depth=3 concurrency=10
 # Output as JSON
 deepscanbot scan https://example.com json=true
 
-> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with any command (such as `scan`, `version`, `doctor`, etc.) to produce JSON-formatted output.
+> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with select commands that produce structured output (`scan`, `version`, `doctor`, and `help`) to produce JSON-formatted output.
 
 # Use a proxy
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
@@ -391,7 +391,7 @@ deepscanbot completion powershell
 
 ```bash
 # Bash - Add to ~/.bashrc or ~/.bash_profile
-deepscanbot completion bash > /etc/bash_completion.d/deepscanbot
+deepscanbot completion bash > ~/.local/share/bash-completion/completions/deepscanbot
 
 # Zsh - Add to ~/.zshrc
 deepscanbot completion zsh > "${fpath[1]}/_deepscanbot"
