@@ -207,9 +207,9 @@ deepscanbot scan <url> [key=value ...]
 | `depth`               | `2`                  | Maximum crawl depth                  |
 | `timeout`             | `2`                  | Request timeout in seconds           |
 | `concurrency`         | `8`                  | Max concurrent workers               |
-| `host-concurrency`    | `2`                  | Max concurrent requests per host     |
+| `host-concurrency`    | `2`                  | Max concurrent requests per host (0 = effective concurrency)     |
 | `content-types`       | `"text/html"`        | Allowed MIME types                   |
-| `output`              | `"crawler_results"`  | Output filename (without extension)  |
+| `output`              | `"crawler_results"`  | Output filename base (automatically gets .txt or .json extension)  |
 | `json`                | `false`              | JSON output                          |
 | `size`                | `-1`                 | Page size limit in bytes (-1 = unlimited) |
 | `proxy`               | `""`                 | Proxy URL                            |

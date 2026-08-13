@@ -725,9 +725,6 @@ Options are specified as `key=value` pairs after the URL.
 | `content-types`     | MIME types to download (quoted, space/comma separated) | `"text/html"`       |
 | `output`            | Output filename without extension                      | `"crawler_results"` |
 
-> **Note on Output Files:** The output filename is specified without an extension. DeepScanBot automatically appends the appropriate extension based on the output format:
-> - Text format (default): `crawler_results.txt`
-> - JSON format (`--json` or `json=true`): `crawler_results.json`
 | `ignore-robots`     | Ignore robots.txt restrictions                         | `false`             |
 | `cross-domain`      | Follow links to other hosts                            | `false`             |
 | `retries`           | Number of retry attempts                               | `0`                 |
@@ -736,6 +733,10 @@ Options are specified as `key=value` pairs after the URL.
 | `sitemap`           | Discover URLs from /sitemap.xml                        | `false`             |
 | `resume`            | Load existing output and avoid recrawling              | `false`             |
 
+
+> **Note on Output Files:** The output filename is specified without an extension. DeepScanBot automatically appends the appropriate extension based on the output format:
+> - Text format (default): `crawler_results.txt`
+> - JSON format (`--json` or `json=true`): `crawler_results.json`
 > **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
 
 ### Examples
