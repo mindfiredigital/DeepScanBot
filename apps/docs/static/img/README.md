@@ -5,10 +5,12 @@ This directory contains images and media files used in the documentation site.
 ## Required Branding Assets
 
 ### Logo Files
+
 - `deepscanbot-logo.png` - Main logo for navbar and favicon (recommended: 512x512px, PNG with transparency)
 - `deepscanbot-social-preview.png` - Social media preview image (recommended: 1200x630px, PNG or JPG)
 
 ### Scan Result Screenshots
+
 Add the following screenshots to demonstrate DeepScanBot in action:
 
 - `scan-terminal-example.png` - Screenshot of terminal showing a scan in progress

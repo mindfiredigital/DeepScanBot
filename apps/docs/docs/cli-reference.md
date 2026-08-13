@@ -43,7 +43,7 @@ These options are specific to the `scan` command and can be provided as flags (`
 | `--content-types` | `"text/html"` | Allowed MIME types |
 | `--output` | `"crawler_results"` | Output filename base (automatically gets .txt or .json extension) |
 | `--json` | `false` | JSON output (scan-specific flag) |
-| `--size` | `-1` | Page size limit in bytes (-1 = unlimited) |
+| `--size` | `-1` | Page size limit in KB (-1 = unlimited) |
 | `--proxy` | `""` | Proxy URL |
 | `--unique` | `false` | Unique URLs only |
 | `--show-source` | `false` | Show URL source in output |
