@@ -86,9 +86,9 @@ fi
 
 ### Error Messages
 
-All errors include:
-- **Error message** — a clear description of what went wrong
-- **Hint (optional)** — an actionable suggestion with an example when available
+Errors are printed to stderr in a consistent format:
+- **Message** — always present, rendered as `Error: <message>`
+- **Hint** — optional; rendered as `Hint: <hint>` only when an actionable hint is available
 
 ```bash
 $ deepscanbot scan ftp://example.com
