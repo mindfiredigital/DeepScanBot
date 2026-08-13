@@ -391,6 +391,7 @@ deepscanbot completion powershell
 
 ```bash
 # Bash - Add to ~/.bashrc or ~/.bash_profile
+mkdir -p ~/.local/share/bash-completion/completions
 deepscanbot completion bash > ~/.local/share/bash-completion/completions/deepscanbot
 
 # Zsh - Add to ~/.zshrc
@@ -720,8 +721,8 @@ Options are specified as `key=value` pairs after the URL.
 | `show-source`       | Show source of each URL                                | `false`             |
 | `insecure`          | Disable TLS verification                               | `false`             |
 | `unique`            | Ensure unique URLs                                     | `false`             |
-| `concurrency`       | Maximum concurrent requests (0 = CPU count)            | `0`                 |
-| `host-concurrency`  | Max concurrent requests per host (0 = use concurrency) | `0`                 |
+| `concurrency`       | Maximum concurrent requests                            | `8`                 |
+| `host-concurrency`  | Max concurrent requests per host (0 = use concurrency) | `2`                 |
 | `content-types`     | MIME types to download (quoted, space/comma separated) | `"text/html"`       |
 | `output`            | Output filename without extension                      | `"crawler_results"` |
 
