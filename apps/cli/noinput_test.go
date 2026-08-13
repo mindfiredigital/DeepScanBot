@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
 func TestCLINoInputFlag(t *testing.T) {
@@ -200,36 +201,57 @@ func TestCLINoInputHelpJSON(t *testing.T) {
 // TestCLINoInputSummaryRefusesOverwriteWithoutForce verifies that a multi-site
 // scan in non-interactive mode refuses to overwrite an existing summary file
 // unless --force is explicitly provided, and leaves the existing summary intact.
+// It also verifies that --yes does NOT substitute for --force for the summary.
 func TestCLINoInputSummaryRefusesOverwriteWithoutForce(t *testing.T) {
 	binary := testutil.BuildCLI(t)
-	workdir := t.TempDir()
 
 	server1 := newTestServer()
 	defer server1.Close()
 	server2 := newTestServer()
 	defer server2.Close()
 
-	// Create an existing summary file that must not be overwritten.
-	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
-	if err := os.WriteFile(summaryFile, []byte(`{"existing":true}`), 0o644); err != nil {
-		t.Fatalf("create summary file: %v", err)
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "without any confirm flag",
+			args: []string{"--no-input", server1.URL, server2.URL, "depth=0"},
+		},
+		{
+			name: "--yes does not substitute for --force",
+			args: []string{"--no-input", "--yes", server1.URL, server2.URL, "depth=0"},
+		},
 	}
 
-	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "scan", server1.URL, server2.URL, "depth=0")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			workdir := t.TempDir()
 
-	if code == 0 {
-		t.Error("Expected non-zero exit when summary file exists in --no-input mode without --force")
-	}
-	if !strings.Contains(stderr, "already exists") {
-		t.Errorf("stderr should mention the existing summary, got: %s", stderr)
-	}
+			// Create an existing summary file that must not be overwritten.
+			summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
+			if err := os.WriteFile(summaryFile, []byte(`{"existing":true}`), 0o644); err != nil {
+				t.Fatalf("create summary file: %v", err)
+			}
 
-	data, err := os.ReadFile(summaryFile)
-	if err != nil {
-		t.Fatalf("read summary file: %v", err)
-	}
-	if string(data) != `{"existing":true}` {
-		t.Errorf("summary file was overwritten without --force: got %q", string(data))
+			args := append([]string{"scan"}, tt.args...)
+			_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, args...)
+
+			if code != exitcode.InvalidInput {
+				t.Errorf("expected exit code %d (InvalidInput) when summary exists without --force, got %d; stderr: %s", exitcode.InvalidInput, code, stderr)
+			}
+			if !strings.Contains(stderr, "already exists") {
+				t.Errorf("stderr should mention the existing summary, got: %s", stderr)
+			}
+
+			data, err := os.ReadFile(summaryFile)
+			if err != nil {
+				t.Fatalf("read summary file: %v", err)
+			}
+			if string(data) != `{"existing":true}` {
+				t.Errorf("summary file was overwritten without --force: got %q", string(data))
+			}
+		})
 	}
 }
 
@@ -261,6 +283,32 @@ func TestCLINoInputSummaryForceOverwrites(t *testing.T) {
 	}
 	if string(data) == `{"existing":true}` {
 		t.Error("summary file was not overwritten even with --force")
+	}
+}
+
+// TestCLISummaryWriteFailureReturnsInternalError verifies that a multi-site
+// scan whose aggregate summary cannot be written exits with InternalError (70)
+// instead of succeeding, even when every site crawled successfully.
+func TestCLISummaryWriteFailureReturnsInternalError(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server1 := newTestServer()
+	defer server1.Close()
+	server2 := newTestServer()
+	defer server2.Close()
+
+	// A directory at the summary path forces the atomic renames to fail, so the
+	// aggregate report cannot be written. --force bypasses the overwrite-refusal
+	// check, isolating the summary write failure itself.
+	if err := os.Mkdir(filepath.Join(workdir, "crawler_results_summary.json"), 0o755); err != nil {
+		t.Fatalf("create directory at summary path: %v", err)
+	}
+
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "--no-input", "--force", "scan", server1.URL, server2.URL, "depth=0")
+
+	if code != exitcode.InternalError {
+		t.Errorf("expected exit code %d (InternalError) when summary write fails, got %d; stderr: %s", exitcode.InternalError, code, stderr)
 	}
 }
 

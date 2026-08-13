@@ -591,10 +591,28 @@ Examples:
 
 		// Multi-site crawling support
 		var multiSiteReport types.MultiSiteReport
+		summaryFilename := opts.Output + "_summary.json"
 		if len(urlsToScan) > 1 {
 			multiSiteReport = types.NewMultiSiteReport()
 			multiSiteReport.StartedAt = time.Now()
 			log.Infof("Starting multi-site crawl of %d URLs", len(urlsToScan))
+
+			// Fail before any site is crawled if the multi-site summary (a shared
+			// aggregate artifact) already exists and --force was not provided, so
+			// we do not write per-site reports we will refuse to summarize over.
+			// Unlike per-site outputs, --yes does not substitute for --force here.
+			if _, statErr := os.Stat(summaryFilename); statErr == nil {
+				if !forceOverwrite {
+					if !noinput.IsInteractive() {
+						exitcode.HandleError(&exitcode.ExitCode{
+							Code:    exitcode.InvalidInput,
+							Message: fmt.Sprintf("Multi-site summary file %q already exists. Refusing to overwrite without confirmation.", summaryFilename),
+							Hint:    "Pass --force to overwrite the existing summary file.",
+						})
+					}
+					log.Warnf("Multi-site summary file %q already exists. It will be overwritten.", summaryFilename)
+				}
+			}
 		}
 
 		// Track failures with error categories for proper exit codes
@@ -774,28 +792,18 @@ Examples:
 			}
 
 			// Write multi-site summary (always write for multi-site scans, even if some sites failed).
-			// The summary is a shared aggregate artifact, so an existing summary is only overwritten
-			// when --force is explicitly provided. Unlike per-site outputs, --yes does not substitute
-			// for --force here; otherwise fail clearly before writing anything.
-			summaryFilename := opts.Output + "_summary.json"
-			if _, statErr := os.Stat(summaryFilename); statErr == nil {
-				if !forceOverwrite {
-					if !noinput.IsInteractive() {
-						exitcode.HandleError(&exitcode.ExitCode{
-							Code:    exitcode.InvalidInput,
-							Message: fmt.Sprintf("Multi-site summary file %q already exists. Refusing to overwrite without confirmation.", summaryFilename),
-							Hint:    "Pass --force to overwrite the existing summary file.",
-						})
-					}
-					log.Warnf("Multi-site summary file %q already exists. It will be overwritten.", summaryFilename)
-				}
-			}
+			// A summary write failure is fatal: a missing aggregate report must not result in a
+			// successful exit, even when no individual site reported a failure.
 			err = storage.WriteMultiSiteReportToFile(summaryFilename, multiSiteReport)
 			if err != nil {
 				log.Errorf("Failed to write multi-site summary: %v", err)
-			} else {
-				log.Infof("Multi-site summary written to %s", summaryFilename)
+				exitcode.HandleError(&exitcode.ExitCode{
+					Code:    exitcode.InternalError,
+					Message: fmt.Sprintf("Failed to write multi-site summary: %v", err),
+					Hint:    "Ensure the output path is writable and there is free disk space.",
+				})
 			}
+			log.Infof("Multi-site summary written to %s", summaryFilename)
 
 			// Print summary to stdout
 			formatter := output.NewFormatter(opts.JSON)
