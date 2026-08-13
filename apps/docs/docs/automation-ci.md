@@ -64,12 +64,11 @@ DeepScanBot uses standardized exit codes to make CLI failures predictable for sc
 | `0` | `Success` | Command completed successfully | Scan finished, version shown |
 | `1` | `InvalidInput` | Invalid argument or option value | Malformed URL, unknown flag |
 | `2` | `ValidationError` | Semantic validation failure | Empty output filename |
-| `3` | `AuthFailure` | Authentication failure | Invalid API token |
-| `10` | `AuthzFailure` | Authenticated but lacking permission | Insufficient rights |
-| `20` | `NotFound` | Resource could not be located | URL/file not found |
 | `30` | `NetworkFailure` | Network request failed | DNS resolution failure |
 | `31` | `Timeout` | Operation exceeded deadline | Request timed out |
 | `70` | `InternalError` | Unexpected internal error | Failed to write output |
+
+> **Note:** Exit codes 3 (AuthFailure), 10 (AuthzFailure), and 20 (NotFound) are defined in the codebase for future use but are not currently returned by any runtime errors.
 
 ### Checking Exit Codes
 
@@ -90,9 +89,8 @@ fi
 ### Error Messages
 
 All errors include:
-- **What went wrong** — a clear description of the problem
-- **Why it happened** — the root cause when possible
-- **How to fix it** — an actionable hint with an example
+- **Error message** — a clear description of what went wrong
+- **Hint (optional)** — an actionable suggestion with an example when available
 
 ```bash
 $ deepscanbot scan ftp://example.com

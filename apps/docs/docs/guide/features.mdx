@@ -206,14 +206,12 @@ deepscanbot scan <url> [key=value ...]
 |-----------------------|----------------------|--------------------------------------|
 | `depth`               | `2`                  | Maximum crawl depth                  |
 | `timeout`             | `2`                  | Request timeout in seconds           |
-
-> **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
-| `concurrency`         | `0`                  | Max concurrent workers (0 = CPU)     |
-| `host-concurrency`    | `0`                  | Max concurrent requests per host     |
+| `concurrency`         | `8`                  | Max concurrent workers               |
+| `host-concurrency`    | `2`                  | Max concurrent requests per host     |
 | `content-types`       | `"text/html"`        | Allowed MIME types                   |
-| `output`              | `"crawler_results"`  | Output filename                      |
+| `output`              | `"crawler_results"`  | Output filename (without extension)  |
 | `json`                | `false`              | JSON output                          |
-| `size`                | `-1`                 | Page size limit in KB                |
+| `size`                | `-1`                 | Page size limit in bytes (-1 = unlimited) |
 | `proxy`               | `""`                 | Proxy URL                            |
 | `unique`              | `false`              | Unique URLs only                     |
 | `show-source`         | `false`              | Show URL source                      |
@@ -226,3 +224,4 @@ deepscanbot scan <url> [key=value ...]
 | `resume`              | `false`              | Resume mode                          |
 | `ignore-robots`       | `false`              | Ignore robots.txt                    |
 | `cross-domain`        | `false`              | Follow external links                |
+> **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, \`timeout=10\` or \`timeout=30\`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider \`timeout=60\` or higher.
