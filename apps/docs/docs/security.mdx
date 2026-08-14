@@ -1,0 +1,31 @@
+---
+sidebar_position: 7
+---
+
+# Security
+
+DeepScanBot takes security seriously. This page outlines how to report security issues and the security practices built into the tool.
+
+## Reporting Security Vulnerabilities
+
+Please **do not** open a public issue for security-related problems. Instead, report the vulnerability privately by opening a [GitHub Security Advisory](https://github.com/mindfiredigital/DeepScanBot/security/advisories/new) or by creating an issue in the [DeepScanBot repository](https://github.com/mindfiredigital/DeepScanBot/issues) marked as private.
+
+When reporting, please include:
+
+- A description of the vulnerability and its impact
+- Steps to reproduce the issue
+- Affected versions (if known)
+- Any suggested fix or mitigation
+
+Reports are reviewed and acknowledged as soon as possible.
+
+## Security Practices
+
+- **Single binary**: DeepScanBot ships as a self-contained binary with no runtime dependencies, reducing the attack surface.
+- **No hidden network calls**: The tool only requests the URLs you specify and does not phone home or send telemetry.
+- **Non-interactive by default**: In CI/CD and automation contexts (`--no-input`), the CLI never waits on user input, preventing process hangs.
+- **Timeouts and retries**: Requests use configurable timeouts and retries to avoid resource exhaustion against slow or unresponsive hosts.
+
+## Responsible Use
+
+Before crawling a website, ensure you have permission and comply with the target's terms of service, `robots.txt`, and any applicable laws. DeepScanBot is intended for legitimate web crawling and analysis (development, testing, research), not for abuse or DoS.

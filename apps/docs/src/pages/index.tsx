@@ -137,6 +137,24 @@ export default function Home(): ReactNode {
       description="DeepScanBot - A powerful, feature-rich web crawler">
       <HomepageHeader />
       <main>
+        <section className={styles.screenshotSection}>
+          <div className="container">
+            <div className={styles.sectionHeader}>
+              <Heading as="h2" className={styles.sectionTitle}>
+                See it in action
+              </Heading>
+              <p className={styles.sectionSubtitle}>
+                Real DeepScanBot terminal output from a crawl in progress.
+              </p>
+            </div>
+            <img
+              className={styles.screenshot}
+              src="/img/scan-terminal-example.png"
+              alt="DeepScanBot terminal scan output"
+              loading="lazy"
+            />
+          </div>
+        </section>
         <section className={styles.features}>
           <div className="container">
             <div className={styles.sectionHeader}>

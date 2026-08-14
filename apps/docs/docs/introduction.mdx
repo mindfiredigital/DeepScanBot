@@ -32,7 +32,7 @@ The fastest way to get started:
 npm install -g @mindfiredigital/deepscanbot
 
 deepscanbot scan https://example.com
-deepscanbot scan https://example.com depth=3 json=true
+deepscanbot scan https://example.com depth=3 --json
 deepscanbot --version
 deepscanbot doctor
 ```
@@ -97,3 +97,29 @@ Structured JSON output perfect for automation, scripting, and integration with o
 | **Output** | JSON or text with full analytics | Usually basic |
 | **Resume Mode** | Built-in | Rare |
 | **Sitemap** | Auto-discovery plus nested | Rare |
+| **Exit Codes** | Standardized `no issues` / `issues found` | Inconsistent |
+
+## Comparison with Similar Tools
+
+DeepScanBot shares features with several established crawlers, but is designed to be simple to deploy, safe for CI/CD, and rich in structured output. The table below highlights how it differs from common alternatives.
+
+| | **DeepScanBot** | **Screaming Frog** | **Wget** | **Scrapy** | **HTTrack** |
+|---|-----------------|--------------------|----------|------------|-------------|
+| **Deployment** | Single binary, zero runtime deps, npm-installable | Desktop GUI app (Java) | CLI utility | Python framework | Desktop GUI app |
+| **License / Cost** | Free, open source | Commercial (free tier) | Free (GPL) | Free (BSD) | Free (GPL) |
+| **CI/CD friendly** | Yes — headless, `--no-input`, standardized exit codes | No — requires GUI/session | Partial | Requires custom runner | No |
+| **JSON output** | First-class (`--json` global flag) + `jq`-friendly | Limited / app-dependent | Limited | Custom pipelines | No |
+| **Concurrency** | Built-in, configurable, CPU-aware | Yes | Single-threaded (`-e robots=off` etc.) | Framework (you build it) | Limited |
+| **Rate limiting** | Per-host + global semaphores | Built-in | Minimal | Manual | Partial |
+| **Robots.txt** | Automatic + bypass option | Built-in | `-e robots=off` | Via middleware | Built-in |
+| **Retry / backoff** | Automatic exponential backoff + Retry-After | Partial | `--tries` | Manual | Basic |
+| **Sitemap discovery** | Built-in, incl. nested indexes | Built-in (SEO focus) | No | Via extension | No |
+| **Resume mode** | Built-in | No | `-c` (partial) | No | Yes |
+| **Cross-domain follows** | Optional | Optional | No | Custom | Option |
+| **Proxy / TLS options** | Yes | Yes | Yes | Yes | Yes |
+
+**Key takeaways**
+
+- **DeepScanBot is the only option here that is both free/open-source and CI/CD-first**, shipping as a single dependency-free binary that never hangs on user input.
+- It provides **first-class JSON output** (`--json`) and **standardized exit codes**, making it easy to script, monitor, and integrate into pipelines.
+- Screaming Frog and HTTrack are powerful but GUI-oriented; Wget is minimal; Scrapy is a framework that requires building your own crawler.

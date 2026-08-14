@@ -108,7 +108,7 @@ func applyScanOption(opts *ScanOptions, key, val string) {
 		}
 	case "proxy", "content-types", "output", "input-file":
 		applyStringOption(opts, key, val)
-	case "json", "disable-redirects", "show-source", "insecure", "unique",
+	case "disable-redirects", "show-source", "insecure", "unique",
 		"ignore-robots", "cross-domain", "sitemap", "resume", "stdin":
 		applyBoolOption(opts, key, val)
 	}
@@ -156,8 +156,6 @@ func applyStringOption(opts *ScanOptions, key, value string) {
 func applyBoolOption(opts *ScanOptions, key, value string) {
 	boolVal := value == "true"
 	switch key {
-	case "json":
-		opts.JSON = boolVal
 	case "disable-redirects":
 		opts.DisableRedirects = boolVal
 	case "show-source":
@@ -421,7 +419,7 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3
 
   # Scan with JSON output
-  deepscanbot scan https://example.com depth=3 json=true
+  deepscanbot scan https://example.com depth=3 --json
 
   # Show version
   deepscanbot version
@@ -455,7 +453,7 @@ Examples:
   deepscanbot scan --stdin --depth=3 < urls.txt
   deepscanbot scan https://example.com --concurrency=10 --delay=500ms
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
-  deepscanbot scan https://example.com depth=3 json=true output=results`,
+  deepscanbot scan https://example.com depth=3 --json output=results`,
 	Args: cobra.ArbitraryArgs,
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
@@ -463,11 +461,8 @@ Examples:
   # Scan multiple sites
   deepscanbot scan https://example.com https://xyz.com
 
-  # Scan with depth and JSON output (flag format)
+  # Scan with depth and JSON output
   deepscanbot scan https://example.com --depth=3 --json
-
-  # Scan with depth and JSON output (key=value format)
-  deepscanbot scan https://example.com depth=3 json=true
 
   # Scan with proxy and custom output
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --output=results
@@ -493,9 +488,6 @@ Examples:
 		// Check for --json flag (persistent flag from root command)
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		if jsonFlag {
-			opts.JSON = true
-		} else if keyValueOpts.JSON {
-			// If --json flag wasn't set but json=true was in key=value options, use that
 			opts.JSON = true
 		}
 
@@ -872,22 +864,12 @@ var versionCmd = &cobra.Command{
   # Show version in JSON format
   deepscanbot version --json`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
+		// Check for --json flag
 		jsonFlag, _ := cmd.Flags().GetBool("json")
-
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
-		}
 
 		info := versionInfo()
 
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
 			err := formatter.WriteSuccess(os.Stdout, info.JSON(), meta)
@@ -910,20 +892,10 @@ var doctorCmd = &cobra.Command{
   # Run diagnostics with JSON output
   deepscanbot doctor --json`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
+		// Check for --json flag
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
-		}
-
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
 			data := map[string]interface{}{

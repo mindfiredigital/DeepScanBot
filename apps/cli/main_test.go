@@ -57,7 +57,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 	}
 
 	// Test custom JSON output
-	if output, err := testutil.RunCLI(t, binary, workdir, "scan", server.URL, "depth=0", "json=true", "output=scan-json"); err != nil {
+	if output, err := testutil.RunCLI(t, binary, workdir, "scan", server.URL, "depth=0", "--json", "output=scan-json"); err != nil {
 		t.Fatalf("run JSON output: %v\n%s", err, output)
 	}
 

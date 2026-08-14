@@ -292,7 +292,7 @@ brew test deepscanbot
 
 ## Quick Start
 
-```bash
+````bash
 # Crawl a website with default settings
 deepscanbot scan https://example.com
 
@@ -300,9 +300,9 @@ deepscanbot scan https://example.com
 deepscanbot scan https://example.com depth=3 concurrency=10
 
 # Output as JSON
-deepscanbot scan https://example.com json=true
+deepscanbot scan https://example.com --json
 
-> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with select commands that produce structured output (`scan`, `version`, `doctor`, and `help`) to produce JSON-formatted output.
+> **Note:** The `--json` global flag enables JSON-formatted output for commands that produce structured output (`scan`, `version`, `doctor`, and `help`).
 
 # Use a proxy
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
@@ -333,7 +333,7 @@ deepscanbot scan https://example.com depth=3 concurrency=10
 
 # Scan with JSON output
 deepscanbot scan https://example.com --json
-```
+````
 
 ### version
 
@@ -416,11 +416,14 @@ deepscanbot scan --help
 ```
 
 # Verify installation
+
 deepscanbot doctor
 
 # Generate shell completion
+
 deepscanbot completion bash
-```
+
+````
 
 ## JSON Output Mode
 
@@ -443,7 +446,7 @@ deepscanbot --no-input --version --json
 
 # Run doctor in CI
 deepscanbot --no-input doctor
-```
+````
 
 ### `--force` Flag
 
@@ -726,19 +729,19 @@ Options are specified as `key=value` pairs after the URL.
 | `content-types`     | MIME types to download (quoted, space/comma separated) | `"text/html"`       |
 | `output`            | Output filename without extension                      | `"crawler_results"` |
 
-| `ignore-robots`     | Ignore robots.txt restrictions                         | `false`             |
-| `cross-domain`      | Follow links to other hosts                            | `false`             |
-| `retries`           | Number of retry attempts                               | `0`                 |
-| `retry-backoff`     | Base retry backoff duration (e.g. `500ms`, `2s`)       | `1s`                |
-| `delay`             | Politeness delay between requests to same host         | `0`                 |
-| `sitemap`           | Discover URLs from /sitemap.xml                        | `false`             |
-| `resume`            | Load existing output and avoid recrawling              | `false`             |
-
+| `ignore-robots` | Ignore robots.txt restrictions | `false` |
+| `cross-domain` | Follow links to other hosts | `false` |
+| `retries` | Number of retry attempts | `0` |
+| `retry-backoff` | Base retry backoff duration (e.g. `500ms`, `2s`) | `1s` |
+| `delay` | Politeness delay between requests to same host | `0` |
+| `sitemap` | Discover URLs from /sitemap.xml | `false` |
+| `resume` | Load existing output and avoid recrawling | `false` |
 
 > **Note on Output Files:** The output filename is specified without an extension. DeepScanBot automatically appends the appropriate extension based on the output format:
+>
 > - Text format (default): `crawler_results.txt`
-> - JSON format (`--json` or `json=true`): `crawler_results.json`
-> **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
+> - JSON format (`--json`): `crawler_results.json`
+>   **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
 
 ### Examples
 
@@ -759,7 +762,7 @@ deepscanbot scan https://docs.example.com \
   delay=200ms \
   retries=3 \
   retry-backoff=1s \
-  json=true \
+  --json \
   sitemap=true \
   cross-domain=true \
   content-types="text/html application/pdf" \

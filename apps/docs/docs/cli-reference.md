@@ -8,14 +8,105 @@ This section provides complete reference documentation for all DeepScanBot CLI c
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `scan` | Crawl and analyze a website |
-| `version` | Show installed version |
-| `doctor` | Verify installation and environment |
-| `config` | Manage CLI configuration |
-| `completion` | Generate shell completion script |
-| `help` | Show help for any command |
+DeepScanBot is built around a set of subcommands, each with a focused purpose.
+
+### `scan`
+
+Crawl and analyze one or more websites, following links up to a configurable depth and producing a report.
+
+```bash
+deepscanbot scan https://example.com
+deepscanbot scan https://example.com https://another.com --depth=3
+deepscanbot scan --input-file=urls.txt --depth=3
+
+# Scan with JSON output
+deepscanbot scan https://example.com --json
+```
+
+See the [Scan Options](#scan-options) section below for all available options, or the [Usage Guide](/docs/guide/usage) for detailed examples.
+
+### `version`
+
+Show the installed version. The short flag `--version` is also supported.
+
+```bash
+deepscanbot version
+deepscanbot version --json
+```
+
+### `doctor`
+
+Verify the installation and environment. Useful for checking that everything is set up correctly.
+
+```bash
+deepscanbot doctor
+deepscanbot doctor --json
+```
+
+### `config`
+
+Manage CLI configuration. Currently configuration is provided via command-line flags; running this command reports the current state.
+
+```bash
+deepscanbot config
+```
+
+### `completion`
+
+Generate a shell completion script for Bash, Zsh, Fish, or PowerShell. See [Shell Completion](#shell-completion) below for setup instructions.
+
+```bash
+deepscanbot completion bash
+deepscanbot completion zsh
+deepscanbot completion fish
+deepscanbot completion powershell
+```
+
+### `help`
+
+Show help for any command.
+
+```bash
+deepscanbot --help
+deepscanbot scan --help
+deepscanbot help scan
+```
+
+## Shell Completion
+
+Install shell completion so that `deepscanbot`, its subcommands, and options auto-complete in your terminal.
+
+### Bash
+
+```bash
+deepscanbot completion bash | sudo tee /etc/bash_completion.d/deepscanbot
+```
+
+To load it in the current shell:
+
+```bash
+source /etc/bash_completion.d/deepscanbot
+```
+
+### Zsh
+
+```bash
+deepscanbot completion zsh > "${fpath[1]}/_deepscanbot"
+```
+
+Then start a new shell (or run `compinit`) so zsh picks up the new completion script.
+
+### Fish
+
+```bash
+deepscanbot completion fish > ~/.config/fish/completions/deepscanbot.fish
+```
+
+### PowerShell
+
+```powershell
+deepscanbot completion powershell | Out-String | Invoke-Expression
+```
 
 ## Global Flags
 
@@ -42,7 +133,7 @@ These options are specific to the `scan` command and can be provided as flags (`
 | `--host-concurrency` | `2` | Max concurrent requests per host (0 = use effective concurrency) |
 | `--content-types` | `"text/html"` | Allowed MIME types |
 | `--output` | `"crawler_results"` | Output filename base (automatically gets .txt or .json extension) |
-| `--json` | `false` | Output results in JSON format (global flag; also accepted as `json=true` key=value) |
+| `--json` | `false` | Output results in JSON format |
 | `--size` | `-1` | Page size limit in KB (-1 = unlimited) |
 | `--proxy` | `""` | Proxy URL |
 | `--unique` | `false` | Unique URLs only |
@@ -65,6 +156,6 @@ These options are specific to the `scan` command and can be provided as flags (`
 > - **Global flags** (`--json`, `--no-input`, `--verbose`, `--debug`, `--quiet`, `--dry-run`) work with any command and use `--flag` syntax only
 > - **Scan options** (`--force`, `--yes`, `--input-file`, `--stdin`, `--depth`, `--timeout`, etc.) only work with the `scan` command
 > - Scan options accept both flag syntax (`--depth=3`) and key=value syntax (`depth=3`); a few, such as `--force` and `--yes`, are flag-only
-> - `--json` is a global flag; `json=true` is also accepted as a scan key=value option for backward compatibility
+> - `--json` is a global flag that produces JSON-formatted output for supported commands
 
 > **Note:** For detailed examples and usage instructions, see the [Usage Guide](/docs/guide/usage).

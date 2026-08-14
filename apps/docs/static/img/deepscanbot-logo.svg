@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="64" fill="#2563eb"/>
-  <text x="256" y="280" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle">DSB</text>
-  <text x="256" y="340" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle">DeepScanBot</text>
-</svg>
