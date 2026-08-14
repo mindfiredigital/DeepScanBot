@@ -255,23 +255,6 @@
   line-height: 1.6;
 }
 
-/* Screenshot Section */
-.screenshotSection {
-  padding: 4rem 0;
-  background: var(--dsb-bg);
-  border-bottom: 1px solid var(--dsb-card-border);
-}
-
-.screenshot {
-  display: block;
-  margin: 2.5rem auto 0;
-  max-width: 880px;
-  width: 100%;
-  border-radius: 1rem;
-  border: 1px solid var(--dsb-card-border);
-  box-shadow: 0 12px 40px var(--dsb-shadow);
-}
-
 /* CTA Section */
 .cta {
   padding: 5rem 0;

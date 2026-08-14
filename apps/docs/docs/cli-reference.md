@@ -133,7 +133,6 @@ These options are specific to the `scan` command and can be provided as flags (`
 | `--host-concurrency` | `2` | Max concurrent requests per host (0 = use effective concurrency) |
 | `--content-types` | `"text/html"` | Allowed MIME types |
 | `--output` | `"crawler_results"` | Output filename base (automatically gets .txt or .json extension) |
-| `--json` | `false` | Output results in JSON format |
 | `--size` | `-1` | Page size limit in KB (-1 = unlimited) |
 | `--proxy` | `""` | Proxy URL |
 | `--unique` | `false` | Unique URLs only |

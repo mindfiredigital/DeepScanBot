@@ -417,13 +417,12 @@ deepscanbot scan --help
 
 # Verify installation
 
+```bash
 deepscanbot doctor
 
 # Generate shell completion
-
 deepscanbot completion bash
-
-````
+```
 
 ## JSON Output Mode
 
@@ -718,7 +717,6 @@ Options are specified as `key=value` pairs after the URL.
 | `depth`             | Maximum crawl depth                                    | `2`                 |
 | `timeout`           | Request timeout in seconds                             | `2`                 |
 | `proxy`             | Proxy URL (e.g. `http://127.0.0.1:8080`)               | `""`                |
-| `json`              | Output as JSON                                         | `false`             |
 | `size`              | Page size limit in KB (-1 = no limit)                  | `-1`                |
 | `disable-redirects` | Disable following redirects                            | `false`             |
 | `show-source`       | Show source of each URL                                | `false`             |
