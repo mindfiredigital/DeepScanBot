@@ -302,6 +302,8 @@ deepscanbot scan https://example.com depth=3 concurrency=10
 # Output as JSON
 deepscanbot scan https://example.com json=true
 
+> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with select commands that produce structured output (`scan`, `version`, `doctor`, and `help`) to produce JSON-formatted output.
+
 # Use a proxy
 deepscanbot scan https://example.com proxy=http://127.0.0.1:8080
 
@@ -313,6 +315,105 @@ deepscanbot scan https://example.com resume=true output=crawler_results
 
 # Show version
 deepscanbot --version
+
+## CLI Commands
+
+DeepScanBot provides several commands to help you work with the tool effectively.
+
+### scan
+
+Crawl and analyze a website. This is the main command for web crawling.
+
+```bash
+# Basic scan
+deepscanbot scan https://example.com
+
+# Scan with options
+deepscanbot scan https://example.com depth=3 concurrency=10
+
+# Scan with JSON output
+deepscanbot scan https://example.com --json
+```
+
+### version
+
+Show the installed version of DeepScanBot.
+
+```bash
+# Show version
+deepscanbot version
+deepscanbot --version
+
+# Show version in JSON format
+deepscanbot version --json
+```
+
+### doctor
+
+Verify your DeepScanBot installation and environment. This command checks that the binary is properly installed and the environment is configured correctly.
+
+```bash
+# Run diagnostics
+deepscanbot doctor
+
+# Run diagnostics with JSON output
+deepscanbot doctor --json
+```
+
+### config
+
+Manage CLI configuration settings. Currently, all settings must be specified via command-line flags.
+
+```bash
+# View configuration help
+deepscanbot config
+```
+
+### completion
+
+Generate shell completion scripts for Bash, Zsh, Fish, or PowerShell. This enables tab completion for DeepScanBot commands.
+
+```bash
+# Generate bash completion
+deepscanbot completion bash
+
+# Generate zsh completion
+deepscanbot completion zsh
+
+# Generate fish completion
+deepscanbot completion fish
+
+# Generate PowerShell completion
+deepscanbot completion powershell
+```
+
+**Setup instructions:**
+
+```bash
+# Bash - Add to ~/.bashrc or ~/.bash_profile
+mkdir -p ~/.local/share/bash-completion/completions
+deepscanbot completion bash > ~/.local/share/bash-completion/completions/deepscanbot
+
+# Zsh - Add to ~/.zshrc
+deepscanbot completion zsh > "${fpath[1]}/_deepscanbot"
+
+# Fish - Add to ~/.config/fish/completions/
+deepscanbot completion fish > ~/.config/fish/completions/deepscanbot.fish
+```
+
+### help
+
+Show help for any command.
+
+```bash
+# Show general help
+deepscanbot help
+deepscanbot --help
+
+# Show help for a specific command
+deepscanbot help scan
+deepscanbot scan --help
+```
 
 # Verify installation
 deepscanbot doctor
@@ -620,10 +721,11 @@ Options are specified as `key=value` pairs after the URL.
 | `show-source`       | Show source of each URL                                | `false`             |
 | `insecure`          | Disable TLS verification                               | `false`             |
 | `unique`            | Ensure unique URLs                                     | `false`             |
-| `concurrency`       | Maximum concurrent requests (0 = CPU count)            | `0`                 |
-| `host-concurrency`  | Max concurrent requests per host (0 = use concurrency) | `0`                 |
+| `concurrency`       | Maximum concurrent requests                            | `8`                 |
+| `host-concurrency`  | Max concurrent requests per host (0 = use concurrency) | `2`                 |
 | `content-types`     | MIME types to download (quoted, space/comma separated) | `"text/html"`       |
 | `output`            | Output filename without extension                      | `"crawler_results"` |
+
 | `ignore-robots`     | Ignore robots.txt restrictions                         | `false`             |
 | `cross-domain`      | Follow links to other hosts                            | `false`             |
 | `retries`           | Number of retry attempts                               | `0`                 |
@@ -631,6 +733,12 @@ Options are specified as `key=value` pairs after the URL.
 | `delay`             | Politeness delay between requests to same host         | `0`                 |
 | `sitemap`           | Discover URLs from /sitemap.xml                        | `false`             |
 | `resume`            | Load existing output and avoid recrawling              | `false`             |
+
+
+> **Note on Output Files:** The output filename is specified without an extension. DeepScanBot automatically appends the appropriate extension based on the output format:
+> - Text format (default): `crawler_results.txt`
+> - JSON format (`--json` or `json=true`): `crawler_results.json`
+> **Note on Timeout:** The default timeout is 2 seconds, which balances speed and reliability for most websites. Increase this value (for example, `timeout=10` or `timeout=30`) when crawling slow websites or large pages that take longer to respond. For very slow sites, consider `timeout=60` or higher.
 
 ### Examples
 

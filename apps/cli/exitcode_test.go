@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/mindfiredigital/DeepScanBot/apps/cli/tests/testutil"
+	"github.com/mindfiredigital/DeepScanBot/packages/exitcode"
 )
 
 // Helper function leveraging testutil to fetch just the exit code
@@ -144,18 +145,50 @@ func TestCLIExitCodeNetworkFailure(t *testing.T) {
 	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()
 
-	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://127.0.0.1:0", "--timeout=1s")
+	// Use a valid integer --timeout so flag parsing succeeds and the command
+	// actually reaches the crawl step against the unreachable host. A prior
+	// version of this test used --timeout=1s (invalid for the int flag) and
+	// therefore passed for the wrong reason (early flag-parse failure).
+	_, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, "scan", "http://127.0.0.1:1", "--timeout=1")
 	t.Logf("network failure: exit code=%d, stderr=%s", code, stderr)
 
-	// Unconditionally require failure. An exit code of 0 means the CLI failed to catch a broken connection.
-	if code == 0 {
-		t.Fatalf("Expected non-zero exit code for network failure, got 0")
+	// A single-site crawl that cannot reach its host must not silently succeed.
+	if code != exitcode.NetworkFailure {
+		t.Fatalf("Expected single-site crawl network failure to exit with %d, got %d", exitcode.NetworkFailure, code)
 	}
 
 	// Validate that stderr contains a clear, actionable error message
 	lowerStderr := strings.ToLower(stderr)
 	if !strings.Contains(lowerStderr, "error") && !strings.Contains(lowerStderr, "failed") && !strings.Contains(lowerStderr, "timeout") && !strings.Contains(lowerStderr, "refused") {
 		t.Errorf("stderr should contain an actionable error message, got: %s", stderr)
+	}
+}
+
+// TestCLIExitCodeSingleSiteOutputFailure verifies that a single-site scan whose
+// output file cannot be written propagates an internal error exit code instead
+// of silently returning 0.
+func TestCLIExitCodeSingleSiteOutputFailure(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html></html>"))
+	}))
+	defer server.Close()
+
+	workdir := t.TempDir()
+
+	// Use a regular file as an output parent directory: the atomic writer cannot
+	// create a directory over it, forcing an output error while the crawl itself
+	// succeeds, so we can verify the propagated exit code.
+	blocker := filepath.Join(workdir, "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatalf("failed to create blocker file: %v", err)
+	}
+	badOutput := filepath.Join(blocker, "out")
+	code := exitCodeFor(t, binary, workdir, "scan", server.URL, "depth=0", "--no-input", "output="+badOutput)
+	if code != exitcode.InternalError {
+		t.Fatalf("Expected single-site output failure to exit with %d, got %d", exitcode.InternalError, code)
 	}
 }
 

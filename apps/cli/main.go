@@ -591,10 +591,28 @@ Examples:
 
 		// Multi-site crawling support
 		var multiSiteReport types.MultiSiteReport
+		summaryFilename := opts.Output + "_summary.json"
 		if len(urlsToScan) > 1 {
 			multiSiteReport = types.NewMultiSiteReport()
 			multiSiteReport.StartedAt = time.Now()
 			log.Infof("Starting multi-site crawl of %d URLs", len(urlsToScan))
+
+			// Fail before any site is crawled if the multi-site summary (a shared
+			// aggregate artifact) already exists and --force was not provided, so
+			// we do not write per-site reports we will refuse to summarize over.
+			// Unlike per-site outputs, --yes does not substitute for --force here.
+			if _, statErr := os.Stat(summaryFilename); statErr == nil {
+				if !forceOverwrite {
+					if !noinput.IsInteractive() {
+						exitcode.HandleError(&exitcode.ExitCode{
+							Code:    exitcode.InvalidInput,
+							Message: fmt.Sprintf("Multi-site summary file %q already exists. Refusing to overwrite without confirmation.", summaryFilename),
+							Hint:    "Pass --force to overwrite the existing summary file.",
+						})
+					}
+					log.Warnf("Multi-site summary file %q already exists. It will be overwritten.", summaryFilename)
+				}
+			}
 		}
 
 		// Track failures with error categories for proper exit codes
@@ -681,24 +699,22 @@ Examples:
 
 			if err != nil {
 				log.Errorf("Failed to crawl %s: %v", targetURL, err)
-				if len(urlsToScan) > 1 {
-					errorCode := exitcode.NetworkFailure
-					if errors.Is(err, exitcode.ErrTimeout) {
-						errorCode = exitcode.Timeout
-					}
-					failedSiteReports = append(failedSiteReports, types.SiteReport{
-						StartURL:   targetURL,
-						StartedAt:  siteStartTime,
-						FinishedAt: siteEndTime,
-						Error:      err.Error(),
-						ErrorCode:  errorCode,
-					})
+				errorCode := exitcode.NetworkFailure
+				if errors.Is(err, exitcode.ErrTimeout) {
+					errorCode = exitcode.Timeout
 				}
+				failedSiteReports = append(failedSiteReports, types.SiteReport{
+					StartURL:   targetURL,
+					StartedAt:  siteStartTime,
+					FinishedAt: siteEndTime,
+					Error:      err.Error(),
+					ErrorCode:  errorCode,
+				})
 				continue
 			}
 
 			// Check if the report has failures (crawler records failures in summary, not as errors)
-			if len(urlsToScan) > 1 && report.Summary.Failed > 0 {
+			if report.Summary.Failed > 0 {
 				failedSiteReports = append(failedSiteReports, types.SiteReport{
 					StartURL:   targetURL,
 					OutputFile: siteOutputFilename,
@@ -727,16 +743,14 @@ Examples:
 
 			if err != nil {
 				log.Errorf("Failed to write output for %s: %v", targetURL, err)
-				if len(urlsToScan) > 1 {
-					failedSiteReports = append(failedSiteReports, types.SiteReport{
-						StartURL:   targetURL,
-						StartedAt:  siteStartTime,
-						FinishedAt: siteEndTime,
-						Report:     report,
-						Error:      err.Error(),
-						ErrorCode:  exitcode.InternalError,
-					})
-				}
+				failedSiteReports = append(failedSiteReports, types.SiteReport{
+					StartURL:   targetURL,
+					StartedAt:  siteStartTime,
+					FinishedAt: siteEndTime,
+					Report:     report,
+					Error:      err.Error(),
+					ErrorCode:  exitcode.InternalError,
+				})
 				continue
 			}
 
@@ -777,14 +791,19 @@ Examples:
 				multiSiteReport.AddSiteReport(failedReport)
 			}
 
-			// Write multi-site summary (always write for multi-site scans, even if some sites failed)
-			summaryFilename := opts.Output + "_summary.json"
+			// Write multi-site summary (always write for multi-site scans, even if some sites failed).
+			// A summary write failure is fatal: a missing aggregate report must not result in a
+			// successful exit, even when no individual site reported a failure.
 			err = storage.WriteMultiSiteReportToFile(summaryFilename, multiSiteReport)
 			if err != nil {
 				log.Errorf("Failed to write multi-site summary: %v", err)
-			} else {
-				log.Infof("Multi-site summary written to %s", summaryFilename)
+				exitcode.HandleError(&exitcode.ExitCode{
+					Code:    exitcode.InternalError,
+					Message: fmt.Sprintf("Failed to write multi-site summary: %v", err),
+					Hint:    "Ensure the output path is writable and there is free disk space.",
+				})
 			}
+			log.Infof("Multi-site summary written to %s", summaryFilename)
 
 			// Print summary to stdout
 			formatter := output.NewFormatter(opts.JSON)
@@ -808,35 +827,37 @@ Examples:
 				log.Infof("Individual site reports saved with prefix: %s_*", opts.Output)
 			}
 
-			// If any sites failed, return appropriate exit code based on failure categories
-			if len(failedSiteReports) > 0 {
-				// Determine the most severe exit code from all failures
-				maxExitCode := exitcode.Success
-				for _, failedReport := range failedSiteReports {
-					if failedReport.ErrorCode > maxExitCode {
-						maxExitCode = failedReport.ErrorCode
-					}
-				}
+		}
 
-				// Count failures by category for the error message
-				networkFailures := 0
-				for _, failedReport := range failedSiteReports {
-					if failedReport.ErrorCode == exitcode.NetworkFailure || failedReport.ErrorCode == exitcode.Timeout {
-						networkFailures++
-					}
+		// If any site failed, propagate a non-zero exit code for both single-site
+		// and multi-site scans instead of silently succeeding with exit code 0.
+		if len(failedSiteReports) > 0 {
+			// Determine the most severe exit code from all failures
+			maxExitCode := exitcode.Success
+			for _, failedReport := range failedSiteReports {
+				if failedReport.ErrorCode > maxExitCode {
+					maxExitCode = failedReport.ErrorCode
 				}
-
-				message := fmt.Sprintf("%d of %d sites failed to crawl", len(failedSiteReports), len(urlsToScan))
-				if networkFailures > 0 {
-					message = fmt.Sprintf("%d of %d sites failed to crawl (%d network failures)", len(failedSiteReports), len(urlsToScan), networkFailures)
-				}
-
-				exitcode.HandleError(&exitcode.ExitCode{
-					Code:    maxExitCode,
-					Message: message,
-					Hint:    "Check network connectivity and URL accessibility",
-				})
 			}
+
+			// Count failures by category for the error message
+			networkFailures := 0
+			for _, failedReport := range failedSiteReports {
+				if failedReport.ErrorCode == exitcode.NetworkFailure || failedReport.ErrorCode == exitcode.Timeout {
+					networkFailures++
+				}
+			}
+
+			message := fmt.Sprintf("%d of %d site(s) failed to crawl", len(failedSiteReports), len(urlsToScan))
+			if networkFailures > 0 {
+				message = fmt.Sprintf("%d of %d site(s) failed to crawl (%d network failures)", len(failedSiteReports), len(urlsToScan), networkFailures)
+			}
+
+			exitcode.HandleError(&exitcode.ExitCode{
+				Code:    maxExitCode,
+				Message: message,
+				Hint:    "Check network connectivity and URL accessibility",
+			})
 		}
 	},
 }

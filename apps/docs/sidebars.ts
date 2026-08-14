@@ -9,12 +9,43 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Guide',
-      items: ['guide/usage', 'guide/features'],
+      label: 'Usage Guide',
+      items: [
+        {
+          type: 'doc',
+          id: 'guide/usage',
+          label: 'Usage Guide',
+        },
+        {
+          type: 'doc',
+          id: 'guide/features',
+          label: 'Features',
+        },
+      ],
     },
     {
       type: 'category',
-      label: 'Contribution Guide',
+      label: 'CLI Reference',
+      items: ['cli-reference'],
+    },
+    {
+      type: 'category',
+      label: 'Output & JSON',
+      items: ['output-json'],
+    },
+    {
+      type: 'category',
+      label: 'Automation & CI/CD',
+      items: ['automation-ci'],
+    },
+    {
+      type: 'category',
+      label: 'Troubleshooting',
+      items: ['troubleshooting'],
+    },
+    {
+      type: 'category',
+      label: 'Contributing',
       items: [
         'contribution-guide/how-to-contribute',
         'contribution-guide/code-of-conduct',

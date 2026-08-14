@@ -14,6 +14,10 @@ deepscanbot scan https://example.com
 
 This crawls the start page, follows links up to 2 levels deep, and writes results to `crawler_results.txt`.
 
+> **Note on Output Files:** The output filename is specified without an extension. DeepScanBot automatically appends the appropriate extension based on the output format:
+> - Text format (default): `crawler_results.txt`
+> - JSON format (`--json` or `json=true`): `crawler_results.json`
+
 ## Version Information
 
 ```bash
@@ -43,6 +47,8 @@ deepscanbot scan https://example.com depth=5 concurrency=20
 ```bash
 deepscanbot scan https://example.com json=true output=results
 ```
+
+> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with select commands that produce structured output (`scan`, `version`, `doctor`, and `help`) to produce JSON-formatted output.
 
 ### Crawl with Proxy
 
