@@ -202,6 +202,16 @@ func TestCLIExitCodeVersion(t *testing.T) {
 	}
 }
 
+func TestCLIExitCodeVersionUnexpectedArg(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	code := exitCodeFor(t, binary, workdir, "version", "extra")
+	if code != exitcode.InvalidInput {
+		t.Errorf("version with unexpected arg exit code = %d, want %d (InvalidInput)", code, exitcode.InvalidInput)
+	}
+}
+
 func TestCLIExitCodeVersionJSON(t *testing.T) {
 	binary := testutil.BuildCLI(t)
 	workdir := t.TempDir()

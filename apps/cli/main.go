@@ -427,7 +427,11 @@ func rejectRemovedJSONOption(cmdName string) cobra.PositionalArgs {
 			}
 		}
 		if len(args) > 0 {
-			return fmt.Errorf("unknown argument %q for %s; this command accepts no positional arguments", args[0], cmdName)
+			return &exitcode.ExitCode{
+				Code:    exitcode.InvalidInput,
+				Message: fmt.Sprintf("unknown argument %q for %s; this command accepts no positional arguments", args[0], cmdName),
+				Hint:    fmt.Sprintf("This command accepts no positional arguments. Run 'deepscanbot %s --help'.", cmdName),
+			}
 		}
 		return nil
 	}
