@@ -57,7 +57,7 @@ func TestCLIConfiguresOutputFilename(t *testing.T) {
 	}
 
 	// Test custom JSON output
-	if output, err := testutil.RunCLI(t, binary, workdir, "scan", server.URL, "depth=0", "json=true", "output=scan-json"); err != nil {
+	if output, err := testutil.RunCLI(t, binary, workdir, "scan", server.URL, "depth=0", "--json", "output=scan-json"); err != nil {
 		t.Fatalf("run JSON output: %v\n%s", err, output)
 	}
 
@@ -311,5 +311,39 @@ func TestCLIMultipleURLsWithPartialFailure(t *testing.T) {
 	summaryFile := filepath.Join(workdir, "crawler_results_summary.json")
 	if _, statErr := os.Stat(summaryFile); os.IsNotExist(statErr) {
 		t.Errorf("Summary file should be created even with partial failures: %s", summaryFile)
+	}
+}
+
+// TestCLIRejectsRemovedJSONOption verifies that the removed json=true option is
+// rejected with a non-zero exit code and a migration hint across scan, version,
+// and doctor.
+func TestCLIRejectsRemovedJSONOption(t *testing.T) {
+	binary := testutil.BuildCLI(t)
+	workdir := t.TempDir()
+
+	server := testutil.NewTestServer()
+	defer server.Close()
+
+	cases := []struct {
+		name string
+		args []string
+	}{
+		{"scan", []string{"scan", server.URL, "depth=0", "json=true"}},
+		{"version", []string{"version", "json=true"}},
+		{"doctor", []string{"doctor", "json=true"}},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			stdout, stderr, code := testutil.CombinedOutputFor(t, binary, workdir, c.args...)
+			output := stdout + stderr
+
+			if code == 0 {
+				t.Fatalf("CLI accepted removed json=true option (exit 0)")
+			}
+			if !strings.Contains(output, "json=true") || !strings.Contains(output, "--json") {
+				t.Errorf("CLI should reject json=true and point to --json, got: %q", output)
+			}
+		})
 	}
 }
