@@ -108,7 +108,7 @@ func applyScanOption(opts *ScanOptions, key, val string) {
 		}
 	case "proxy", "content-types", "output", "input-file":
 		applyStringOption(opts, key, val)
-	case "json", "disable-redirects", "show-source", "insecure", "unique",
+	case "disable-redirects", "show-source", "insecure", "unique",
 		"ignore-robots", "cross-domain", "sitemap", "resume", "stdin":
 		applyBoolOption(opts, key, val)
 	}
@@ -156,8 +156,6 @@ func applyStringOption(opts *ScanOptions, key, value string) {
 func applyBoolOption(opts *ScanOptions, key, value string) {
 	boolVal := value == "true"
 	switch key {
-	case "json":
-		opts.JSON = boolVal
 	case "disable-redirects":
 		opts.DisableRedirects = boolVal
 	case "show-source":
@@ -372,7 +370,7 @@ func applyKeyValueOptions(cmd *cobra.Command, opts *ScanOptions, kvOpts ScanOpti
 	}
 }
 
-func parseKeyValue(args []string) ([]string, ScanOptions) {
+func parseKeyValue(args []string) ([]string, ScanOptions, error) {
 	opts := ScanOptions{
 		Depth:           2,
 		Timeout:         2,
@@ -396,13 +394,47 @@ func parseKeyValue(args []string) ([]string, ScanOptions) {
 			parts := strings.SplitN(arg, "=", 2)
 			key := strings.ToLower(strings.TrimSpace(parts[0]))
 			val := strings.TrimSpace(parts[1])
+			if key == "json" {
+				return nil, opts, removedJSONOptionError("scan <url>")
+			}
 			applyScanOption(&opts, key, val)
 		} else {
 			urls = append(urls, arg)
 		}
 	}
 
-	return urls, opts
+	return urls, opts, nil
+}
+
+// removedJSONOptionError returns a non-zero migration error for the removed
+// json=true option, directing users to the supported --json flag.
+func removedJSONOptionError(cmdName string) *exitcode.ExitCode {
+	return &exitcode.ExitCode{
+		Code:    exitcode.InvalidInput,
+		Message: "The `json=true` option has been removed.",
+		Hint:    fmt.Sprintf("Use the global `--json` flag instead, e.g. `deepscanbot %s --json`.", cmdName),
+	}
+}
+
+// rejectRemovedJSONOption validates that a command is not given the removed
+// json=true option and rejects any unexpected positional arguments.
+func rejectRemovedJSONOption(cmdName string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		for _, arg := range args {
+			key := strings.ToLower(strings.TrimSpace(strings.SplitN(arg, "=", 2)[0]))
+			if key == "json" {
+				return removedJSONOptionError(cmdName)
+			}
+		}
+		if len(args) > 0 {
+			return &exitcode.ExitCode{
+				Code:    exitcode.InvalidInput,
+				Message: fmt.Sprintf("unknown argument %q for %s; this command accepts no positional arguments", args[0], cmdName),
+				Hint:    fmt.Sprintf("This command accepts no positional arguments. Run 'deepscanbot %s --help'.", cmdName),
+			}
+		}
+		return nil
+	}
 }
 
 var rootCmd = &cobra.Command{
@@ -421,7 +453,7 @@ self-contained binary.`,
   deepscanbot scan https://example.com depth=3
 
   # Scan with JSON output
-  deepscanbot scan https://example.com depth=3 json=true
+  deepscanbot scan https://example.com depth=3 --json
 
   # Show version
   deepscanbot version
@@ -455,7 +487,7 @@ Examples:
   deepscanbot scan --stdin --depth=3 < urls.txt
   deepscanbot scan https://example.com --concurrency=10 --delay=500ms
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --retries=3
-  deepscanbot scan https://example.com depth=3 json=true output=results`,
+  deepscanbot scan https://example.com depth=3 --json output=results`,
 	Args: cobra.ArbitraryArgs,
 	Example: `  # Basic scan
   deepscanbot scan https://example.com
@@ -463,11 +495,8 @@ Examples:
   # Scan multiple sites
   deepscanbot scan https://example.com https://xyz.com
 
-  # Scan with depth and JSON output (flag format)
+  # Scan with depth and JSON output
   deepscanbot scan https://example.com --depth=3 --json
-
-  # Scan with depth and JSON output (key=value format)
-  deepscanbot scan https://example.com depth=3 json=true
 
   # Scan with proxy and custom output
   deepscanbot scan https://example.com --proxy=http://127.0.0.1:8080 --output=results
@@ -485,17 +514,20 @@ Examples:
   deepscanbot scan https://example.com --yes --force`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse key=value options for backward compatibility
-		urls, keyValueOpts := parseKeyValue(args)
+		urls, keyValueOpts, err := parseKeyValue(args)
+		if err != nil {
+			exitcode.HandleError(err)
+		}
 
 		// Merge with flag-based options (flags take precedence)
 		opts := mergeOptions(cmd, keyValueOpts)
 
 		// Check for --json flag (persistent flag from root command)
-		jsonFlag, _ := cmd.Flags().GetBool("json")
+		jsonFlag, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			exitcode.HandleError(err)
+		}
 		if jsonFlag {
-			opts.JSON = true
-		} else if keyValueOpts.JSON {
-			// If --json flag wasn't set but json=true was in key=value options, use that
 			opts.JSON = true
 		}
 
@@ -871,23 +903,17 @@ var versionCmd = &cobra.Command{
 
   # Show version in JSON format
   deepscanbot version --json`,
+	Args: rejectRemovedJSONOption("version"),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
-		jsonFlag, _ := cmd.Flags().GetBool("json")
-
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
+		// Check for --json flag
+		jsonFlag, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			exitcode.HandleError(err)
 		}
 
 		info := versionInfo()
 
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("version", 0)
 			err := formatter.WriteSuccess(os.Stdout, info.JSON(), meta)
@@ -909,21 +935,15 @@ var doctorCmd = &cobra.Command{
 
   # Run diagnostics with JSON output
   deepscanbot doctor --json`,
+	Args: rejectRemovedJSONOption("doctor"),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check for --json flag or json=true option
-		jsonFlag, _ := cmd.Flags().GetBool("json")
-
-		// Also check if json=true was passed as a key=value option
-		jsonOption := false
-		for _, arg := range args {
-			if strings.HasPrefix(strings.ToLower(arg), "json=") {
-				parts := strings.SplitN(arg, "=", 2)
-				jsonOption = len(parts) == 2 && strings.ToLower(parts[1]) == "true"
-				break
-			}
+		// Check for --json flag
+		jsonFlag, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			exitcode.HandleError(err)
 		}
 
-		if jsonFlag || jsonOption {
+		if jsonFlag {
 			formatter := output.NewFormatter(true)
 			meta := output.NewResponseMetadata("doctor", 0)
 			data := map[string]interface{}{
@@ -1058,7 +1078,10 @@ func init() {
 	// Store the original help function to avoid recursion
 	originalHelpFunc := rootCmd.HelpFunc()
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		jsonFlag, _ := cmd.Flags().GetBool("json")
+		jsonFlag, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			exitcode.HandleError(err)
+		}
 		if jsonFlag {
 			tree := output.BuildCommandTree(rootCmd)
 			formatter := output.NewFormatter(true)

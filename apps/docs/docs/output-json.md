@@ -33,7 +33,7 @@ deepscanbot scan https://example.com --json
 
 > **Note:** The output filename is specified without extension. DeepScanBot automatically appends the appropriate extension based on the output format:
 > - Text format (default): `crawler_results.txt`
-> - JSON format (`--json` or `json=true`): `crawler_results.json`
+> - JSON format (`--json`): `crawler_results.json`
 
 ## JSON Output Structure
 
@@ -70,4 +70,4 @@ if deepscanbot scan https://example.com --json | jq -e '.status == "success"'; t
 fi
 ```
 
-> **Note:** `json=true` is a scan option that enables JSON output for the scan command. The `--json` flag is a global CLI option that works with any command (such as `scan`, `version`, `doctor`, etc.) to produce JSON-formatted output.
+> **Note:** The `--json` global flag enables JSON output for commands that produce structured output such as `scan`, `version`, `doctor`, etc.
